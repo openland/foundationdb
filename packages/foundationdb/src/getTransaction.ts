@@ -17,5 +17,5 @@ export function getTransaction(ctx: Context): Transaction {
         return cache;
     }
 
-    return new ReadOnlyTransaction();
+    return new ReadOnlyTransaction(true);
 }

@@ -8,6 +8,7 @@ export abstract class BaseTransaction implements Transaction {
     readonly id = BaseTransaction.nextId++;
     abstract isReadOnly: boolean;
     abstract isCompleted: boolean;
+    abstract isEphemeral: boolean;
     protected db?: Database;
     protected rawTx?: fdb.Transaction;
 

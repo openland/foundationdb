@@ -4,6 +4,7 @@ import { BaseTransaction } from './BaseTransaction';
 export class ReadWriteTransaction extends BaseTransaction {
 
     readonly isReadOnly: boolean = false;
+    readonly isEphemeral: boolean = false;
     private _beforeCommit: (((ctx: Context) => void) | ((ctx: Context) => Promise<void>))[] = [];
     private _afterCommit: ((ctx: Context) => void)[] = [];
     private _isCompleted = false;
@@ -47,10 +48,9 @@ export class ReadWriteTransaction extends BaseTransaction {
 
         // Commit changes
         this._isCompleted = true;
-        if (!this.rawTx) {
-            return;
+        if (this.rawTx) {
+            await this.rawTx.rawCommit();
         }
-        await this.rawTx.rawCommit();
 
         // afterCommit hook
         let pend2 = [...this._afterCommit];

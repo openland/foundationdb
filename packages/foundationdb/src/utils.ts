@@ -7,9 +7,16 @@ byteZero.writeUInt8(0, 0)
  * Increment of a key is a key that is ordered after all keys that is prefixed by a first one.
  * For example, keyIncrement(ABCD) -> ABCE.
  * 
+ * Special case for empty key: [] -> [0xFF]
+ * 
  * @param buf source key
  */
 export function keyIncrement(buf: Buffer): Buffer {
+    if (buf.length === 0) {
+        let b = Buffer.alloc(1);
+        b.writeUInt8(0xff, 0);
+        return b;
+    }
     let lastNonFFByte
     for (lastNonFFByte = buf.length - 1; lastNonFFByte >= 0; --lastNonFFByte) {
         if (buf[lastNonFFByte] !== 0xFF) {
@@ -36,4 +43,16 @@ export function keyNext(buf: Buffer): Buffer {
     // Buffer.from does support taking a string but @types/node has overly
     // strict type definitions for the function.
     return Buffer.concat([buf, byteZero], buf.length + 1)
+}
+
+export function randomNumbersString(len: number) {
+    let length = len;
+    let alphabet = '0123456789';
+    let key = '';
+
+    for (let i = 0; i < length; i++) {
+        key += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+    }
+
+    return key;
 }

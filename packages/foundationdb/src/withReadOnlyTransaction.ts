@@ -14,7 +14,7 @@ export function withReadOnlyTransaction(ctx: Context): Context {
         return ctx;
     }
 
-    let cache = new ReadOnlyTransaction();
+    let cache = new ReadOnlyTransaction(false);
     ctx = ReadOnlyTransactionContext.set(ctx, cache);
     return ctx;
 }

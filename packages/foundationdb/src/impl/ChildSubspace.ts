@@ -31,7 +31,7 @@ export class ChildSubspace implements Subspace {
 
     async get(ctx: Context, key: Buffer) {
         let tx = getTransaction(ctx)!.rawTransaction(this.db);
-        return await tx.get(key);
+        return await tx.get(Buffer.concat([this.prefix, key]));
     }
 
     async range(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {

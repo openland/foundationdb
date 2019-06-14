@@ -17,6 +17,7 @@ module.exports = {
     collectCoverageFrom: [
         'packages/**/*.{ts,tsx,js,jsx}',
         '!packages/**/*.d.ts',
+        '!packages/**/lib/**/*',
     ],
     moduleDirectories: [
         '.',

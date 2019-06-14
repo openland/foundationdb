@@ -35,6 +35,11 @@ export interface Transaction {
     readonly isCompleted: boolean;
 
     /**
+     * If transaction is ephemeral. Ephemeral transactions are never commited.
+     */
+    readonly isEphemeral: boolean;
+
+    /**
      * Hook that will be called right before transaction commit,  
      * before starting or before completion of inner transaction.
      * 
