@@ -1,6 +1,14 @@
 const byteZero = Buffer.alloc(1)
 byteZero.writeUInt8(0, 0)
 
+/**
+ * Getting an "increment" of a key. 
+ * 
+ * Increment of a key is a key that is ordered after all keys that is prefixed by a first one.
+ * For example, keyIncrement(ABCD) -> ABCE.
+ * 
+ * @param buf source key
+ */
 export function keyIncrement(buf: Buffer): Buffer {
     let lastNonFFByte
     for (lastNonFFByte = buf.length - 1; lastNonFFByte >= 0; --lastNonFFByte) {
@@ -20,6 +28,10 @@ export function keyIncrement(buf: Buffer): Buffer {
     return result;
 }
 
+/**
+ * Calculating next key. Next key is a first key that right after provided one. It is always `key + 0x00`.
+ * @param buf source key
+ */
 export function keyNext(buf: Buffer): Buffer {
     // Buffer.from does support taking a string but @types/node has overly
     // strict type definitions for the function.

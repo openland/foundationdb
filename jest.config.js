@@ -28,6 +28,8 @@ module.exports = {
         //
         // WARNING: ORDER MATTERS
         //
+        'foundationdb/(.*)': '<rootDir>/$1',
+        'foundationdb': '<rootDir>/node_modules/foundationdb',
         '@openland/foundationdb/(.*)': '<rootDir>/packages/foundationdb/$1',
         '@openland/foundationdb': '<rootDir>/packages/foundationdb'
     },

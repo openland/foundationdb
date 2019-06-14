@@ -3,7 +3,7 @@ import { Context } from '@openland/context';
 import { encoders, Transformer } from './../encoding';
 import { Database } from './../Database';
 import { Subspace, RangeOptions } from './../Subspace';
-import { getTransaction } from './getTransaction';
+import { getTransaction } from '../getTransaction';
 import { keyNext, keyIncrement } from '../utils';
 import { keySelector } from 'foundationdb';
 

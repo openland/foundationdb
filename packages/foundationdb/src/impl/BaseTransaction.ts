@@ -27,6 +27,6 @@ export abstract class BaseTransaction implements Transaction {
         return this.rawTx!;
     }
 
-    abstract beforeCommit(fn: ((ctx: Context) => Promise<void>) | (() => void)): void;
+    abstract beforeCommit(fn: ((ctx: Context) => Promise<void>) | ((ctx: Context) => void)): void;
     abstract afterCommit(fn: (ctx: Context) => void): void;
 }

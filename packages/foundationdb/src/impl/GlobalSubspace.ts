@@ -3,7 +3,7 @@ import { ChildSubspace } from './ChildSubspace';
 import { Context } from '@openland/context';
 import { Database } from './../Database';
 import { Subspace, RangeOptions } from "../Subspace";
-import { getTransaction } from './getTransaction';
+import { getTransaction } from '../getTransaction';
 import { encoders, Transformer } from '../encoding';
 import { TransformedSubspace } from './TransformedSubspace';
 import { keyNext, keyIncrement } from '../utils';

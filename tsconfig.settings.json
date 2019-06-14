@@ -19,7 +19,8 @@
         "typeRoots": ["./node_modules/@types"],
         "resolveJsonModule": true,
         "importHelpers": false,
-        "composite": true
+        "composite": true,
+        "esModuleInterop": true
     },
     "exclude": [
         "node_modules/**",

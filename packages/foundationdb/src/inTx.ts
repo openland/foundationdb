@@ -36,10 +36,34 @@ async function doInTx<T>(leaky: boolean, ctx: Context, callback: (ctx: Context) 
     } while (true);
 }
 
+/**
+ * Performing transaction. Transactions can be nested.
+ * 
+ * Example:
+ * ```
+ * await inTx(rootContext, async (ctx) => {
+ *     ....
+ *     await inTx(ctx, async (innerCtx) => {
+ *         ....
+ *     });
+ *     ....
+ * })
+ * ```
+ * @param ctx Context
+ * @param callback transaction body
+ */
 export async function inTx<T>(ctx: Context, callback: (ctx: Context) => Promise<T>): Promise<T> {
     return doInTx(false, ctx, callback);
 }
 
+/**
+ * Performing transaction without strict guarantees. 
+ * Use only if you can guarantee that data wouldn't be corrupted if changes won't flushed 
+ * between inner transactions.
+ * 
+ * @param ctx context
+ * @param callback transaction body
+ */
 export async function inTxLeaky<T>(ctx: Context, callback: (ctx: Context) => Promise<T>): Promise<T> {
     return doInTx(true, ctx, callback);
 }

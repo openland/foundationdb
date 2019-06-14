@@ -1,10 +1,16 @@
 import { encoders as fencoders } from 'foundationdb';
 
+/**
+ * Transformer of values
+ */
 export interface Transformer<T1, T2> {
     unpack(src: T1): T2;
     pack(src: T2): T1;
 }
 
+/**
+ * Type represented tuple item that is limited to only integers, strings and booleans.
+ */
 export type Tuple = (string | number | boolean);
 
 const zero = Buffer.of();
@@ -60,12 +66,38 @@ const booleanTransformer: Transformer<Buffer, boolean> = {
     }
 };
 
+/**
+ * Built-in encoders.
+ */
 export const encoders = {
+    
+    /**
+     * JSON encoder
+     */
     json: jsonTransformer,
+    
+    /**
+     * Tuple encoder
+     */
     tuple: tupleTransformer,
+
+    /**
+     * Boolean encoder. `false === (key.length === 0)`.
+     */
     boolean: booleanTransformer,
+    
+    /**
+     * Int32 Little-Endian encoding. Useful for atomic counters.
+     */
     int32LE: int32LETransfromer,
+    /**
+     * Int32 Big-Endian encoding. Useful for sorting.
+     */
     int32BE: int32BETransfromer,
+    
+    /**
+     * Identity transformer
+     */
     id: <T>(): Transformer<T, T> => {
         return {
             pack: (src: T) => src,
