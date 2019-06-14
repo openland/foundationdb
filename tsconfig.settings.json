@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "lib": ["es6", "dom"],
+        "sourceMap": true,
+        "allowJs": false,
+        "jsx": "react",
+        "moduleResolution": "node",
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "noUnusedLocals": false,
+        "allowSyntheticDefaultImports": true,
+        "strictPropertyInitialization": true,
+        "typeRoots": ["./node_modules/@types"],
+        "resolveJsonModule": true,
+        "importHelpers": false,
+        "composite": true
+    },
+    "exclude": [
+        "node_modules/**",
+        "packages/*/lib/**",
+        "packages/*/node_modules/**"
+    ]
+}

@@ -1,0 +1,27 @@
+{
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  },
+  "scripts": {
+    "build": "yarn tsc --build",
+    "test": "yarn jest",
+    "release": "yarn build && yarn test && yarn lerna publish --force-publish"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.13",
+    "jest": "^23.6.0",
+    "lerna": "^3.6.0",
+    "ts-jest": "^23.10.5",
+    "tslint": "^5.11.0",
+    "tslint-config-prettier": "^1.17.0",
+    "typescript": "^3.2.2"
+  },
+  "dependencies": {
+    "@openland/context": "*",
+    "@openland/log": "*",
+    "@types/node": "^12.0.7"
+  }
+}

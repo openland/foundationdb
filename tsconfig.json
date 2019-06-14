@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "lib": ["es6", "dom"],
+        "jsx": "react",
+    },
+    "files": [],
+    "references": [{
+        "path": "./packages/foundationdb"
+    }]
+}

@@ -1,0 +1,16 @@
+{
+    "name": "@openland/foundationdb",
+    "description": "Simple log api",
+    "version": "1.1.1",
+    "main": "lib/index.js",
+    "typings": "lib/index.d.ts",
+    "repository": "https://github.com/openland/log",
+    "author": "Steve Kite <steve@openland.com>",
+    "license": "MIT",
+    "gitHead": "c697113adf1cb4b345de8d545d09c6b3f002792b",
+    "dependencies": {
+        "@openland/context": "*",
+        "@openland/log": "*",
+        "foundationdb": "0.10.2"
+    }
+}
