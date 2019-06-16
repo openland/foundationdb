@@ -1,11 +1,10 @@
 {
-    "extends": "../../tsconfig.settings.json",
-    "compilerOptions": {
-      "composite": true,
-      "rootDir": "src",
-      "outDir": "lib"
-    },
-    "references": [
-      
-    ]
-  }
+  "extends": "../../tsconfig.settings.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "lib",
+    "experimentalDecorators": true
+  },
+  "references": []
+}

@@ -3,7 +3,7 @@ import { Context } from '@openland/context';
 import { HighContentionAllocator } from './HighContentionAllocator';
 import { Subspace } from '../../Subspace';
 import { encoders, Tuple } from '../../encoding';
-import { inTx } from '../../inTx';
+import { transactable } from '../../transactable';
 
 class Node {
     readonly subspace!: Subspace<Tuple[]>;
@@ -51,93 +51,94 @@ export class DirectoryLayer {
         this.db = db;
     }
 
+    @transactable
     async createOrOpen(ctx: Context, path: string[]) {
         return this.doCreateOrOpen(ctx, path, null, true, true);
     }
 
+    @transactable
     async create(ctx: Context, path: string[]) {
         return this.doCreateOrOpen(ctx, path, null, true, false);
     }
 
+    @transactable
     async open(ctx: Context, path: string[]) {
         return this.doCreateOrOpen(ctx, path, null, false, true);
     }
 
-    async exists(parent: Context, path: string[]) {
-        return await inTx(parent, async (ctx) => {
-            await this.checkVersion(ctx, false);
-            let res = await this.find(ctx, path);
-            if (!res.exists) {
-                return false;
-            }
+    @transactable
+    async exists(ctx: Context, path: string[]) {
+        await this.checkVersion(ctx, false);
+        let res = await this.find(ctx, path);
+        if (!res.exists) {
+            return false;
+        }
+
+        // TODO: Implement partitions
+        if (res.layer.equals(partition)) {
+            throw Error('partitions are not supported');
+        }
+
+        return true;
+    }
+
+    @transactable
+    private async doCreateOrOpen(ctx: Context, path: string[], layer: Buffer | null, allowCreate: boolean, allowOpen: boolean) {
+        if (path.length === 0) {
+            throw Error('Path can\'t be empty');
+        }
+        await this.checkVersion(ctx, false);
+
+        let res = await this.find(ctx, path);
+        if (res.exists) {
 
             // TODO: Implement partitions
             if (res.layer.equals(partition)) {
                 throw Error('partitions are not supported');
             }
 
-            return true;
-        });
-    }
+            if (layer) {
+                if (Buffer.compare(res.layer, layer!) !== 0) {
+                    throw Error('the directory was created with an incompatible layer');
+                }
+            }
 
-    private async doCreateOrOpen(parentCtx: Context, path: string[], layer: Buffer | null, allowCreate: boolean, allowOpen: boolean) {
-        if (path.length === 0) {
-            throw Error('Path can\'t be empty');
+            if (!allowOpen) {
+                throw Error('directory already exists');
+            }
+
+            return this.prefixFromNode(res);
         }
-        return await inTx(parentCtx, async (ctx) => {
-            await this.checkVersion(ctx, false);
 
-            let res = await this.find(ctx, path);
-            if (res.exists) {
+        if (!allowCreate) {
+            throw Error('directory does not exists');
+        }
 
-                // TODO: Implement partitions
-                if (res.layer.equals(partition)) {
-                    throw Error('partitions are not supported');
-                }
+        // Create directory if not exists
+        await this.checkVersion(ctx, true);
 
-                if (layer) {
-                    if (Buffer.compare(res.layer, layer!) !== 0) {
-                        throw Error('the directory was created with an incompatible layer');
-                    }
-                }
+        // Content Subspace
+        let newss = this.contentSS.subspace([await this.allocator.allocate(ctx, this.db)]);
+        let prefix = newss.prefix;
+        if ((await newss.range(ctx, [], { limit: 1 })).length !== 0) {
+            throw Error('the database has keys stored at the prefix chosen by the automatic prefix allocator');
+        }
 
-                if (!allowOpen) {
-                    throw Error('directory already exists');
-                }
+        // Parent directory
+        let parentPrefix = this.nodeSS.prefix;
+        if (path.length > 1) {
+            parentPrefix = await this.doCreateOrOpen(ctx, path.slice(0, path.length - 1), layer, allowCreate, allowOpen);
+        }
+        let parent = this.nodeSS.subspace([parentPrefix]);
 
-                return this.prefixFromNode(res);
-            }
+        // Create node
+        let newNodeSS = this.nodeWithPrefix(prefix);
+        newNodeSS.set(ctx, [Buffer.from('layer', 'ascii')], layer || empty);
 
-            if (!allowCreate) {
-                throw Error('directory does not exists');
-            }
+        // Set reference to parent node
+        parent.set(ctx, [SUBDIR, path[path.length - 1]], prefix);
 
-            // Create directory if not exists
-            await this.checkVersion(ctx, true);
-
-            // Content Subspace
-            let newss = this.contentSS.subspace([await this.allocator.allocate(ctx, this.db)]);
-            let prefix = newss.prefix;
-            if ((await newss.range(ctx, [], { limit: 1 })).length !== 0) {
-                throw Error('the database has keys stored at the prefix chosen by the automatic prefix allocator');
-            }
-
-            // Parent directory
-            let parentPrefix = this.nodeSS.prefix;
-            if (path.length > 1) {
-                parentPrefix = await this.doCreateOrOpen(ctx, path.slice(0, path.length - 1), layer, allowCreate, allowOpen);
-            }
-            let parent = this.nodeSS.subspace([parentPrefix]);
-
-            // Create node
-            let newNodeSS = this.nodeWithPrefix(prefix);
-            newNodeSS.set(ctx, [Buffer.from('layer', 'ascii')], layer || empty);
-
-            // Set reference to parent node
-            parent.set(ctx, [SUBDIR, path[path.length - 1]], prefix);
-
-            return prefix;
-        });
+        return prefix;
     }
 
     private async checkVersion(ctx: Context, allowWrite: boolean) {
