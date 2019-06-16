@@ -23,7 +23,7 @@ let context = createNamedContext('main');
 async function main() {
 
     // Resolve directory for our data
-    let directory = db.directory.createOrOpen(context, ['examples', 'hello-world']);
+    let directory = await db.directory.createOrOpen(context, ['examples', 'hello-world']);
 
     // Do write transaction
     await inTx(context, async (ctx) => {
