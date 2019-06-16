@@ -1,3 +1,4 @@
+import { DirectoryLayer } from './impl/directory/DirectoryLayer';
 import { Subspace } from './Subspace';
 import * as fdb from 'foundationdb';
 import { GlobalSubspace } from './impl/GlobalSubspace';
@@ -49,12 +50,18 @@ export class Database {
     readonly allKeys: Subspace
 
     /**
+     * Root directory layer
+     */
+    readonly directory: DirectoryLayer;
+
+    /**
      * Constructor for client
      * @param db raw database object
      */
     private constructor(db: fdb.Database) {
         this.rawDB = db;
         this.allKeys = new GlobalSubspace(this);
+        this.directory = new DirectoryLayer(this, this.allKeys.subspace(Buffer.of(0xfe)), this.allKeys);
     }
 
     /**

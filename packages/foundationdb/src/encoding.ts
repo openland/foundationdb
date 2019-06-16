@@ -11,7 +11,7 @@ export interface Transformer<T1, T2> {
 /**
  * Type represented tuple item that is limited to only integers, strings and booleans.
  */
-export type Tuple = (string | number | boolean);
+export type Tuple = (string | number | boolean | Buffer);
 
 const zero = Buffer.of();
 const one = Buffer.from('ff', 'hex');
@@ -70,12 +70,12 @@ const booleanTransformer: Transformer<Buffer, boolean> = {
  * Built-in encoders.
  */
 export const encoders = {
-    
+
     /**
      * JSON encoder
      */
     json: jsonTransformer,
-    
+
     /**
      * Tuple encoder
      */
@@ -85,7 +85,7 @@ export const encoders = {
      * Boolean encoder. `false === (key.length === 0)`.
      */
     boolean: booleanTransformer,
-    
+
     /**
      * Int32 Little-Endian encoding. Useful for atomic counters.
      */
@@ -94,7 +94,7 @@ export const encoders = {
      * Int32 Big-Endian encoding. Useful for sorting.
      */
     int32BE: int32BETransfromer,
-    
+
     /**
      * Identity transformer
      */

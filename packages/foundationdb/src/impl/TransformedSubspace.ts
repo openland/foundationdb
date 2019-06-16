@@ -1,17 +1,20 @@
 import { Context } from '@openland/context';
 import { Subspace, RangeOptions } from '../Subspace';
 import { Transformer, encoders } from '../encoding';
+import { Watch } from '../Watch';
 
 export class TransformedSubspace<K, V, SK, SV> implements Subspace<K, V> {
 
     readonly ops: Subspace<SK, SV>;
     readonly keyTf: Transformer<SK, K>;
     readonly valTf: Transformer<SV, V>;
+    readonly prefix: Buffer;
 
     constructor(ops: Subspace<SK, SV>, keyTf: Transformer<SK, K>, valTf: Transformer<SV, V>) {
         this.ops = ops;
         this.keyTf = keyTf;
         this.valTf = valTf;
+        this.prefix = ops.prefix;
     }
 
     withKeyEncoding<K2>(keyTf: Transformer<K, K2>): Subspace<K2, V> {
@@ -69,5 +72,9 @@ export class TransformedSubspace<K, V, SK, SV> implements Subspace<K, V> {
 
     clear(ctx: Context, key: K) {
         this.ops.clear(ctx, this.keyTf.pack(key));
+    }
+
+    watch(ctx: Context, key: K): Watch {
+        return this.ops.watch(ctx, this.keyTf.pack(key));
     }
 }

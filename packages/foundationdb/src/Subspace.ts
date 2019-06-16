@@ -1,16 +1,17 @@
 import { Context } from '@openland/context';
 import { Transformer } from './encoding';
+import { Watch } from './Watch';
 
 /**
  * RangeOption contains parameters of range queries
  */
 export interface RangeOptions<K = Buffer> {
-    
+
     /**
      * If provided specifies after what key to query data
      */
     after?: K;
-    
+
     /**
      * Maximnum number of returned values.
      */
@@ -27,6 +28,11 @@ export interface RangeOptions<K = Buffer> {
  * all possible operations in it.
  */
 export interface Subspace<K = Buffer, V = Buffer> {
+
+    /**
+     * Prefix of keys in current subspace
+     */
+    readonly prefix: Buffer;
 
     /**
      * Returns subspace with different key encoding
@@ -133,4 +139,32 @@ export interface Subspace<K = Buffer, V = Buffer> {
      * @param value value
      */
     bitXor(ctx: Context, key: K, value: V): void;
+
+    /**
+     * Watch creates a watch and returns a promise that will become ready when the watch reports a change to the value 
+     * of the specified key.
+     * 
+     * A watchs behavior is relative to the transaction that created it. A watch will report a change in relation to 
+     * the keys value as readable by that transaction. The initial value used for comparison is either that of the transactions 
+     * read version or the value as modified by the transaction itself prior to the creation of the watch. If the value changes 
+     * and then changes back to its initial value, the watch might not report the change.
+     * 
+     * Until the transaction that created it has been committed, a watch will not report changes made by other transactions. 
+     * In contrast, a watch will immediately report changes made by the transaction itself. Watches cannot be created if the 
+     * transaction has called SetReadYourWritesDisable on the Transaction options, and an attempt to do so will return a 
+     * watches_disabled error.
+     * 
+     * If the transaction used to create a watch encounters an error during commit, then the watch will be set with that error. 
+     * A transaction whose commit result is unknown will set all of its watches with the commit_unknown_result error. 
+     * If an uncommitted transaction is reset or destroyed, then any watches it created will be set with the transaction_cancelled error.
+     * 
+     * By default, each database connection can have no more than 10,000 watches that have not yet reported a change. When this number 
+     * is exceeded, an attempt to create a watch will return a too_many_watches error. This limit can be changed using SetMaxWatches on 
+     * the Database. Because a watch outlives the transaction that creates it, any watch that is no longer needed should be cancelled 
+     * by calling `cancel()` on its returned object.
+     * 
+     * @param ctx context
+     * @param key key to watch
+     */
+    watch(ctx: Context, key: K): Watch;
 }

@@ -6,11 +6,12 @@ import { Subspace, RangeOptions } from './../Subspace';
 import { getTransaction } from '../getTransaction';
 import { keyNext, keyIncrement } from '../utils';
 import { keySelector } from 'foundationdb';
+import { Watch } from '../Watch';
 
 export class ChildSubspace implements Subspace {
     
     private readonly db: Database;
-    private readonly prefix: Buffer;
+    readonly prefix: Buffer;
 
     constructor(db: Database, prefix: Buffer) {
         this.db = db;
@@ -82,5 +83,21 @@ export class ChildSubspace implements Subspace {
     bitXor(ctx: Context, key: Buffer, value: Buffer) {
         let tx = getTransaction(ctx)!.rawTransaction(this.db);
         tx.bitXor(Buffer.concat([this.prefix, key]), value);
+    }
+
+    watch(ctx: Context, key: Buffer): Watch {
+        let tn = getTransaction(ctx);
+        if (tn.isEphemeral) {
+            throw Error('Watches are not possible in ephemeral transactions');
+        }
+        if (tn.isReadOnly) {
+            throw Error('Watches are not possible in read only transactions');
+        }
+        let tx = getTransaction(ctx).rawTransaction(this.db);
+        let w = tx.watch(Buffer.concat([this.prefix, key]), { throwAllErrors: true });
+        return {
+            promise: w.promise as any as Promise<void>,
+            cancel: () => w.cancel()
+        }
     }
 }
