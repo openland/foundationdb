@@ -22,13 +22,16 @@ let context = createNamedContext('main');
 
 async function main() {
 
+    // Resolve directory for our data
+    let directory = db.directory.createOrOpen(context, ['examples', 'hello-world']);
+
     // Do write transaction
     await inTx(context, async (ctx) => {
-        db.allKeys.set(ctx, Buffer.of(1,2,3), Buffer.of(1,2,3));
+        directory.set(ctx, Buffer.of(1,2,3), Buffer.of(1,2,3));
     });
 
     // Read data with auto-created transaction
-    await db.allKeys.get(context, Buffer.of(1,2,3)) // Resolves to value of Buffer.of(1,2,3)
+    await directory.get(context, Buffer.of(1,2,3)); // Resolves to value of Buffer.of(1,2,3)
 }
 
 main();
