@@ -1,6 +1,6 @@
 {
     "name": "@openland/foundationdb",
-    "description": "Simple log api",
+    "description": "NodeJS FoundationDB client",
     "version": "1.2.1",
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",
