@@ -1,7 +1,7 @@
 ---
 id: index
-title: Latin-ish
-sidebar_label: Example Page
+title: Getting Started
+sidebar_label: Getting Started
 ---
 
 Check the [documentation](https://docusaurus.io) for how to use Docusaurus.

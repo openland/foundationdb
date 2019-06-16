@@ -1,5 +1,5 @@
 ---
-id: doc2
+id: transactions
 title: document number 2
 ---
 

@@ -5,21 +5,18 @@
     "previous": "Previous",
     "tagline": "NodeJS foundation DB bindings",
     "docs": {
-      "doc2": {
-        "title": "document number 2"
+      "index": {
+        "title": "Getting Started",
+        "sidebar_label": "Getting Started"
       },
-      "doc3": {
+      "install": {
         "title": "This is document number 3"
       },
-      "doc4": {
-        "title": "Other Document"
+      "layers": {
+        "title": "document number 2"
       },
-      "doc5": {
-        "title": "Fifth Document"
-      },
-      "index": {
-        "title": "Latin-ish",
-        "sidebar_label": "Example Page"
+      "transactions": {
+        "title": "document number 2"
       }
     },
     "links": {
@@ -27,9 +24,8 @@
       "Chat": "Chat"
     },
     "categories": {
-      "Docusaurus": "Docusaurus",
-      "First Category": "First Category",
-      "Second Category": "Second Category"
+      "Getting Started": "Getting Started",
+      "Guides": "Guides"
     }
   },
   "pages-strings": {
