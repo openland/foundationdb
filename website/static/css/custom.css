@@ -14,3 +14,12 @@
 
 @media only screen and (min-width: 1500px) {
 }
+
+.homeContainer {
+    margin-top: 84px;
+    margin-bottom: -24px;
+}
+
+.mainContainer {
+    margin-bottom: -48px;
+}

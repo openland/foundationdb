@@ -29,11 +29,11 @@ class HomeSplash extends React.Component {
       </div>
     );
 
-    const Logo = props => (
-      <div className="projectLogo">
-        <img src={props.img_src} alt="Project Logo" />
-      </div>
-    );
+    // const Logo = props => (
+    //   <div className="projectLogo">
+    //     <img src={props.img_src} alt="Project Logo" />
+    //   </div>
+    // );
 
     const ProjectTitle = () => (
       <h2 className="projectTitle">
@@ -60,13 +60,11 @@ class HomeSplash extends React.Component {
 
     return (
       <SplashContainer>
-        <Logo img_src={`${baseUrl}img/undraw_monitor.svg`} />
+        {/* <Logo img_src={`${baseUrl}img/undraw_monitor.svg`} /> */}
         <div className="inner">
           <ProjectTitle siteConfig={siteConfig} />
           <PromoSection>
-            <Button href="#try">Try It Out</Button>
-            <Button href={docUrl('doc1.html')}>Example Link</Button>
-            <Button href={docUrl('doc2.html')}>Example Link 2</Button>
+            <Button href={docUrl('index')}>Documentation</Button>
           </PromoSection>
         </div>
       </SplashContainer>
@@ -92,14 +90,14 @@ class Index extends React.Component {
       </Container>
     );
 
-    const FeatureCallout = () => (
-      <div
-        className="productShowcaseSection paddingBottom"
-        style={{textAlign: 'center'}}>
-        <h2>Feature Callout</h2>
-        <MarkdownBlock>These are features of this project</MarkdownBlock>
-      </div>
-    );
+    // const FeatureCallout = () => (
+    //   <div
+    //     className="productShowcaseSection paddingBottom"
+    //     style={{textAlign: 'center'}}>
+    //     <h2>Feature Callout</h2>
+    //     <MarkdownBlock>These are features of this project</MarkdownBlock>
+    //   </div>
+    // );
 
     const TryOut = () => (
       <Block id="try">
@@ -149,16 +147,22 @@ class Index extends React.Component {
       <Block layout="fourColumn">
         {[
           {
-            content: 'This is the content of my feature',
-            image: `${baseUrl}img/undraw_react.svg`,
+            content: 'Up to 100k random read operations per second in single process.',
+            image: `${baseUrl}img/undraw_fast_loading_0lbh.svg`,
             imageAlign: 'top',
-            title: 'Feature One',
+            title: 'Fast',
           },
           {
-            content: 'The content of my second feature',
-            image: `${baseUrl}img/undraw_operating_system.svg`,
+            content: 'Easy for starters and for large projects.',
+            image: `${baseUrl}img/undraw_pilates_gpdb.svg`,
             imageAlign: 'top',
-            title: 'Feature Two',
+            title: 'Easy to use',
+          },
+          {
+            content: 'Correct implementation, safe defaults and large test coverage',
+            image: `${baseUrl}img/undraw_checking_boxes_2ibd.svg`,
+            imageAlign: 'top',
+            title: 'Scalable',
           },
         ]}
       </Block>
@@ -198,11 +202,11 @@ class Index extends React.Component {
         <HomeSplash siteConfig={siteConfig} language={language} />
         <div className="mainContainer">
           <Features />
-          <FeatureCallout />
-          <LearnHow />
-          <TryOut />
-          <Description />
-          <Showcase />
+          {/* <FeatureCallout /> */}
+          {/* <LearnHow />
+          <TryOut /> */}
+          {/* <Description />
+          <Showcase /> */}
         </div>
       </div>
     );
