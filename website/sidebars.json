@@ -8,8 +8,8 @@
     "Reference": [
       "api-database",
       "api-transactions",
-      "api-directory",
-      "api-subspaces"
+      "api-subspaces",
+      "api-directory"
     ]
   }
 }
