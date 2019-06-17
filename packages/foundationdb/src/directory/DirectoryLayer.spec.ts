@@ -1,5 +1,5 @@
 import { DirectoryLayer } from "./DirectoryLayer";
-import { Database } from "../../Database";
+import { Database } from "../Database";
 import { createNamedContext } from "@openland/context";
 
 /**

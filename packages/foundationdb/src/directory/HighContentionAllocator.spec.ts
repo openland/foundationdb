@@ -1,7 +1,7 @@
 import { HighContentionAllocator } from './HighContentionAllocator';
 import { createNamedContext } from '@openland/context';
-import { Database } from '../../Database';
-import { inTx } from '../../inTx';
+import { Database } from '../Database';
+import { inTx } from '../inTx';
 
 describe('HighContentionAllocator', () => {
 

@@ -1,4 +1,4 @@
-import { DirectoryLayer } from './impl/directory/DirectoryLayer';
+import { DirectoryLayer } from './directory/DirectoryLayer';
 import { Subspace } from './Subspace';
 import * as fdb from 'foundationdb';
 import { GlobalSubspace } from './impl/GlobalSubspace';

@@ -1,8 +1,8 @@
 import { Context } from '@openland/context';
-import { Database } from './../../Database';
+import { Database } from './../Database';
 import { TransactionOptionCode } from 'foundationdb';
-import { encoders } from '../../encoding';
-import { getTransaction } from '../../getTransaction';
+import { encoders } from '../encoding';
+import { getTransaction } from '../getTransaction';
 
 //
 // Port from https://github.com/apple/foundationdb/blob/master/bindings/go/src/fdb/directory/allocator.go

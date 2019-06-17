@@ -1,9 +1,9 @@
-import { Database } from '../../Database';
+import { Database } from '../Database';
 import { Context } from '@openland/context';
 import { HighContentionAllocator } from './HighContentionAllocator';
-import { Subspace } from '../../Subspace';
-import { encoders, Tuple } from '../../encoding';
-import { transactional } from '../../transactional';
+import { Subspace } from '../Subspace';
+import { encoders, Tuple } from '../encoding';
+import { transactional } from '../transactional';
 
 class Node {
     readonly subspace!: Subspace<Tuple[]>;
