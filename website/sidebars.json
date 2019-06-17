@@ -2,7 +2,14 @@
   "docs": {
     "Getting Started": [
       "index",
-      "install"
+      "install",
+      "sample-hello"
+    ],
+    "Reference": [
+      "api-database",
+      "api-transactions",
+      "api-directory",
+      "api-subspaces"
     ]
   }
 }

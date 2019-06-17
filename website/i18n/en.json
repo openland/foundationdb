@@ -5,6 +5,22 @@
     "previous": "Previous",
     "tagline": "NodeJS foundation DB bindings",
     "docs": {
+      "api-database": {
+        "title": "Database",
+        "sidebar_label": "Database"
+      },
+      "api-directory": {
+        "title": "Directory Layer",
+        "sidebar_label": "Directory Layer"
+      },
+      "api-subspaces": {
+        "title": "Subspaces",
+        "sidebar_label": "Subspaces"
+      },
+      "api-transactions": {
+        "title": "Transactions",
+        "sidebar_label": "Transactions"
+      },
       "index": {
         "title": "Getting Started",
         "sidebar_label": "Getting Started"
@@ -12,11 +28,9 @@
       "install": {
         "title": "Installation"
       },
-      "layers": {
-        "title": "document number 2"
-      },
-      "transactions": {
-        "title": "document number 2"
+      "sample-hello": {
+        "title": "Hello world",
+        "sidebar_label": "Hello world"
       }
     },
     "links": {
@@ -24,7 +38,8 @@
       "Chat": "Chat"
     },
     "categories": {
-      "Getting Started": "Getting Started"
+      "Getting Started": "Getting Started",
+      "Reference": "Reference"
     }
   },
   "pages-strings": {

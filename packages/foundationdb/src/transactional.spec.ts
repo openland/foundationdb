@@ -1,13 +1,13 @@
 import { createNamedContext } from '@openland/context';
 import { Context } from '@openland/context';
-import { transactable } from "./transactable";
+import { transactional } from "./transactional";
 import { getTransaction } from './getTransaction';
 
-describe('transactable', () => {
+describe('transactional', () => {
     it('should create transaction', async () => {
         let fn = jest.fn();
         class A {
-            @transactable
+            @transactional
             async txed(ctx: Context) {
                 expect(getTransaction(ctx).isReadOnly).toBe(false);
                 fn();

@@ -3,7 +3,7 @@ import { Context } from '@openland/context';
 import { HighContentionAllocator } from './HighContentionAllocator';
 import { Subspace } from '../../Subspace';
 import { encoders, Tuple } from '../../encoding';
-import { transactable } from '../../transactable';
+import { transactional } from '../../transactional';
 
 class Node {
     readonly subspace!: Subspace<Tuple[]>;
@@ -51,22 +51,22 @@ export class DirectoryLayer {
         this.db = db;
     }
 
-    @transactable
+    @transactional
     async createOrOpen(ctx: Context, path: string[]) {
         return this.doCreateOrOpen(ctx, path, null, true, true);
     }
 
-    @transactable
+    @transactional
     async create(ctx: Context, path: string[]) {
         return this.doCreateOrOpen(ctx, path, null, true, false);
     }
 
-    @transactable
+    @transactional
     async open(ctx: Context, path: string[]) {
         return this.doCreateOrOpen(ctx, path, null, false, true);
     }
 
-    @transactable
+    @transactional
     async exists(ctx: Context, path: string[]) {
         await this.checkVersion(ctx, false);
         let res = await this.find(ctx, path);
@@ -82,7 +82,7 @@ export class DirectoryLayer {
         return true;
     }
 
-    @transactable
+    @transactional
     private async doCreateOrOpen(ctx: Context, path: string[], layer: Buffer | null, allowCreate: boolean, allowOpen: boolean) {
         if (path.length === 0) {
             throw Error('Path can\'t be empty');

@@ -3,7 +3,6 @@ id: install
 title: Installation
 ---
 
-## Install FoundationDB
 Before adding `@openland/foundationdb` library to your project you need to install FoundationDB client to you machine (and server for development). 
 
 Minimum required version of FoundationDB is **6.0.0**.

@@ -1,7 +1,7 @@
 import { Context } from '@openland/context';
 import { inTx } from './inTx';
 
-export function transactable(target: any, key: string, descriptor: TypedPropertyDescriptor<(ctx: Context, ...args: any) => Promise<any>>) {
+export function transactional(target: any, key: string, descriptor: TypedPropertyDescriptor<(ctx: Context, ...args: any) => Promise<any>>) {
     const originalMethod = descriptor.value!;
     descriptor.value = async function () {
         let ctx = arguments[0];
