@@ -1,7 +1,7 @@
 {
     "name": "@openland/foundationdb",
     "description": "NodeJS FoundationDB client",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",
     "repository": "https://github.com/openland/log",
@@ -11,8 +11,8 @@
     "dependencies": {
         "@openland/context": "*",
         "@openland/log": "*",
-        "foundationdb": "0.10.2",
         "@types/uuid": "^3.4.3",
+        "foundationdb": "0.10.2",
         "uuid": "^3.2.1"
     }
 }
