@@ -39,9 +39,9 @@ export class ChildSubspace implements Subspace {
         let tx = getTransaction(ctx)!.rawTransaction(this.db);
         if (opts && opts.after) {
             let keyR = Buffer.concat([this.prefix, key]);
-            let after = Buffer.concat([this.prefix, key, opts.after!]);
+            let after = Buffer.concat([this.prefix, opts.after!]);
             let reversed = (opts && opts.reverse) ? true : false;
-            let start = reversed ? keyNext(keyR) : keySelector.firstGreaterThan(keyIncrement(after));
+            let start = reversed ? keyNext(keyR) : keySelector.firstGreaterThan(after);
             let end = reversed ? after : keyIncrement(keyR);
             return (await tx.getRangeAll(start, end, {
                 limit: opts && opts.limit ? opts.limit! : undefined,
