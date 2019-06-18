@@ -241,7 +241,7 @@ describe('Subspace', () => {
         }
     });
 
-    it('should honor after', async () => {
+    it('should honor after for exact position', async () => {
         let db = await Database.openTest();
         let rootCtx = createNamedContext('test');
 
@@ -269,6 +269,54 @@ describe('Subspace', () => {
                 keyspace.set(ctx, [1, 10], 10);
                 keyspace.set(ctx, [1, 11], 11);
                 keyspace.set(ctx, [1, 12], 12);
+            });
+
+            let res = await keyspace.range(rootCtx, [1], { after: [1, 6], limit: 1 });
+            expect(res.length).toBe(1);
+            expect(res[0].value).toBe(7);
+
+            res = await keyspace.range(rootCtx, [1], { after: [1, 6], limit: 1, reverse: true });
+            expect(res.length).toBe(1);
+            expect(res[0].value).toBe(5);
+
+            res = await keyspace.range(rootCtx, [1], { after: [2], limit: 1 });
+            expect(res.length).toBe(0);
+
+            res = await keyspace.range(rootCtx, [1], { after: [0], limit: 1, reverse: true });
+            expect(res.length).toBe(0);
+        }
+    });
+
+    it('should honor after for prefix position', async () => {
+        let db = await Database.openTest();
+        let rootCtx = createNamedContext('test');
+
+        let keyspaces = [
+            db.allKeys
+                .withKeyEncoding(encoders.tuple)
+                .withValueEncoding(encoders.int32LE),
+            db.allKeys
+                .withKeyEncoding(encoders.tuple)
+                .withValueEncoding(encoders.int32LE)
+                .subspace(['1'])
+        ];
+
+        for (let keyspace of keyspaces) {
+            await inTx(rootCtx, async (ctx) => {
+                keyspace.set(ctx, [1, 1, 1], 1);
+                keyspace.set(ctx, [1, 2, 1], 2);
+                keyspace.set(ctx, [1, 3, 1], 3);
+                keyspace.set(ctx, [1, 4, 1], 4);
+                keyspace.set(ctx, [1, 5, 1], 5);
+                keyspace.set(ctx, [1, 6, 0], 6);
+                keyspace.set(ctx, [1, 6, 1], 6);
+                keyspace.set(ctx, [1, 6, 2], 6);
+                keyspace.set(ctx, [1, 7, 1], 7);
+                keyspace.set(ctx, [1, 8, 1], 8);
+                keyspace.set(ctx, [1, 9, 1], 9);
+                keyspace.set(ctx, [1, 10, 1], 10);
+                keyspace.set(ctx, [1, 11, 1], 11);
+                keyspace.set(ctx, [1, 12, 1], 12);
             });
 
             let res = await keyspace.range(rootCtx, [1], { after: [1, 6], limit: 1 });

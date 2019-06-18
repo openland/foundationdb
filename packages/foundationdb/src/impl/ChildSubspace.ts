@@ -41,7 +41,7 @@ export class ChildSubspace implements Subspace {
             let keyR = Buffer.concat([this.prefix, key]);
             let after = Buffer.concat([this.prefix, opts.after!]);
             let reversed = (opts && opts.reverse) ? true : false;
-            let start = reversed ? keyNext(keyR) : keySelector.firstGreaterThan(after);
+            let start = reversed ? keyNext(keyR) : keyIncrement(after);
             let end = reversed ? after : keyIncrement(keyR);
             return (await tx.getRangeAll(start, end, {
                 limit: opts && opts.limit ? opts.limit! : undefined,

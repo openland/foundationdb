@@ -42,7 +42,7 @@ export class GlobalSubspace implements Subspace {
         if (opts && opts.after) {
             let after = opts.after!;
             let reversed = (opts && opts.reverse) ? true : false;
-            let start = reversed ? keyNext(key) : keySelector.firstGreaterThan(after);
+            let start = reversed ? keyNext(key) : keyIncrement(after);
             let end = reversed ? after : keyIncrement(key);
             return (await tx.getRangeAll(start, end, {
                 limit: opts && opts.limit ? opts.limit! : undefined,
