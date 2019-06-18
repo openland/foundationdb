@@ -84,7 +84,7 @@ describe('Transaction', () => {
     });
 
     it('should crash when using two different connections in the same transaction', async () => {
-        let db1 = await Database.openTest('name');
+        let db1 = await Database.openTest();
         let db2 = await Database.openTest();
         let r = inTx(createNamedContext('test'), async (ctx) => {
             db1.allKeys.set(ctx, Buffer.of(1), Buffer.of());

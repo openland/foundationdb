@@ -56,3 +56,11 @@ export function randomNumbersString(len: number) {
 
     return key;
 }
+
+/**
+ * Promise that resolves after `ms` milliseconds
+ * @param ms delay in milliseconds
+ */
+export async function delay(ms: number) {
+    return new Promise(resolve => { setTimeout(resolve, ms); });
+}

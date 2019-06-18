@@ -11,6 +11,8 @@
     "dependencies": {
         "@openland/context": "*",
         "@openland/log": "*",
-        "foundationdb": "0.10.2"
+        "foundationdb": "0.10.2",
+        "@types/uuid": "^3.4.3",
+        "uuid": "^3.2.1"
     }
 }

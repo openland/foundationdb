@@ -5,6 +5,7 @@ import { encoders } from "./encoding";
 
 async function createKeyspaces() {
     let db = await Database.openTest();
+    
     return [
         db.allKeys
             .withKeyEncoding(encoders.tuple)

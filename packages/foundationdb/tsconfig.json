@@ -4,7 +4,8 @@
     "composite": true,
     "rootDir": "src",
     "outDir": "lib",
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "esModuleInterop": true
   },
   "references": []
 }

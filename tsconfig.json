@@ -4,7 +4,8 @@
         "module": "commonjs",
         "lib": ["es6", "dom"],
         "jsx": "react",
-        "experimentalDecorators": true
+        "experimentalDecorators": true,
+        "esModuleInterop": true
     },
     "files": [],
     "references": [{
