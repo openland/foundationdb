@@ -8,13 +8,15 @@ export class TransformedSubspace<K, V, SK, SV> implements Subspace<K, V> {
     readonly ops: Subspace<SK, SV>;
     readonly keyTf: Transformer<SK, K>;
     readonly valTf: Transformer<SV, V>;
-    readonly prefix: Buffer;
 
     constructor(ops: Subspace<SK, SV>, keyTf: Transformer<SK, K>, valTf: Transformer<SV, V>) {
         this.ops = ops;
         this.keyTf = keyTf;
         this.valTf = valTf;
-        this.prefix = ops.prefix;
+    }
+
+    get prefix() {
+        return this.ops.prefix;
     }
 
     withKeyEncoding<K2>(keyTf: Transformer<K, K2>): Subspace<K2, V> {
