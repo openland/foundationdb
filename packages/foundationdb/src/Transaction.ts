@@ -40,6 +40,11 @@ export interface Transaction {
     readonly isEphemeral: boolean;
 
     /**
+     * Application or layer specific data.
+     */
+    readonly userData: Map<string, any>;
+
+    /**
      * Hook that will be called right before transaction commit,  
      * before starting or before completion of inner transaction.
      * 

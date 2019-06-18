@@ -9,6 +9,7 @@ export abstract class BaseTransaction implements Transaction {
     abstract isReadOnly: boolean;
     abstract isCompleted: boolean;
     abstract isEphemeral: boolean;
+    readonly userData: Map<string, any> = new Map();
     protected db?: Database;
     protected rawTx?: fdb.Transaction;
 
