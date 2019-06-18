@@ -1,5 +1,5 @@
 import { DirectoryLayer } from "./DirectoryLayer";
-import { Database } from "../Database";
+import { Database } from "./Database";
 import { createNamedContext } from "@openland/context";
 
 /**
@@ -31,15 +31,15 @@ describe('Directory', () => {
         expect(await d.exists(ctx, ['test', 'test2'])).toBeFalsy();
         let d1 = await d.createOrOpen(ctx, ['test']);
         let d2 = await d.createOrOpen(ctx, ['test', 'test2']);
-        expect(!d1.equals(d2)).toBeTruthy();
+        expect(!d1.prefix.equals(d2.prefix)).toBeTruthy();
 
         expect(await d.exists(ctx, ['test'])).toBeTruthy();
         expect(await d.exists(ctx, ['test', 'test2'])).toBeTruthy();
 
         let d12 = await d.open(ctx, ['test']);
         let d22 = await d.createOrOpen(ctx, ['test', 'test2']);
-        expect(d1.equals(d12)).toBeTruthy();
-        expect(d2.equals(d22)).toBeTruthy();
+        expect(d1.prefix.equals(d12.prefix)).toBeTruthy();
+        expect(d2.prefix.equals(d22.prefix)).toBeTruthy();
     });
     it('should create custom prefixes', async () => {
         let ctx = createNamedContext('test');
@@ -47,7 +47,7 @@ describe('Directory', () => {
         let d = new DirectoryLayer(db, db.allKeys.subspace(Buffer.of(0xfe)), db.allKeys);
         await d.createPrefix(ctx, ['test'], Buffer.of(0xf0, 0x01, 0x02));
         let tst = await d.open(ctx, ['test']);
-        expect(tst.equals(Buffer.of(0xf0, 0x01, 0x02))).toBe(true);
+        expect(tst.prefix.equals(Buffer.of(0xf0, 0x01, 0x02))).toBe(true);
     });
     it('should throw error on double creation', async () => {
         let ctx = createNamedContext('test');
@@ -66,6 +66,6 @@ describe('Directory', () => {
         let ctx = createNamedContext('test');
         let db = await Database.openTest();
         let p = await db.directory.create(ctx, ['test']);
-        expect(db.directory.createPrefix(ctx, ['test2', 'test3'], p)).rejects.toThrowError('the given prefix is already in use');
+        expect(db.directory.createPrefix(ctx, ['test2', 'test3'], p.prefix)).rejects.toThrowError('the given prefix is already in use');
     });
 });

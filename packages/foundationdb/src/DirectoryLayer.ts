@@ -1,9 +1,10 @@
-import { Database } from '../Database';
+import { DirectorySubspace, Directory } from './Directory';
+import { Database } from './Database';
 import { Context } from '@openland/context';
-import { HighContentionAllocator } from './HighContentionAllocator';
-import { Subspace } from '../Subspace';
-import { encoders, Tuple } from '../encoding';
-import { transactional } from '../transactional';
+import { HighContentionAllocator } from './directory/HighContentionAllocator';
+import { Subspace } from './Subspace';
+import { encoders, Tuple } from './encoding';
+import { transactional } from './transactional';
 
 class Node {
     readonly subspace!: Subspace<Tuple[]>;
@@ -119,7 +120,7 @@ export class DirectoryLayer {
                 throw Error('directory already exists');
             }
 
-            return this.prefixFromNode(res);
+            return new DirectorySubspace(this, path, this.prefixFromNode(res)) as Directory;
         }
 
         if (!allowCreate) {
@@ -156,7 +157,7 @@ export class DirectoryLayer {
         // Parent directory
         let parentPrefix = this.nodeSS.prefix;
         if (path.length > 1) {
-            parentPrefix = await this.doCreateOrOpen(ctx, path.slice(0, path.length - 1), null, null, allowCreate, allowOpen);
+            parentPrefix = (await this.doCreateOrOpen(ctx, path.slice(0, path.length - 1), null, null, allowCreate, allowOpen)).prefix;
         }
         let parent = this.nodeSS.subspace([parentPrefix]);
 
@@ -167,7 +168,7 @@ export class DirectoryLayer {
         // Set reference to parent node
         parent.set(ctx, [SUBDIR, path[path.length - 1]], resPrefix);
 
-        return resPrefix;
+        return new DirectorySubspace(this, path, resPrefix) as Directory;
     }
 
     private async checkVersion(ctx: Context, allowWrite: boolean) {
