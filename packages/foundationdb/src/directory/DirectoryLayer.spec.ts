@@ -41,6 +41,14 @@ describe('Directory', () => {
         expect(d1.equals(d12)).toBeTruthy();
         expect(d2.equals(d22)).toBeTruthy();
     });
+    it('should create custom prefixes', async () => {
+        let ctx = createNamedContext('test');
+        let db = await Database.openTest();
+        let d = new DirectoryLayer(db, db.allKeys.subspace(Buffer.of(0xfe)), db.allKeys);
+        await d.createPrefix(ctx, ['test'], Buffer.of(0xf0, 0x01, 0x02));
+        let tst = await d.open(ctx, ['test']);
+        expect(tst.equals(Buffer.of(0xf0, 0x01, 0x02))).toBe(true);
+    });
     it('should throw error on double creation', async () => {
         let ctx = createNamedContext('test');
         let db = await Database.openTest();
@@ -53,5 +61,11 @@ describe('Directory', () => {
         let db = await Database.openTest();
         let d = new DirectoryLayer(db, db.allKeys.subspace(Buffer.of(0xfe)), db.allKeys);
         await expect(d.open(ctx, ['test'])).rejects.toThrowError();
+    });
+    it('should throw error on trying to create prefix for existing directory', async () => {
+        let ctx = createNamedContext('test');
+        let db = await Database.openTest();
+        let p = await db.directory.create(ctx, ['test']);
+        expect(db.directory.createPrefix(ctx, ['test2', 'test3'], p)).rejects.toThrowError('the given prefix is already in use');
     });
 });

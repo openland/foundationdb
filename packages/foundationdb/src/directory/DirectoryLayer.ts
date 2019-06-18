@@ -34,6 +34,13 @@ const empty = Buffer.alloc(0);
 const partition = Buffer.from('partition', 'ascii');
 const SUBDIR = 0;
 
+function hasPrefix(src: Buffer, value: Buffer) {
+    if (src.length < value.length) {
+        return false;
+    }
+    return value.equals(src.slice(0, value.length));
+}
+
 export class DirectoryLayer {
     private readonly VERSION = [1, 0, 0]
     private readonly nodeSS: Subspace<Tuple[]>;
@@ -53,17 +60,22 @@ export class DirectoryLayer {
 
     @transactional
     async createOrOpen(ctx: Context, path: string[]) {
-        return this.doCreateOrOpen(ctx, path, null, true, true);
+        return this.doCreateOrOpen(ctx, path, null, null, true, true);
     }
 
     @transactional
     async create(ctx: Context, path: string[]) {
-        return this.doCreateOrOpen(ctx, path, null, true, false);
+        return this.doCreateOrOpen(ctx, path, null, null, true, false);
     }
 
     @transactional
     async open(ctx: Context, path: string[]) {
-        return this.doCreateOrOpen(ctx, path, null, false, true);
+        return this.doCreateOrOpen(ctx, path, null, null, false, true);
+    }
+
+    @transactional
+    async createPrefix(ctx: Context, path: string[], prefix: Buffer) {
+        return this.doCreateOrOpen(ctx, path, null, prefix, true, false);
     }
 
     @transactional
@@ -83,7 +95,7 @@ export class DirectoryLayer {
     }
 
     @transactional
-    private async doCreateOrOpen(ctx: Context, path: string[], layer: Buffer | null, allowCreate: boolean, allowOpen: boolean) {
+    private async doCreateOrOpen(ctx: Context, path: string[], layer: Buffer | null, prefix: Buffer | null, allowCreate: boolean, allowOpen: boolean) {
         if (path.length === 0) {
             throw Error('Path can\'t be empty');
         }
@@ -117,28 +129,45 @@ export class DirectoryLayer {
         // Create directory if not exists
         await this.checkVersion(ctx, true);
 
-        // Content Subspace
-        let newss = this.contentSS.subspace([await this.allocator.allocate(ctx, this.db)]);
-        let prefix = newss.prefix;
-        if ((await newss.range(ctx, [], { limit: 1 })).length !== 0) {
-            throw Error('the database has keys stored at the prefix chosen by the automatic prefix allocator');
+        let resPrefix: Buffer;
+        if (!prefix) {
+
+            let allocated = await this.allocator.allocate(ctx, this.db);
+
+            // Check content keys
+            let newss = this.contentSS.subspace([allocated]);
+            if ((await newss.range(ctx, [], { limit: 1 })).length !== 0) {
+                throw Error('the database has keys stored at the prefix chosen by the automatic prefix allocator');
+            }
+
+            // Check node prefix keys
+            if (!await this.isPrefixFree(ctx, newss.prefix)) {
+                throw Error('the directory layer has manually allocated prefixes that conflict with the automatic prefix allocator');
+            }
+
+            resPrefix = newss.prefix;
+        } else {
+            if (!await this.isPrefixFree(ctx, prefix)) {
+                throw Error('the given prefix is already in use');
+            }
+            resPrefix = prefix;
         }
 
         // Parent directory
         let parentPrefix = this.nodeSS.prefix;
         if (path.length > 1) {
-            parentPrefix = await this.doCreateOrOpen(ctx, path.slice(0, path.length - 1), layer, allowCreate, allowOpen);
+            parentPrefix = await this.doCreateOrOpen(ctx, path.slice(0, path.length - 1), null, null, allowCreate, allowOpen);
         }
         let parent = this.nodeSS.subspace([parentPrefix]);
 
         // Create node
-        let newNodeSS = this.nodeWithPrefix(prefix);
+        let newNodeSS = this.nodeWithPrefix(resPrefix);
         newNodeSS.set(ctx, [Buffer.from('layer', 'ascii')], layer || empty);
 
         // Set reference to parent node
-        parent.set(ctx, [SUBDIR, path[path.length - 1]], prefix);
+        parent.set(ctx, [SUBDIR, path[path.length - 1]], resPrefix);
 
-        return prefix;
+        return resPrefix;
     }
 
     private async checkVersion(ctx: Context, allowWrite: boolean) {
@@ -196,5 +225,30 @@ export class DirectoryLayer {
     private prefixFromNode(node: Node) {
         let r = node.subspace.prefix.slice(this.nodeSS.prefix.length);
         return encoders.tuple.unpack(r)[0] as Buffer;
+    }
+
+    private async isPrefixFree(ctx: Context, prefix: Buffer) {
+        if (await this.nodeContainingPrefix(ctx, prefix)) {
+            return false;
+        }
+
+        let newss = this.nodeSS.subspace([prefix]);
+        if ((await newss.range(ctx, [], { limit: 1 })).length !== 0) {
+            return false;
+        }
+        return true;
+    }
+
+    private async nodeContainingPrefix(ctx: Context, prefix: Buffer) {
+        if (hasPrefix(prefix, this.nodeSS.prefix)) {
+            return this.nodeSS;
+        }
+        let r = await this.nodeSS.range(ctx, [prefix], { limit: 1 });
+        if (r.length > 0) {
+            let key = r[0].key;
+            return this.nodeWithPrefix(key[key.length - 1] as Buffer);
+        } else {
+            return null;
+        }
     }
 }

@@ -4,6 +4,7 @@ export { inTx, inTxLeaky } from './inTx';
 export { withoutTransaction } from './withoutTransaction';
 export { withReadOnlyTransaction } from './withReadOnlyTransaction';
 export { keyIncrement, keyNext } from './utils';
-export { encoders, Transformer } from './encoding';
+export { encoders, Transformer, Tuple } from './encoding';
 export { Subspace, RangeOptions } from './Subspace';
 export { getTransaction } from './getTransaction';
+export { transactional } from './transactional';
