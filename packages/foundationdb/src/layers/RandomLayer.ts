@@ -1,6 +1,6 @@
-import { Subspace } from './../Subspace';
+import { Subspace } from '../Subspace';
 import { Context, createNamedContext } from '@openland/context';
-import { BaseLayer } from './../Layer';
+import { BaseLayer } from '../Layer';
 import { inTx } from '../inTx';
 import { encoders, Tuple } from '../encoding';
 import uuid from 'uuid/v4';
