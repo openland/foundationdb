@@ -25,13 +25,6 @@ module.exports = {
         'node_modules'
     ],
     moduleNameMapper: {
-
-        //
-        // WARNING: ORDER MATTERS
-        //
-        'foundationdb/(.*)': '<rootDir>/$1',
-        'foundationdb': '<rootDir>/node_modules/foundationdb',
-        '@openland/foundationdb/(.*)': '<rootDir>/packages/foundationdb/$1',
-        '@openland/foundationdb': '<rootDir>/packages/foundationdb'
-    },
+        '^@openland/foundationdb$': '<rootDir>/packages/foundationdb/src',
+    }
 };

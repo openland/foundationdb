@@ -1,0 +1,18 @@
+{
+    "name": "@openland/foundationdb-locks",
+    "description": "FoundationDB distributed locks",
+    "version": "2.1.0",
+    "main": "lib/index.js",
+    "typings": "lib/index.d.ts",
+    "repository": "https://github.com/openland/log",
+    "author": "Steve Kite <steve@openland.com>",
+    "license": "MIT",
+    "gitHead": "c697113adf1cb4b345de8d545d09c6b3f002792b",
+    "dependencies": {
+        "@openland/context": "*",
+        "@openland/foundationdb": "^2.1.0",
+        "@openland/log": "*",
+        "@types/uuid": "^3.4.3",
+        "uuid": "^3.2.1"
+    }
+}

@@ -2,7 +2,10 @@
     "compilerOptions": {
         "target": "es6",
         "module": "commonjs",
-        "lib": ["es6", "dom"],
+        "lib": [
+            "es6",
+            "dom"
+        ],
         "sourceMap": true,
         "allowJs": false,
         "jsx": "react",
@@ -16,7 +19,9 @@
         "noUnusedLocals": false,
         "allowSyntheticDefaultImports": true,
         "strictPropertyInitialization": true,
-        "typeRoots": ["./node_modules/@types"],
+        "typeRoots": [
+            "./node_modules/@types"
+        ],
         "resolveJsonModule": true,
         "importHelpers": false,
         "composite": true,

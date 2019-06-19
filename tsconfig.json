@@ -2,13 +2,21 @@
     "compilerOptions": {
         "target": "es6",
         "module": "commonjs",
-        "lib": ["es6", "dom"],
+        "lib": [
+            "es6",
+            "dom"
+        ],
         "jsx": "react",
         "experimentalDecorators": true,
         "esModuleInterop": true
     },
     "files": [],
-    "references": [{
-        "path": "./packages/foundationdb"
-    }]
+    "references": [
+        {
+            "path": "./packages/foundationdb"
+        },
+        {
+            "path": "./packages/foundationdb-locks"
+        }
+    ]
 }
