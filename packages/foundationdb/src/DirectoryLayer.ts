@@ -43,7 +43,7 @@ function hasPrefix(src: Buffer, value: Buffer) {
 }
 
 export class DirectoryLayer {
-    private readonly VERSION = [1, 0, 0]
+    private readonly VERSION = [1, 0, 0];
     private readonly nodeSS: Subspace<Tuple[]>;
     private readonly contentSS: Subspace<Tuple[]>;
     private readonly rootNode: Subspace<Tuple[]>;
@@ -54,8 +54,7 @@ export class DirectoryLayer {
         this.nodeSS = nodeSS.withKeyEncoding(encoders.tuple);
         this.contentSS = contentSS.withKeyEncoding(encoders.tuple);
         this.rootNode = this.nodeSS.subspace([nodeSS.prefix]);
-        let allocatorPath = Buffer.concat([this.rootNode.prefix, encoders.tuple.pack([Buffer.from('hca', 'ascii')])]);
-        this.allocator = new HighContentionAllocator(allocatorPath);
+        this.allocator = new HighContentionAllocator(this.rootNode.subspace([Buffer.from('hca', 'ascii')]));
         this.db = db;
     }
 
@@ -133,7 +132,7 @@ export class DirectoryLayer {
         let resPrefix: Buffer;
         if (!prefix) {
 
-            let allocated = await this.allocator.allocate(ctx, this.db);
+            let allocated = await this.allocator.allocate(ctx);
 
             // Check content keys
             let newss = this.contentSS.subspace([allocated]);
@@ -172,7 +171,7 @@ export class DirectoryLayer {
     }
 
     private async checkVersion(ctx: Context, allowWrite: boolean) {
-        let ex = await this.rootNode.get(ctx, ([Buffer.from('version', 'ascii')]))
+        let ex = await this.rootNode.get(ctx, ([Buffer.from('version', 'ascii')]));
         if (!ex) {
             if (allowWrite) {
                 this.initDirectory(ctx);

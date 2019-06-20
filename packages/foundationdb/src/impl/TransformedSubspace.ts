@@ -18,6 +18,9 @@ export class TransformedSubspace<K, V, SK, SV> implements Subspace<K, V> {
     get prefix() {
         return this.ops.prefix;
     }
+    get db() {
+        return this.ops.db;
+    }
 
     withKeyEncoding<K2>(keyTf: Transformer<K, K2>): Subspace<K2, V> {
         return new TransformedSubspace<K2, V, K, V>(this, keyTf, encoders.id<V>());
@@ -39,6 +42,15 @@ export class TransformedSubspace<K, V, SK, SV> implements Subspace<K, V> {
         }
     }
 
+    async snapshotGet(ctx: Context, key: K): Promise<V | null> {
+        let res = await this.ops.snapshotGet(ctx, this.keyTf.pack(key));
+        if (res) {
+            return this.valTf.unpack(res);
+        } else {
+            return null;
+        }
+    }
+
     async range(ctx: Context, key: K, opts?: RangeOptions<K>): Promise<{ key: K, value: V }[]> {
         let opts2: RangeOptions<SK> | undefined = undefined;
         if (opts) {
@@ -49,6 +61,19 @@ export class TransformedSubspace<K, V, SK, SV> implements Subspace<K, V> {
             };
         }
         let res = await this.ops.range(ctx, this.keyTf.pack(key), opts2);
+        return res.map((v) => ({ key: this.keyTf.unpack(v.key), value: this.valTf.unpack(v.value) }));
+    }
+
+    async snapshotRange(ctx: Context, key: K, opts?: RangeOptions<K>): Promise<{ key: K, value: V }[]> {
+        let opts2: RangeOptions<SK> | undefined = undefined;
+        if (opts) {
+            opts2 = {
+                after: opts.after ? this.keyTf.pack(opts.after) : undefined,
+                limit: opts.limit,
+                reverse: opts.reverse
+            };
+        }
+        let res = await this.ops.snapshotRange(ctx, this.keyTf.pack(key), opts2);
         return res.map((v) => ({ key: this.keyTf.unpack(v.key), value: this.valTf.unpack(v.value) }));
     }
 
@@ -74,6 +99,14 @@ export class TransformedSubspace<K, V, SK, SV> implements Subspace<K, V> {
 
     clear(ctx: Context, key: K) {
         this.ops.clear(ctx, this.keyTf.pack(key));
+    }
+
+    clearPrefixed(ctx: Context, key: K) {
+        this.ops.clearPrefixed(ctx, this.keyTf.pack(key));
+    }
+
+    clearRange(ctx: Context, start: K, end: K) {
+        this.ops.clearRange(ctx, this.keyTf.pack(start), this.keyTf.pack(end));
     }
 
     watch(ctx: Context, key: K): Watch {

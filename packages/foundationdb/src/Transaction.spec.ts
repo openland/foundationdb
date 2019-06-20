@@ -90,6 +90,6 @@ describe('Transaction', () => {
             db1.allKeys.set(ctx, Buffer.of(1), Buffer.of());
             db2.allKeys.set(ctx, Buffer.of(1), Buffer.of());
         });
-        expect(r).rejects.toThrowError();
+        await expect(r).rejects.toThrowError();
     });
 });

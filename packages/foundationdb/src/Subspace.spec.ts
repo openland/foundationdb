@@ -1,11 +1,11 @@
-import { Database } from "./Database";
-import { inTx } from "./inTx";
-import { createNamedContext } from "@openland/context";
-import { encoders } from "./encoding";
+import { Database } from './Database';
+import { inTx } from './inTx';
+import { createNamedContext } from '@openland/context';
+import { encoders } from './encoding';
 
 async function createKeyspaces() {
     let db = await Database.openTest();
-    
+
     return [
         db.allKeys
             .withKeyEncoding(encoders.tuple)
@@ -204,7 +204,9 @@ describe('Subspace', () => {
                 .subspace(['1'])
         ];
         for (let keyspace of keyspaces) {
-            await db.rawDB.clearRangeStartsWith('');
+            await inTx(rootCtx, async (ctx) => {
+                keyspace.clearPrefixed(ctx, []);
+            });
 
             await inTx(rootCtx, async (ctx) => {
                 keyspace.set(ctx, ['key'], 1);
@@ -333,6 +335,144 @@ describe('Subspace', () => {
 
             res = await keyspace.range(rootCtx, [1], { after: [0], limit: 1, reverse: true });
             expect(res.length).toBe(0);
+        }
+    });
+
+    it('should return first and last values in ranges', async () => {
+        let db = await Database.openTest();
+        let rootCtx = createNamedContext('test');
+
+        let keyspaces = [
+            db.allKeys
+                .withKeyEncoding(encoders.tuple)
+                .withValueEncoding(encoders.int32LE),
+            db.allKeys
+                .withKeyEncoding(encoders.tuple)
+                .withValueEncoding(encoders.int32LE)
+                .subspace(['1'])
+        ];
+
+        for (let keyspace of keyspaces) {
+            await inTx(rootCtx, async (ctx) => {
+                keyspace.set(ctx, [0, 0, 0], 0);
+                keyspace.set(ctx, [1, 1, 1], 1);
+                keyspace.set(ctx, [1, 2, 1], 2);
+                keyspace.set(ctx, [1, 3, 1], 3);
+                keyspace.set(ctx, [1, 4, 1], 4);
+                keyspace.set(ctx, [1, 5, 1], 5);
+                keyspace.set(ctx, [1, 6, 0], 6);
+                keyspace.set(ctx, [1, 6, 1], 6);
+                keyspace.set(ctx, [1, 6, 2], 6);
+                keyspace.set(ctx, [1, 7, 1], 7);
+                keyspace.set(ctx, [1, 8, 1], 8);
+                keyspace.set(ctx, [1, 9, 1], 9);
+                keyspace.set(ctx, [1, 10, 1], 10);
+                keyspace.set(ctx, [1, 11, 1], 11);
+                keyspace.set(ctx, [1, 12, 1], 12);
+                keyspace.set(ctx, [2, 1, 1], 13);
+            });
+
+            let res = await keyspace.range(rootCtx, [], { reverse: true, limit: 1 });
+            expect(res.length).toBe(1);
+            expect(res[0].value).toBe(13);
+
+            res = await keyspace.range(rootCtx, [], { reverse: false, limit: 1 });
+            expect(res.length).toBe(1);
+            expect(res[0].value).toBe(0);
+
+            res = await keyspace.range(rootCtx, [1], { reverse: true, limit: 1 });
+            expect(res.length).toBe(1);
+            expect(res[0].value).toBe(12);
+
+            res = await keyspace.range(rootCtx, [1], { reverse: false, limit: 1 });
+            expect(res.length).toBe(1);
+            expect(res[0].value).toBe(1);
+        }
+    });
+
+    it('should clear all', async () => {
+        let db = await Database.openTest();
+        let rootCtx = createNamedContext('test');
+
+        let keyspaces = [
+            db.allKeys
+                .withKeyEncoding(encoders.tuple)
+                .withValueEncoding(encoders.int32LE),
+            db.allKeys
+                .withKeyEncoding(encoders.tuple)
+                .withValueEncoding(encoders.int32LE)
+                .subspace(['1'])
+        ];
+
+        for (let keyspace of keyspaces) {
+            await inTx(rootCtx, async (ctx) => {
+                keyspace.set(ctx, [0, 0, 0], 0);
+                keyspace.set(ctx, [1, 1, 1], 1);
+                keyspace.set(ctx, [1, 2, 1], 2);
+                keyspace.set(ctx, [1, 3, 1], 3);
+                keyspace.set(ctx, [1, 4, 1], 4);
+                keyspace.set(ctx, [1, 5, 1], 5);
+                keyspace.set(ctx, [1, 6, 0], 6);
+                keyspace.set(ctx, [1, 6, 1], 6);
+                keyspace.set(ctx, [1, 6, 2], 6);
+                keyspace.set(ctx, [1, 7, 1], 7);
+                keyspace.set(ctx, [1, 8, 1], 8);
+                keyspace.set(ctx, [1, 9, 1], 9);
+                keyspace.set(ctx, [1, 10, 1], 10);
+                keyspace.set(ctx, [1, 11, 1], 11);
+                keyspace.set(ctx, [1, 12, 1], 12);
+                keyspace.set(ctx, [2, 1, 1], 13);
+            });
+
+            await inTx(rootCtx, async (ctx) => {
+                await keyspace.clearPrefixed(ctx, []);
+            });
+
+            let res = await keyspace.range(rootCtx, []);
+            expect(res.length).toBe(0);
+        }
+    });
+
+    it('should clear prefix', async () => {
+        let db = await Database.openTest();
+        let rootCtx = createNamedContext('test');
+
+        let keyspaces = [
+            db.allKeys
+                .withKeyEncoding(encoders.tuple)
+                .withValueEncoding(encoders.int32LE),
+            db.allKeys
+                .withKeyEncoding(encoders.tuple)
+                .withValueEncoding(encoders.int32LE)
+                .subspace(['1'])
+        ];
+
+        for (let keyspace of keyspaces) {
+            await inTx(rootCtx, async (ctx) => {
+                keyspace.set(ctx, [0, 0, 0], 0);
+                keyspace.set(ctx, [1, 1, 1], 1);
+                keyspace.set(ctx, [1, 2, 1], 2);
+                keyspace.set(ctx, [1, 3, 1], 3);
+                keyspace.set(ctx, [1, 4, 1], 4);
+                keyspace.set(ctx, [1, 5, 1], 5);
+                keyspace.set(ctx, [1, 6, 0], 6);
+                keyspace.set(ctx, [1, 6, 1], 6);
+                keyspace.set(ctx, [1, 6, 2], 6);
+                keyspace.set(ctx, [1, 7, 1], 7);
+                keyspace.set(ctx, [1, 8, 1], 8);
+                keyspace.set(ctx, [1, 9, 1], 9);
+                keyspace.set(ctx, [1, 10, 1], 10);
+                keyspace.set(ctx, [1, 11, 1], 11);
+                keyspace.set(ctx, [1, 12, 1], 12);
+                keyspace.set(ctx, [2, 1, 1], 13);
+            });
+
+            await inTx(rootCtx, async (ctx) => {
+                await keyspace.clearPrefixed(ctx, [1]);
+            });
+
+            let res = await keyspace.range(rootCtx, []);
+            expect(res.length).toBe(2);
         }
     });
 });

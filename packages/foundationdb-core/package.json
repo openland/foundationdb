@@ -1,0 +1,50 @@
+{
+  "name": "@openland/foundationdb-core",
+  "version": "0.10.2",
+  "description": "Node.js bindings for the FoundationDB database",
+  "keywords": [
+    "foundationdb",
+    "fdb",
+    "database",
+    "NoSQL",
+    "ACID"
+  ],
+  "homepage": "https://foundationdb.org",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "cpu": [
+    "x64"
+  ],
+  "files": [
+    "dist",
+    "prebuilds",
+    "binding.gyp"
+  ],
+  "scripts": {
+    "install": "node-gyp-build",
+    "test": "mocha -r ts-node/register test/*.ts",
+    "prepublishOnly": "rm -rf prebuilds && prebuildify-ci download",
+    "prebuild": "prebuildify -t 8.0.0 -t 10.0.0 -t 11.0.0 --strip && prebuildify -t 12.1.0 --napi --strip"
+  },
+  "dependencies": {
+    "nan": "^2.13.2",
+    "node-gyp-build": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/bindings": "^1.3.0",
+    "@types/node": "^12.0.0",
+    "@types/xml2js": "^0.4.3",
+    "prebuildify": "^3.0.0",
+    "prebuildify-ci": "^1.0.1",
+    "xml2js": "^0.4.19"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/josephg/node-foundationdb.git"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "gypfile": true
+}

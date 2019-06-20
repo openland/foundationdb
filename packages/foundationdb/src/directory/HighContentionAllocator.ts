@@ -1,8 +1,10 @@
+import { Subspace } from './../Subspace';
 import { Context } from '@openland/context';
-import { Database } from './../Database';
-import { TransactionOptionCode } from 'foundationdb';
-import { encoders } from '../encoding';
+import { TransactionOptionCode } from '@openland/foundationdb-core';
+import { encoders, Tuple } from '../encoding';
 import { getTransaction } from '../getTransaction';
+import { keyIncrement } from '../utils';
+import { transactional } from '../transactional';
 
 //
 // Port from https://github.com/apple/foundationdb/blob/master/bindings/go/src/fdb/directory/allocator.go
@@ -14,35 +16,35 @@ increment.writeUInt32LE(1, 0);
 
 export class HighContentionAllocator {
 
-    private readonly counters: Buffer;
-    private readonly recent: Buffer;
+    private readonly counters: Subspace<Tuple[]>;
+    private readonly recent: Subspace<Tuple[]>;
 
-    constructor(subspace: Buffer) {
-        this.counters = Buffer.concat([subspace, encoders.tuple.pack([0])]);
-        this.recent = Buffer.concat([subspace, encoders.tuple.pack([1])]);
+    constructor(subspace: Subspace<Tuple[]>) {
+        this.counters = subspace.subspace([0]);
+        this.recent = subspace.subspace([1]);
     }
 
-    async allocate(ctx: Context, db: Database) {
-        let tx = getTransaction(ctx).rawTransaction(db);
+    @transactional
+    async allocate(ctx: Context) {
         while (true) {
-            let rr = await tx.snapshot().getRangeAllStartsWith(this.counters, { limit: 1, reverse: true });
+            let rr = await this.counters.snapshotRange(ctx, [], { limit: 1, reverse: true });
             let start = 0;
             let window = 0;
             if (rr.length === 1) {
-                let ex = encoders.tuple.unpack(rr[0][0].slice(this.counters.length));
-                start = ex[0] as number;
+                let ex = rr[0].key;
+                start = ex[ex.length - 1] as number;
             }
 
             let windowAdvanced = false;
             while (true) {
                 // Cannot yield to event loop in this block {
                 if (windowAdvanced) {
-                    tx.clearRange(this.counters, Buffer.concat([this.counters, encoders.tuple.pack([start])]));
-                    tx.setOption(TransactionOptionCode.NextWriteNoWriteConflictRange);
-                    tx.clearRange(this.recent, Buffer.concat([this.recent, encoders.tuple.pack([start])]));
+                    this.counters.clearRange(ctx, [], [start]);
+                    getTransaction(ctx).rawTransaction(this.counters.db).setOption(TransactionOptionCode.NextWriteNoWriteConflictRange);
+                    this.recent.clearRange(ctx, [], [start]);
                 }
-                tx.add(Buffer.concat([this.counters, encoders.tuple.pack([start])]), increment);
-                let newCountPromise = tx.snapshot().get(Buffer.concat([this.counters, encoders.tuple.pack([start])]));
+                this.counters.add(ctx, [start], increment);
+                let newCountPromise = this.counters.snapshotGet(ctx, [start]);
                 // }
                 let newCount = await newCountPromise;
                 let count = 0;
@@ -65,24 +67,24 @@ export class HighContentionAllocator {
                 // contention (and when the window advances), there is an additional
                 // subsequent risk of conflict for this transaction.
                 let candidate = Math.floor(Math.random() * window) + start;
-                let key = Buffer.concat([this.recent, encoders.tuple.pack([candidate])]);
+                let key = Buffer.concat([this.recent.prefix, encoders.tuple.pack([candidate])]);
 
                 // Cannot yield to event loop in this block {
-                var counterRangePromise = tx.snapshot().getRangeAllStartsWith(this.counters, { limit: 1, reverse: true });
-                var allocationPromise = tx.get(key);
-                tx.setOption(TransactionOptionCode.NextWriteNoWriteConflictRange);
-                tx.set(key, Buffer.of());
+                var counterRangePromise = this.counters.snapshotRange(ctx, [], { limit: 1, reverse: true });
+                var allocationPromise = this.recent.get(ctx, [candidate]);
+                getTransaction(ctx).rawTransaction(this.counters.db).setOption(TransactionOptionCode.NextWriteNoWriteConflictRange);
+                this.recent.set(ctx, [candidate], Buffer.of());
                 // }
 
                 let counterRange = await counterRangePromise;
-                var currentWindowStart = counterRange.length > 0 ? counterRange[0].slice(this.counters.length) : 0;
+                var currentWindowStart = counterRange.length > 0 ? counterRange[0].key.slice(this.counters.prefix.length) : 0;
                 if (currentWindowStart > start) {
                     break;
                 }
 
                 let res = await allocationPromise;
                 if (res === null) {
-                    tx.addWriteConflictKey(key);
+                    getTransaction(ctx).rawTransaction(this.counters.db).addWriteConflictRange(key, keyIncrement(key));
                     return candidate;
                 }
             }

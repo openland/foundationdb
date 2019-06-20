@@ -7,3 +7,4 @@ packages/foundationdb-random/lib
 packages/foundationdb-utils/lib
 packages/foundationdb-singleton/lib
 packages/foundationdb-migrations/lib
+packages/foundationdb-core/lib

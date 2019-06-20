@@ -1,19 +1,21 @@
-import * as fdb from 'foundationdb';
+import * as fdb from '@openland/foundationdb-core';
 import { Context } from '@openland/context';
 import { Database } from './../Database';
 import { Transaction } from './../Transaction';
 
 export abstract class BaseTransaction implements Transaction {
-    private static nextId = 1;
+    
     readonly id = BaseTransaction.nextId++;
+    db!: Database;
+
+    private static nextId = 1;
     abstract isReadOnly: boolean;
     abstract isCompleted: boolean;
     abstract isEphemeral: boolean;
     readonly userData: Map<string, any> = new Map();
-    protected db?: Database;
     protected rawTx?: fdb.Transaction;
 
-    rawTransaction(db: Database): fdb.Transaction<Buffer, Buffer> {
+    rawTransaction(db: Database): fdb.Transaction {
         if (this.db && this.db !== db) {
             throw Error('Unable to use two different connections in the same transaction');
         }

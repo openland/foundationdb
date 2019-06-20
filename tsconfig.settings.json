@@ -25,7 +25,8 @@
         "resolveJsonModule": true,
         "importHelpers": false,
         "composite": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "experimentalDecorators": true
     },
     "exclude": [
         "node_modules/**",

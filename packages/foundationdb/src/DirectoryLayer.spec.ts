@@ -1,6 +1,6 @@
-import { DirectoryLayer } from "./DirectoryLayer";
-import { Database } from "./Database";
-import { createNamedContext } from "@openland/context";
+import { DirectoryLayer } from './DirectoryLayer';
+import { Database } from './Database';
+import { createNamedContext } from '@openland/context';
 
 /**
  * Sample data from Go bindings:

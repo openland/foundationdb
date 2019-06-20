@@ -1,5 +1,5 @@
 import { TransactionContext } from './impl/TransactionContext';
-import { FDBError } from 'foundationdb';
+import { FDBError } from '@openland/foundationdb-core';
 import { Context } from '@openland/context';
 import { ReadWriteTransaction } from './impl/ReadWriteTransaction';
 

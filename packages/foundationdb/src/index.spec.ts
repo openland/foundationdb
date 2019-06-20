@@ -3,4 +3,4 @@ describe('index', () => {
     it('should import', () => {
         require('./index');
     });
-})
+});

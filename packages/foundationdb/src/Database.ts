@@ -2,9 +2,10 @@ import { Context, createNamedContext } from '@openland/context';
 import { Layer } from './Layer';
 import { DirectoryLayer } from './DirectoryLayer';
 import { Subspace } from './Subspace';
-import * as fdb from 'foundationdb';
+import * as fdb from '@openland/foundationdb-core';
 import { GlobalSubspace } from './impl/GlobalSubspace';
 import { randomNumbersString } from './utils';
+import { inTx } from './inTx';
 
 /**
  * Database is an entry point for working wiht FoundationDB.
@@ -20,7 +21,7 @@ export class Database {
      */
     static async open(args?: { layers: Layer[], clusterFile?: string }) {
         fdb.setAPIVersion(600);
-        let db: fdb.Database = fdb.openSync(args && args.clusterFile);
+        let db: fdb.Database = await fdb.open(args && args.clusterFile);
         let res = new Database(db);
         if (args && args.layers) {
             for (let l of args.layers) {
@@ -43,10 +44,11 @@ export class Database {
             throw Error('Trying to open test database in production mode');
         }
         let nm = args && args.name ? args.name : 'test-' + randomNumbersString(64);
-        let db: fdb.Database = fdb.openSync(args && args.clusterFile)
-            .at(nm);
-        await db.clearRange(Buffer.of());
-        let res = new Database(db);
+        let db: fdb.Database = await fdb.open(args && args.clusterFile);
+        let res = new Database(db, Buffer.from(nm, 'utf-8'));
+        await inTx(createNamedContext('test'), async (ctx) => {
+            res.allKeys.clearPrefixed(ctx, Buffer.of());
+        });
         if (args && args.layers) {
             for (let l of args.layers) {
                 res.register(l);
@@ -64,7 +66,7 @@ export class Database {
     /**
      * Subspace for all keys
      */
-    readonly allKeys: Subspace
+    readonly allKeys: Subspace;
 
     /**
      * Root directory layer
@@ -85,9 +87,13 @@ export class Database {
      * Constructor for client
      * @param db raw database object
      */
-    private constructor(db: fdb.Database) {
+    private constructor(db: fdb.Database, prefix?: Buffer) {
         this.rawDB = db;
-        this.allKeys = new GlobalSubspace(this);
+        let global: Subspace = new GlobalSubspace(this);
+        if (prefix) {
+            global = global.subspace(prefix);
+        }
+        this.allKeys = global;
         this.directories = new DirectoryLayer(this, this.allKeys.subspace(Buffer.of(0xfe)), this.allKeys);
     }
 
@@ -119,7 +125,7 @@ export class Database {
         if (this.started) {
             throw Error('Datanase already started!');
         }
-        let key = (layer as any).constructor
+        let key = (layer as any).constructor;
         if (this.layers.has(key)) {
             throw Error('Layer already registered');
         }

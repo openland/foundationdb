@@ -1,4 +1,4 @@
-import * as fdb from 'foundationdb';
+import * as fdb from '@openland/foundationdb-core';
 import { Database } from './Database';
 import { Context } from '@openland/context';
 
@@ -68,5 +68,5 @@ export interface Transaction {
      * Getting raw transaction object
      * @param db current database connnection
      */
-    rawTransaction(db: Database): fdb.Transaction<Buffer, Buffer>;
+    rawTransaction(db: Database): fdb.Transaction;
 }

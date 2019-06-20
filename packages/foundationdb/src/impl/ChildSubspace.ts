@@ -5,12 +5,12 @@ import { Database } from './../Database';
 import { Subspace, RangeOptions } from './../Subspace';
 import { getTransaction } from '../getTransaction';
 import { keyNext, keyIncrement } from '../utils';
-import { keySelector } from 'foundationdb';
 import { Watch } from '../Watch';
+import * as fdb from '@openland/foundationdb-core';
 
 export class ChildSubspace implements Subspace {
-    
-    private readonly db: Database;
+
+    readonly db: Database;
     readonly prefix: Buffer;
 
     constructor(db: Database, prefix: Buffer) {
@@ -21,7 +21,7 @@ export class ChildSubspace implements Subspace {
     withKeyEncoding<K2>(keyTf: Transformer<Buffer, K2>): Subspace<K2, Buffer> {
         return new TransformedSubspace<K2, Buffer, Buffer, Buffer>(this, keyTf, encoders.id<Buffer>());
     }
-    
+
     withValueEncoding<V2>(valueTf: Transformer<Buffer, V2>): Subspace<Buffer, V2> {
         return new TransformedSubspace<Buffer, V2, Buffer, Buffer>(this, encoders.id<Buffer>(), valueTf);
     }
@@ -35,8 +35,22 @@ export class ChildSubspace implements Subspace {
         return await tx.get(Buffer.concat([this.prefix, key]));
     }
 
+    async snapshotGet(ctx: Context, key: Buffer) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        return await tx.snapshot().get(Buffer.concat([this.prefix, key]));
+    }
+
     async range(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
         let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        return this.doRange(tx, key, opts);
+    }
+
+    async snapshotRange(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        return this.doRange(tx.snapshot(), key, opts);
+    }
+
+    private async doRange(tx: fdb.Transaction, key: Buffer, opts?: RangeOptions<Buffer>) {
         if (opts && opts.after) {
             let keyR = Buffer.concat([this.prefix, key]);
             let after = Buffer.concat([this.prefix, opts.after!]);
@@ -48,7 +62,7 @@ export class ChildSubspace implements Subspace {
                 reverse: opts && opts.reverse ? opts.reverse : undefined
             })).map((v) => ({ key: v[0].slice(this.prefix.length), value: v[1] }));
         } else {
-            return (await tx.getRangeAll(Buffer.concat([this.prefix, key]), undefined, {
+            return (await tx.getRangeAll(Buffer.concat([this.prefix, key]), keyIncrement(Buffer.concat([this.prefix, key])), {
                 limit: opts && opts.limit ? opts.limit! : undefined,
                 reverse: opts && opts.reverse ? opts.reverse : undefined
             })).map((v) => ({ key: v[0].slice(this.prefix.length), value: v[1] }));
@@ -63,6 +77,16 @@ export class ChildSubspace implements Subspace {
     clear(ctx: Context, key: Buffer) {
         let tx = getTransaction(ctx)!.rawTransaction(this.db);
         tx.clear(Buffer.concat([this.prefix, key]));
+    }
+
+    clearPrefixed(ctx: Context, key: Buffer) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        tx.clearRange(Buffer.concat([this.prefix, key]), keyIncrement(Buffer.concat([this.prefix, key])));
+    }
+
+    clearRange(ctx: Context, start: Buffer, end: Buffer) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        tx.clearRange(Buffer.concat([this.prefix, start]), Buffer.concat([this.prefix, end]));
     }
 
     add(ctx: Context, key: Buffer, value: Buffer) {
@@ -98,6 +122,6 @@ export class ChildSubspace implements Subspace {
         return {
             promise: w.promise as any as Promise<void>,
             cancel: () => w.cancel()
-        }
+        };
     }
 }

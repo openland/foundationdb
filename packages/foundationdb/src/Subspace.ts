@@ -1,3 +1,4 @@
+import { Database } from './Database';
 import { Context } from '@openland/context';
 import { Transformer } from './encoding';
 import { Watch } from './Watch';
@@ -35,6 +36,11 @@ export interface Subspace<K = Buffer, V = Buffer> {
     readonly prefix: Buffer;
 
     /**
+     * Active database connection
+     */
+    readonly db: Database;
+
+    /**
      * Returns subspace with different key encoding
      * @param keyTf key transformation function
      */
@@ -63,6 +69,18 @@ export interface Subspace<K = Buffer, V = Buffer> {
     get(ctx: Context, key: K): Promise<V | null>;
 
     /**
+     * Get returns the promise of the value associated with the specified key. The read is performed 
+     * asynchronously and does not block event loop.
+     * 
+     * Unlike `get` method does not creates read conflicts
+     * 
+     * @param ctx context
+     * @param key key
+     * @returns   value or null if not exist
+     */
+    snapshotGet(ctx: Context, key: K): Promise<V | null>;
+
+    /**
      * Returns the promise of values that prefixed by key in current subspace ordered by key values.
      * The read is performed asynchronously and does not block event loop.
      * 
@@ -71,6 +89,18 @@ export interface Subspace<K = Buffer, V = Buffer> {
      * @param opts optional range parameters
      */
     range(ctx: Context, key: K, opts?: RangeOptions<K>): Promise<{ key: K, value: V }[]>;
+
+    /**
+     * Returns the promise of values that prefixed by key in current subspace ordered by key values.
+     * The read is performed asynchronously and does not block event loop.
+     * 
+     * Unlike `range` method does not creates read conflicts
+     * 
+     * @param ctx  context
+     * @param key  key prefix
+     * @param opts optional range parameters
+     */
+    snapshotRange(ctx: Context, key: K, opts?: RangeOptions<K>): Promise<{ key: K, value: V }[]>;
 
     /**
      * Set associated the given key and value, overwriting any previous association with key. 
@@ -90,6 +120,21 @@ export interface Subspace<K = Buffer, V = Buffer> {
      * @param key key
      */
     clear(ctx: Context, key: K): void;
+
+    /**
+     * Clears all keys that is prefixed by key
+     * @param ctx context
+     * @param key key
+     */
+    clearPrefixed(ctx: Context, key: K): void;
+
+    /**
+     * Clears all keys that is prefixed by key
+     * @param ctx context
+     * @param start start key
+     * @param end end key
+     */
+    clearRange(ctx: Context, start: K, end: K): void;
 
     /**
      * Performs an addition of little-endian integers. If the existing value in the database is not present 

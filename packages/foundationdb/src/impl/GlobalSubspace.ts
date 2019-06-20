@@ -1,9 +1,8 @@
 import { Watch } from './../Watch';
-import { keySelector } from 'foundationdb';
 import { ChildSubspace } from './ChildSubspace';
 import { Context } from '@openland/context';
 import { Database } from './../Database';
-import { Subspace, RangeOptions } from "../Subspace";
+import { Subspace, RangeOptions } from '../Subspace';
 import { getTransaction } from '../getTransaction';
 import { encoders, Transformer } from '../encoding';
 import { TransformedSubspace } from './TransformedSubspace';
@@ -36,6 +35,11 @@ export class GlobalSubspace implements Subspace {
         let tx = getTransaction(ctx).rawTransaction(this.db);
         return await tx.get(key);
     }
+    
+    async snapshotGet(ctx: Context, key: Buffer) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        return await tx.snapshot().get(Buffer.concat([this.prefix, key]));
+    }
 
     async range(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
         let tx = getTransaction(ctx).rawTransaction(this.db);
@@ -49,7 +53,26 @@ export class GlobalSubspace implements Subspace {
                 reverse: opts && opts.reverse ? opts.reverse : undefined
             })).map((v) => ({ key: v[0], value: v[1] }));
         } else {
-            return (await tx.getRangeAll(key, undefined, {
+            return (await tx.getRangeAll(key, keyIncrement(key), {
+                limit: opts && opts.limit ? opts.limit! : undefined,
+                reverse: opts && opts.reverse ? opts.reverse : undefined
+            })).map((v) => ({ key: v[0], value: v[1] }));
+        }
+    }
+
+    async snapshotRange(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
+        let tx = getTransaction(ctx).rawTransaction(this.db).snapshot();
+        if (opts && opts.after) {
+            let after = opts.after!;
+            let reversed = (opts && opts.reverse) ? true : false;
+            let start = reversed ? keyNext(key) : keyIncrement(after);
+            let end = reversed ? after : keyIncrement(key);
+            return (await tx.getRangeAll(start, end, {
+                limit: opts && opts.limit ? opts.limit! : undefined,
+                reverse: opts && opts.reverse ? opts.reverse : undefined
+            })).map((v) => ({ key: v[0], value: v[1] }));
+        } else {
+            return (await tx.getRangeAll(key, keyIncrement(key), {
                 limit: opts && opts.limit ? opts.limit! : undefined,
                 reverse: opts && opts.reverse ? opts.reverse : undefined
             })).map((v) => ({ key: v[0], value: v[1] }));
@@ -64,6 +87,16 @@ export class GlobalSubspace implements Subspace {
     clear(ctx: Context, key: Buffer) {
         let tx = getTransaction(ctx).rawTransaction(this.db);
         tx.clear(key);
+    }
+
+    clearPrefixed(ctx: Context, key: Buffer) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        tx.clearRange(key, keyIncrement(key));
+    }
+
+    clearRange(ctx: Context, start: Buffer, end: Buffer) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        tx.clearRange(start, end);
     }
 
     add(ctx: Context, key: Buffer, value: Buffer) {
@@ -99,6 +132,6 @@ export class GlobalSubspace implements Subspace {
         return {
             promise: w.promise as any as Promise<void>,
             cancel: () => w.cancel()
-        }
+        };
     }
 }

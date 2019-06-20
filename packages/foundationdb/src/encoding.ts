@@ -1,4 +1,4 @@
-import { encoders as fencoders } from 'foundationdb';
+import * as tuple from './tuple/tuple';
 
 /**
  * Transformer of values
@@ -26,12 +26,13 @@ const jsonTransformer: Transformer<Buffer, any> = {
 };
 const tupleTransformer: Transformer<Buffer, Tuple[]> = {
     unpack(src: Buffer) {
-        return fencoders.tuple.unpack(src) as Tuple[];
+        return tuple.unpack(src) as Tuple[];
     },
     pack(src: Tuple[]) {
-        return fencoders.tuple.pack(src) as Buffer;
+        return tuple.pack(src) as Buffer;
     }
 };
+
 const int32LETransfromer: Transformer<Buffer, number> = {
     pack(src: number) {
         const b = Buffer.alloc(4);
@@ -41,7 +42,8 @@ const int32LETransfromer: Transformer<Buffer, number> = {
     unpack(buffer: Buffer) {
         return buffer.readInt32LE(0);
     }
-}
+};
+
 const int32BETransfromer: Transformer<Buffer, number> = {
     pack(src: number) {
         const b = Buffer.alloc(4);
@@ -51,7 +53,7 @@ const int32BETransfromer: Transformer<Buffer, number> = {
     unpack(buffer: Buffer) {
         return buffer.readInt32BE(0);
     }
-}
+};
 
 const booleanTransformer: Transformer<Buffer, boolean> = {
     unpack(src: Buffer) {

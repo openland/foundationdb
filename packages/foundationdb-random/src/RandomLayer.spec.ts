@@ -1,5 +1,5 @@
 import { RandomLayer } from './RandomLayer';
-import { Database } from "@openland/foundationdb";
+import { Database } from '@openland/foundationdb';
 import { createNamedContext } from '@openland/context';
 
 describe('RandomLayer', () => {
@@ -12,4 +12,4 @@ describe('RandomLayer', () => {
         }
         expect(ids.size).toBe(1000);
     });
-})
+});

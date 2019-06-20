@@ -9,4 +9,4 @@ describe('Directory', () => {
         let prefix2 = await (await db.directories.open(ctx, ['com.openalnd.layers'])).open(ctx, ['entity']);
         expect(prefix.prefix.equals(prefix2.prefix)).toBe(true);
     });
-})
+});
