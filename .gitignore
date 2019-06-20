@@ -6,3 +6,4 @@ packages/foundationdb-locks/lib
 packages/foundationdb-random/lib
 packages/foundationdb-utils/lib
 packages/foundationdb-singleton/lib
+packages/foundationdb-migrations/lib
