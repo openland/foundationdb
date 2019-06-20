@@ -17,7 +17,8 @@
     "x64"
   ],
   "files": [
-    "dist",
+    "lib",
+    "native",
     "prebuilds",
     "binding.gyp"
   ],
