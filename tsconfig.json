@@ -17,6 +17,9 @@
         },
         {
             "path": "./packages/foundationdb-locks"
+        },
+        {
+            "path": "./packages/foundationdb-random"
         }
     ]
 }

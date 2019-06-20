@@ -3,3 +3,4 @@ coverage
 website/build
 build
 packages/foundationdb-locks/lib
+packages/foundationdb-random/lib

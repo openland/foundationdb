@@ -1,5 +1,5 @@
 import { RandomLayer } from './RandomLayer';
-import { Database } from "../Database";
+import { Database } from "@openland/foundationdb";
 import { createNamedContext } from '@openland/context';
 
 describe('RandomLayer', () => {

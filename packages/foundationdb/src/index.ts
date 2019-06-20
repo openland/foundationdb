@@ -12,4 +12,3 @@ export { getTransaction } from './getTransaction';
 export { transactional } from './transactional';
 
 export { Layer, BaseLayer } from './Layer';
-export { RandomLayer } from './layers/RandomLayer';

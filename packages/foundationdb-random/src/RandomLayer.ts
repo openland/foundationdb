@@ -1,14 +1,14 @@
-import { Subspace } from '../Subspace';
+import { Subspace, BaseLayer, encoders, inTx, Tuple } from '@openland/foundationdb';
 import { Context, createNamedContext } from '@openland/context';
-import { BaseLayer } from '../Layer';
-import { inTx } from '../inTx';
-import { encoders, Tuple } from '../encoding';
 import uuid from 'uuid/v4';
-import { delay } from '../utils';
 import { RandomIDFactory } from './random/RandomIDFactory';
 
+async function delay(ms: number) {
+    return new Promise(resolve => { setTimeout(resolve, ms); });
+}
+
 export class RandomLayer extends BaseLayer {
-    
+
     readonly displayName: string = 'Random Layer';
 
     private readonly seed = uuid();
