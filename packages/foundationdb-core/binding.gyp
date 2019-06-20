@@ -3,14 +3,14 @@
     {
       'target_name': 'fdblib',
       'sources': [
-        'src/module.cpp',
-        'src/database.cpp',
-        'src/transaction.cpp',
-        'src/cluster.cpp',
-        'src/error.cpp',
-        'src/options.cpp',
-        'src/future.cpp',
-        'src/utils.cpp'
+        'native/module.cpp',
+        'native/database.cpp',
+        'native/transaction.cpp',
+        'native/cluster.cpp',
+        'native/error.cpp',
+        'native/options.cpp',
+        'native/future.cpp',
+        'native/utils.cpp'
       ],
       'include_dirs': [
         "<!(node -e \"require('nan')\")"
