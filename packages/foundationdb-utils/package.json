@@ -1,6 +1,6 @@
 {
-    "name": "@openland/foundationdb-locks",
-    "description": "FoundationDB distributed locks",
+    "name": "@openland/foundationdb-utils",
+    "description": "Utily classes for layer developers",
     "version": "2.1.0",
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",
@@ -10,7 +10,6 @@
     "gitHead": "c697113adf1cb4b345de8d545d09c6b3f002792b",
     "dependencies": {
         "@openland/foundationdb": "*",
-        "@openland/foundationdb-utils": "*",
         "@openland/context": "*",
         "@openland/log": "*",
         "@types/uuid": "^3.4.3",

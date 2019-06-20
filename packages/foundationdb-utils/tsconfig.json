@@ -10,9 +10,6 @@
   "references": [
     {
       "path": "../foundationdb"
-    },
-    {
-      "path": "../foundationdb-utils"
     }
   ]
 }

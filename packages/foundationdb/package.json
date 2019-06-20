@@ -4,7 +4,7 @@
     "version": "2.1.0",
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",
-    "repository": "https://github.com/openland/log",
+    "repository": "https://github.com/openland/foundationdb",
     "author": "Steve Kite <steve@openland.com>",
     "license": "MIT",
     "gitHead": "c697113adf1cb4b345de8d545d09c6b3f002792b",

@@ -1,17 +1,13 @@
+import { uniqueSeed, delay } from '@openland/foundationdb-utils';
 import { Subspace, BaseLayer, encoders, inTx, Tuple } from '@openland/foundationdb';
 import { Context, createNamedContext } from '@openland/context';
-import uuid from 'uuid/v4';
 import { RandomIDFactory } from './random/RandomIDFactory';
-
-async function delay(ms: number) {
-    return new Promise(resolve => { setTimeout(resolve, ms); });
-}
 
 export class RandomLayer extends BaseLayer {
 
     readonly displayName: string = 'Random Layer';
 
-    private readonly seed = uuid();
+    private readonly seed = uniqueSeed();
     private nodeIdKeyspace!: Subspace<Tuple[], any>;
     private isStopped = false;
     private randomFactory!: RandomIDFactory;

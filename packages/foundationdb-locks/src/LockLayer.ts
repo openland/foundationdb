@@ -1,6 +1,6 @@
 import { Context } from '@openland/context';
-import uuid from 'uuid/v4';
 import { BaseLayer, Subspace, Tuple, transactional, encoders, Database } from '@openland/foundationdb';
+import { uniqueSeed } from '@openland/foundationdb-utils';
 
 interface LockRecord {
     version: number;
@@ -80,11 +80,12 @@ export class LockLayer extends BaseLayer {
 }
 
 export class DistributedLock {
-    private readonly seed = uuid();
     readonly db: Database;
     readonly layer: LockLayer;
     readonly key: string;
     readonly version: number;
+
+    private readonly seed = uniqueSeed();
 
     constructor(key: string, db: Database, version: number = 0) {
         this.db = db;

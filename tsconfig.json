@@ -16,10 +16,16 @@
             "path": "./packages/foundationdb"
         },
         {
+            "path": "./packages/foundationdb-utils"
+        },
+        {
             "path": "./packages/foundationdb-locks"
         },
         {
             "path": "./packages/foundationdb-random"
+        },
+        {
+            "path": "./packages/foundationdb-singleton"
         }
     ]
 }

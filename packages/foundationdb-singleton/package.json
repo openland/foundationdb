@@ -1,6 +1,6 @@
 {
-    "name": "@openland/foundationdb-locks",
-    "description": "FoundationDB distributed locks",
+    "name": "@openland/foundationdb-singleton",
+    "description": "Singleton worker layer for FoundationDB",
     "version": "2.1.0",
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",

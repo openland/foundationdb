@@ -1,0 +1,1 @@
+export { SingletonWorkerLayer } from './SingletonWorkerLayer';
