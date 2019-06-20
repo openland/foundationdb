@@ -10,9 +10,8 @@ export function singletonWorker(config: { db: Database, name: string, version?: 
     let wasStarted = false;
     let layer = config.db.get(SingletonWorkerLayer);
     let ctx = createNamedContext('singleton-' + config.name);
-    let lock = new DistributedLock('worker_' + config.name, config.db, config.version);
     let timeout = 30000;
-    let refreshInterval = 15000;
+    let refreshInterval = 5000;
     let awaiter: (() => void) | undefined;
 
     let workLoop = foreverBreakable(async () => {
@@ -23,17 +22,18 @@ export function singletonWorker(config: { db: Database, name: string, version?: 
         let res = await (async () => {
 
             // Trying to acquire lock
+            let lock = new DistributedLock('worker_' + config.name, config.db, config.version);
             if (!(await lock.tryLock(ctx, timeout))) {
                 return false;
             }
 
             let locked = true;
 
-            // Update lock loop
+            // Refresh lock loop
             // tslint:disable-next-line:no-floating-promises
             (async () => {
                 while (locked) {
-                    if (!(await lock.tryLock(ctx, timeout))) {
+                    if (!(await lock.refresh(ctx, timeout))) {
                         locked = false;
                         break;
                     }
@@ -41,16 +41,21 @@ export function singletonWorker(config: { db: Database, name: string, version?: 
                 }
             })();
 
-            // Working
+            // Work loop
             while (locked && working) {
                 try {
                     await worker(ctx);
                 } catch (e) {
                     locked = false;
+                    await lock.releaseLock(ctx);
                     throw e;
                 }
                 await delay(100);
             }
+
+            // Release Lock
+            await lock.releaseLock(ctx);
+
             return true;
         })();
         if (!working) {
@@ -75,7 +80,6 @@ export function singletonWorker(config: { db: Database, name: string, version?: 
             awaiter = undefined;
         }
         await workLoop.stop();
-        await lock.releaseLock(sctx);
     };
 
     layer.registerWorker(shutdown);

@@ -1,2 +1,2 @@
-export { DistributedLock } from './LockLayer';
+export { DistributedLock } from './DistributedLock';
 export { LockLayer } from './LockLayer';

@@ -5,6 +5,8 @@ import { uniqueSeed } from '@openland/foundationdb-utils';
 interface LockRecord {
     version: number;
     minVersion: number;
+
+    index: number;
     seed: string;
     timeout: number;
 }
@@ -14,7 +16,7 @@ export class LockLayer extends BaseLayer {
     private locksSubspace!: Subspace<Tuple[], LockRecord>;
 
     @transactional
-    async tryLock(ctx: Context, key: string, seed: string, opts?: { version?: number, timeout?: number }) {
+    async tryLock(ctx: Context, key: string, seed: string, opts?: { version?: number, timeout?: number, refreshIndex?: number }): Promise<false | number> {
 
         let version = 0;
         if (opts && opts.version) {
@@ -27,22 +29,31 @@ export class LockLayer extends BaseLayer {
 
         let existing = await this.locksSubspace.get(ctx, [key]);
         let now = Date.now();
-        let currentTimeout = now + 30 * 1000;
+        let currentTimeout = now + timeout;
         if (existing !== null) {
             // If current version is less than current required minimum
             if (existing.minVersion > version) {
                 return false;
             }
 
+            // Fence token
+            if (opts && opts.refreshIndex && existing.index !== opts.refreshIndex) {
+                return false;
+            }
+
+            // Locking
             if (existing.seed === seed || existing.timeout < now) {
                 existing.seed = seed;
                 existing.timeout = currentTimeout;
                 existing.version = version;
                 existing.minVersion = version;
+                if (existing.seed !== seed) {
+                    existing.index++;
+                }
                 this.locksSubspace.set(ctx, [key], existing);
-                return true;
+                return existing.index;
             } else {
-                // Bump minumum version if needed
+                // Bump minumum version if needed (why?)
                 if (version > existing.minVersion!!) {
                     existing.minVersion = version;
                     this.locksSubspace.set(ctx, [key], existing);
@@ -50,8 +61,8 @@ export class LockLayer extends BaseLayer {
                 return false;
             }
         } else {
-            this.locksSubspace.set(ctx, [key], { version: version, minVersion: version, seed: seed, timeout: currentTimeout });
-            return true;
+            this.locksSubspace.set(ctx, [key], { version: version, minVersion: version, seed: seed, timeout: currentTimeout, index: 1 });
+            return 1;
         }
     }
 
@@ -76,29 +87,5 @@ export class LockLayer extends BaseLayer {
         this.locksSubspace = (await directory.createOrOpen(ctx, ['keys']))
             .withKeyEncoding(encoders.tuple)
             .withValueEncoding(encoders.json);
-    }
-}
-
-export class DistributedLock {
-    readonly db: Database;
-    readonly layer: LockLayer;
-    readonly key: string;
-    readonly version: number;
-
-    private readonly seed = uniqueSeed();
-
-    constructor(key: string, db: Database, version: number = 0) {
-        this.db = db;
-        this.key = key;
-        this.version = version;
-        this.layer = this.db.get(LockLayer);
-    }
-
-    async tryLock(ctx: Context, timeout: number = 30000) {
-        return await this.layer.tryLock(ctx, this.key, this.seed, { timeout, version: this.version });
-    }
-
-    async releaseLock(ctx: Context) {
-        return await this.layer.releaseLock(ctx, this.key, this.seed);
     }
 }
