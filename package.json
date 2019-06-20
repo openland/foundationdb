@@ -8,8 +8,9 @@
   "scripts": {
     "build": "yarn tsc --build",
     "test": "yarn jest",
+    "clean": "yarn tsc --build --clean",
     "coverage": "yarn jest --coverage",
-    "release": "yarn build && yarn test && yarn lerna publish --force-publish"
+    "release": "yarn clean && yarn build && yarn test && yarn lerna publish --force-publish"
   },
   "devDependencies": {
     "@types/jest": "^24.0.13",

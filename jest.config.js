@@ -25,6 +25,6 @@ module.exports = {
         'node_modules'
     ],
     moduleNameMapper: {
-        '^@openland/foundationdb$': '<rootDir>/packages/foundationdb/src',
+        '^@openland/foundationdb$': '<rootDir>/packages/foundationdb/src'
     }
 };

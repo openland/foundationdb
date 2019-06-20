@@ -30,6 +30,7 @@
     "exclude": [
         "node_modules/**",
         "packages/*/lib/**",
-        "packages/*/node_modules/**"
+        "packages/*/node_modules/**",
+        "**/*.spec.ts"
     ]
 }

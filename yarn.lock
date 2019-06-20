@@ -839,6 +839,15 @@
   resolved "https://registry.yarnpkg.com/@openland/context/-/context-0.4.0.tgz#3d12934d9726b5743f9f40521e3d62e81a1f8d0c"
   integrity sha512-U6mwT5IhpA/o4lDi12KBDPm1bGdo9H1eZcQyVHghb6MYRLzeOmPDHlyaS3lMuwTorT6dYbPt2vzZBK3F++TY7g==
 
+"@openland/foundationdb@file:packages/foundationdb":
+  version "2.1.0"
+  dependencies:
+    "@openland/context" "*"
+    "@openland/log" "*"
+    "@types/uuid" "^3.4.3"
+    foundationdb "0.10.2"
+    uuid "^3.2.1"
+
 "@openland/log@*":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@openland/log/-/log-1.1.1.tgz#0fda381e08748f03f9ec4e4316e672f44f40d45d"
