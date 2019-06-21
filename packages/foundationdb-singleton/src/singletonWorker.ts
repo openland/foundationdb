@@ -50,7 +50,7 @@ export function singletonWorker(config: { db: Database, name: string, version?: 
                     await lock.releaseLock(ctx);
                     throw e;
                 }
-                await delay(100);
+                await delay(config.delay || 1000);
             }
 
             // Release Lock
