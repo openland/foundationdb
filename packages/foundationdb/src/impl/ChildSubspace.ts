@@ -6,7 +6,7 @@ import { Subspace, RangeOptions } from './../Subspace';
 import { getTransaction } from '../getTransaction';
 import { keyNext, keyIncrement } from '../utils';
 import { Watch } from '../Watch';
-import * as fdb from '@openland/foundationdb-core';
+import * as fdb from 'foundationdb';
 
 export class ChildSubspace implements Subspace {
 

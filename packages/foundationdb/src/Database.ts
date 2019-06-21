@@ -2,7 +2,7 @@ import { Context, createNamedContext } from '@openland/context';
 import { Layer } from './Layer';
 import { DirectoryLayer } from './DirectoryLayer';
 import { Subspace } from './Subspace';
-import * as fdb from '@openland/foundationdb-core';
+import * as fdb from 'foundationdb';
 import { GlobalSubspace } from './impl/GlobalSubspace';
 import { randomNumbersString } from './utils';
 import { inTx } from './inTx';

@@ -1,4 +1,4 @@
-import * as fdb from '@openland/foundationdb-core';
+import * as fdb from 'foundationdb';
 import { Context } from '@openland/context';
 import { Database } from './../Database';
 import { Transaction } from './../Transaction';

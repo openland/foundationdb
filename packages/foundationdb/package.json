@@ -10,9 +10,9 @@
     "gitHead": "c697113adf1cb4b345de8d545d09c6b3f002792b",
     "dependencies": {
         "@openland/context": "*",
-        "@openland/foundationdb-core": "^3.0.4",
         "@openland/log": "*",
         "@types/uuid": "^3.4.3",
+        "foundationdb": "0.10.2",
         "uuid": "^3.2.1"
     }
 }

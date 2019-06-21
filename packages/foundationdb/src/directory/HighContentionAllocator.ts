@@ -1,6 +1,6 @@
 import { Subspace } from './../Subspace';
 import { Context } from '@openland/context';
-import { TransactionOptionCode } from '@openland/foundationdb-core';
+import { TransactionOptionCode } from 'foundationdb';
 import { encoders, Tuple } from '../encoding';
 import { getTransaction } from '../getTransaction';
 import { keyIncrement } from '../utils';

@@ -25,6 +25,7 @@ module.exports = {
         'node_modules'
     ],
     moduleNameMapper: {
+        '^foundationdb$': '<rootDir>/node_modules/foundationdb',
         '^@openland/foundationdb$': '<rootDir>/packages/foundationdb/src',
         '^@openland/foundationdb-locks$': '<rootDir>/packages/foundationdb-locks/src',
         '^@openland/foundationdb-random$': '<rootDir>/packages/foundationdb-random/src',

@@ -10,7 +10,8 @@
     "test": "yarn jest",
     "clean": "yarn tsc --build --clean",
     "coverage": "yarn jest --coverage",
-    "release": "yarn clean && yarn build && yarn test && yarn lerna publish --force-publish"
+    "release": "yarn clean && yarn build && yarn test && yarn lerna publish --force-publish",
+    "prepare": "patch-package"
   },
   "devDependencies": {
     "@types/jest": "^24.0.13",
@@ -25,6 +26,8 @@
     "@openland/context": "*",
     "@openland/log": "*",
     "@types/node": "^12.0.7",
+    "foundationdb": "0.10.2",
+    "patch-package": "^6.1.2",
     "uuid": "^3.2.1"
   }
 }
