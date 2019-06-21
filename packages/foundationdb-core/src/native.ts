@@ -60,6 +60,7 @@ export interface NativeDatabase {
 
 export interface NativeCluster {
   openDatabase(dbName: 'DB'): Promise<NativeDatabase>;
+  openDatabaseSync(dbName: 'DB'): NativeDatabase;
   close(): void;
 }
 
@@ -77,6 +78,7 @@ export interface NativeModule {
   stopNetwork(): void;
 
   createCluster(filename?: string): Promise<NativeCluster>;
+  createClusterSync(filename?: string): NativeCluster;
 
   setNetworkOption(code: number, param: string | number | Buffer | null): void;
 

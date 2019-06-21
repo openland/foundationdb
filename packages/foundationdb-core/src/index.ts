@@ -58,7 +58,7 @@ export {
 
 const wrapCluster = (cluster: fdb.NativeCluster) => ({
   async openDatabase(dbName: 'DB' = 'DB', opts?: DatabaseOptions) {
-    const db = createDatabase(await cluster.openDatabase(dbName));
+    const db = createDatabase(cluster.openDatabaseSync(dbName));
     if (opts) {
       db.setNativeOptions(opts);
     }
@@ -67,9 +67,10 @@ const wrapCluster = (cluster: fdb.NativeCluster) => ({
   close() { cluster.close(); }
 });
 
-export const createCluster = (clusterFile?: string) => {
+export const createCluster = async (clusterFile?: string) => {
   init();
-  return nativeMod.createCluster(clusterFile).then(c => wrapCluster(c));
+  let c = nativeMod.createClusterSync(clusterFile);
+  return wrapCluster(c);
 };
 
 // Can only be called before open() or openSync().
