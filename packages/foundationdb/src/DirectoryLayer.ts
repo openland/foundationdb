@@ -156,7 +156,7 @@ export class DirectoryLayer {
         // Parent directory
         let parentPrefix = this.nodeSS.prefix;
         if (path.length > 1) {
-            parentPrefix = (await this.doCreateOrOpen(ctx, path.slice(0, path.length - 1), null, null, allowCreate, allowOpen)).prefix;
+            parentPrefix = (await this.doCreateOrOpen(ctx, path.slice(0, path.length - 1), null, null, true, true)).prefix;
         }
         let parent = this.nodeSS.subspace([parentPrefix]);
 
