@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.settings.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "lib",
+    "experimentalDecorators": true,
+    "esModuleInterop": true
+  },
+  "references": [
+    {
+      "path": "../foundationdb"
+    },
+    {
+      "path": "../foundationdb-utils"
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import { createLogger } from '@openland/log';
 import { Context, createNamedContext } from '@openland/context';
 import { Layer } from './Layer';
 import { DirectoryLayer } from './DirectoryLayer';
@@ -6,6 +7,8 @@ import * as fdb from 'foundationdb';
 import { GlobalSubspace } from './impl/GlobalSubspace';
 import { randomNumbersString } from './utils';
 import { inTx } from './inTx';
+
+const logger = createLogger('database');
 
 /**
  * Database is an entry point for working wiht FoundationDB.
@@ -115,12 +118,19 @@ export class Database {
      * @param ctx context
      */
     async close(ctx: Context) {
-        for (let l of this.layers.values()) {
-            await l.willStop(ctx);
+        logger.log(ctx, 'Stopping database...');
+        if (this.layers.size > 0) {
+            for (let l of this.layers.values()) {
+                logger.log(ctx, 'Prepare to stop layer: ' + l.displayName);
+                await l.willStop(ctx);
+            }
         }
         this.rawDB.close();
-        for (let l of this.layers.values()) {
-            await l.didStop(ctx);
+        if (this.layers.size > 0) {
+            for (let l of this.layers.values()) {
+                logger.log(ctx, 'Stopping layer: ' + l.displayName);
+                await l.didStop(ctx);
+            }
         }
     }
 
@@ -149,11 +159,18 @@ export class Database {
             throw Error('Datanase already started!');
         }
         this.started = true;
-        for (let l of this.layers.values()) {
-            await l.willStart(ctx);
+        if (this.layers.size > 0) {
+            logger.log(ctx, 'Initing database...');
+            for (let l of this.layers.values()) {
+                logger.log(ctx, 'Initing layer: ' + l.displayName);
+                await l.willStart(ctx);
+            }
+            logger.log(ctx, 'Starting database...');
+            for (let l of this.layers.values()) {
+                logger.log(ctx, 'Starting layer: ' + l.displayName);
+                await l.didStart(ctx);
+            }
         }
-        for (let l of this.layers.values()) {
-            await l.didStart(ctx);
-        }
+        logger.log(ctx, 'Database started');
     }
 }

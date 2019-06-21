@@ -868,6 +868,13 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.0.8.tgz#551466be11b2adc3f3d47156758f610bd9f6b1d8"
   integrity sha512-b8bbUOTwzIY3V5vDTY1fIJ+ePKDUBqt2hC2woVGotdQQhG/2Sh62HOKHrT7ab+VerXAcPyAiTEipPu/FsreUtg==
 
+"@types/redis@^2.8.6":
+  version "2.8.13"
+  resolved "https://registry.yarnpkg.com/@types/redis/-/redis-2.8.13.tgz#fdd76d9a8b7c36ff24d8506a94ef2a890c87f498"
+  integrity sha512-p86cm5P6DMotUqCS6odQRz0JJwc5QXZw9eyH0ALVIqmq12yqtex5ighWyGFHKxak9vaA/GF/Ilu0KZ0MuXXUbg==
+  dependencies:
+    "@types/node" "*"
+
 "@types/uuid@^3.4.3":
   version "3.4.4"
   resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-3.4.4.tgz#7af69360fa65ef0decb41fd150bf4ca5c0cefdf5"
@@ -2253,6 +2260,11 @@ dot-prop@^4.1.0, dot-prop@^4.2.0:
   dependencies:
     is-obj "^1.0.0"
 
+double-ended-queue@^2.1.0-0:
+  version "2.1.0-0"
+  resolved "https://registry.yarnpkg.com/double-ended-queue/-/double-ended-queue-2.1.0-0.tgz#103d3527fd31528f40188130c841efdd78264e5c"
+  integrity sha1-ED01J/0xUo9AGIEwyEHv3XgmTlw=
+
 duplexer2@~0.0.2:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/duplexer2/-/duplexer2-0.0.2.tgz#c614dcf67e2fb14995a91711e5a617e8a60a31db"
@@ -3042,6 +3054,14 @@ handlebars@^4.0.3, handlebars@^4.1.0:
     source-map "^0.6.1"
   optionalDependencies:
     uglify-js "^3.1.4"
+
+handy-redis@^1.5.5:
+  version "1.5.5"
+  resolved "https://registry.yarnpkg.com/handy-redis/-/handy-redis-1.5.5.tgz#c6b8c2f69e95590ac1f341ccec7c6eabd7c11323"
+  integrity sha512-yi4d9G7isZ5CYlPgT7UqOXjHONWPyJWFnfhS1yG6HBsfiKWFvRsf8XU3XgruyyyelwIap+a+1MdMchyfmxC2Bg==
+  dependencies:
+    "@types/redis" "^2.8.6"
+    redis "^2.8.0"
 
 har-schema@^2.0.0:
   version "2.0.0"
@@ -5778,6 +5798,25 @@ redent@^2.0.0:
   dependencies:
     indent-string "^3.0.0"
     strip-indent "^2.0.0"
+
+redis-commands@^1.2.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/redis-commands/-/redis-commands-1.5.0.tgz#80d2e20698fe688f227127ff9e5164a7dd17e785"
+  integrity sha512-6KxamqpZ468MeQC3bkWmCB1fp56XL64D4Kf0zJSwDZbVLLm7KFkoIcHrgRvQ+sk8dnhySs7+yBg94yIkAK7aJg==
+
+redis-parser@^2.6.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/redis-parser/-/redis-parser-2.6.0.tgz#52ed09dacac108f1a631c07e9b69941e7a19504b"
+  integrity sha1-Uu0J2srBCPGmMcB+m2mUHnoZUEs=
+
+redis@^2.8.0:
+  version "2.8.0"
+  resolved "https://registry.yarnpkg.com/redis/-/redis-2.8.0.tgz#202288e3f58c49f6079d97af7a10e1303ae14b02"
+  integrity sha512-M1OkonEQwtRmZv4tEWF2VgpG0JWJ8Fv1PhlgT5+B+uNq2cA3Rt1Yt/ryoR+vQNOQcIEgdCdfH0jr3bDpihAw1A==
+  dependencies:
+    double-ended-queue "^2.1.0-0"
+    redis-commands "^1.2.0"
+    redis-parser "^2.6.0"
 
 regenerator-runtime@^0.11.0:
   version "0.11.1"

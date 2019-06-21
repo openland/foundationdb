@@ -32,6 +32,12 @@
         },
         {
             "path": "./packages/foundationdb-migrations"
+        },
+        {
+            "path": "./packages/foundationdb-bus"
+        },
+        {
+            "path": "./packages/foundationdb-bus-redis"
         }
     ]
 }
