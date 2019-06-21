@@ -112,9 +112,16 @@ export class Database {
 
     /**
      * Closing database
+     * @param ctx context
      */
-    close() {
+    async close(ctx: Context) {
+        for (let l of this.layers.values()) {
+            await l.willStop(ctx);
+        }
         this.rawDB.close();
+        for (let l of this.layers.values()) {
+            await l.didStop(ctx);
+        }
     }
 
     /**
