@@ -37,10 +37,16 @@ Until this is fixed, use FDB API version ${MAX_VERSION}.
 `);
     }
 
-    if (headerVersion == null) {
-      native.setAPIVersion(version);
-    } else {
-      native.setAPIVersionImpl(version, headerVersion);
+    try {
+      if (headerVersion == null) {
+        native.setAPIVersion(version);
+      } else {
+        native.setAPIVersionImpl(version, headerVersion);
+      }
+    } catch (e) {
+      if (!e || e.message !== 'API version may be set only once') {
+        throw e;
+      }
     }
 
     apiVersion = version;
