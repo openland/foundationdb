@@ -76,4 +76,17 @@ describe('Directory', () => {
         await db.directories.create(ctx, ['test', 'test2']);
         await db.directories.create(ctx, ['test2', 'test2']);
     });
+
+    it('should be able to move directories', async () => {
+        let ctx = createNamedContext('test');
+        let db = await Database.openTest();
+        let t1 = await db.directories.create(ctx, ['test']);
+        await db.directories.move(ctx, ['test'], ['test2']);
+        let t2 = await db.directories.open(ctx, ['test2']);
+        expect(t1.prefix.equals(t2.prefix)).toBe(true);
+        expect(await db.directories.exists(ctx, ['test2'])).toBe(true);
+        expect(await db.directories.exists(ctx, ['test'])).toBe(false);
+        let t3 = await db.directories.create(ctx, ['test']);
+        expect(t1.prefix.equals(t3.prefix)).toBe(false);
+    });
 });

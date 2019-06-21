@@ -95,6 +95,43 @@ export class DirectoryLayer {
     }
 
     @transactional
+    async move(ctx: Context, oldPath: string[], newPath: string[]) {
+        await this.checkVersion(ctx, false);
+        let sliceEnd = oldPath.length;
+        if (sliceEnd > newPath.length) {
+            sliceEnd = newPath.length;
+        }
+        if (JSON.stringify(oldPath) === JSON.stringify(newPath.slice(0, sliceEnd))) {
+            throw Error('the destination directory cannot be a subdirectory of the source directory');
+        }
+
+        let oldNode = await this.find(ctx, oldPath);
+        if (!oldNode.exists) {
+            throw Error('the source directory does not exist');
+        }
+        // TODO: Implement partitions
+        if (oldNode.layer.equals(partition)) {
+            throw Error('partitions are not supported');
+        }
+
+        let newNode = await this.find(ctx, newPath);
+        if (newNode.exists) {
+            throw Error('the destination directory already exists. Remove it first');
+        }
+
+        let parentNode = await this.find(ctx, newPath.slice(0, newPath.length - 1));
+        if (!parentNode.exists) {
+            throw Error('the parent of the destination directory does not exist. Create it first');
+        }
+
+        let prefix = this.prefixFromNode(oldNode);
+        parentNode.subspace.set(ctx, [SUBDIR, newPath[newPath.length - 1]], prefix);
+
+        let oldParent = await this.find(ctx, oldPath.slice(0, oldPath.length - 1));
+        oldParent.subspace.clear(ctx, [SUBDIR, oldPath[oldPath.length - 1]]);
+    }
+
+    @transactional
     private async doCreateOrOpen(ctx: Context, path: string[], layer: Buffer | null, prefix: Buffer | null, allowCreate: boolean, allowOpen: boolean) {
         if (path.length === 0) {
             throw Error('Path can\'t be empty');
