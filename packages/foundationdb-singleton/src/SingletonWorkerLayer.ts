@@ -8,4 +8,10 @@ export class SingletonWorkerLayer extends BaseLayer {
     registerWorker(shutdown: (ctx: Context) => void) {
         this.workers.push(shutdown);
     }
+
+    async willStop(ctx: Context) {
+        for (let w of this.workers) {
+            await w(ctx);
+        }
+    }
 }

@@ -73,6 +73,12 @@ export class RandomLayer extends BaseLayer {
                     }
                 }
             }
+            await inTx(rootCtx, async (ctx) => {
+                let existing = await this.nodeIdKeyspace.get(ctx, [nodeId]);
+                if (existing && (existing.seed === this.seed)) {
+                    this.nodeIdKeyspace.set(ctx, [nodeId], { timeout: 0, seed: this.seed });
+                }
+            });
         })();
     }
 
