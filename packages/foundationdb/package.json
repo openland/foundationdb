@@ -1,7 +1,7 @@
 {
     "name": "@openland/foundationdb",
     "description": "NodeJS FoundationDB client",
-    "version": "3.2.1",
+    "version": "3.2.2",
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",
     "repository": "https://github.com/openland/foundationdb",
