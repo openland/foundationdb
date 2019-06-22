@@ -8,6 +8,9 @@
     "author": "Steve Kite <steve@openland.com>",
     "license": "MIT",
     "gitHead": "8ec0134f55301034ec512aedb7c7c30b9a993235",
+    "publishConfig": {
+        "access": "public"
+    },
     "dependencies": {
         "@openland/context": "*",
         "@openland/foundationdb": "^3.2.1",

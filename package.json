@@ -5,6 +5,9 @@
       "packages/*"
     ]
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "yarn tsc --build",
     "test": "yarn jest",
