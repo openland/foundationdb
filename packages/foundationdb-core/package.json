@@ -1,6 +1,6 @@
 {
   "name": "@openland/foundationdb-core",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "Node.js bindings for the FoundationDB database",
   "keywords": [
     "foundationdb",
@@ -44,5 +44,6 @@
   "engines": {
     "node": ">=8.0.0"
   },
-  "gypfile": true
+  "gypfile": true,
+  "gitHead": "8ec0134f55301034ec512aedb7c7c30b9a993235"
 }
