@@ -84,6 +84,11 @@ export class GlobalSubspace implements Subspace {
         tx.set(key, value);
     }
 
+    setVersionstampedKey(ctx: Context, key: Buffer, value: Buffer, suffix?: Buffer) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        tx.setVersionstampSuffixedKey(key, value, suffix);
+    }
+
     clear(ctx: Context, key: Buffer) {
         let tx = getTransaction(ctx).rawTransaction(this.db);
         tx.clear(key);

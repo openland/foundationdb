@@ -10,3 +10,4 @@ packages/foundationdb-migrations/lib
 packages/foundationdb-core/lib
 packages/foundationdb-bus-redis/lib
 packages/foundationdb-bus/lib
+packages/foundationdb-events/lib

@@ -38,6 +38,9 @@
         },
         {
             "path": "./packages/foundationdb-bus-redis"
+        },
+        {
+            "path": "./packages/foundationdb-events"
         }
     ]
 }
