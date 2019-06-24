@@ -7,6 +7,12 @@ export function generateAtomicsHeader(schema: SchemaModel, builder: StringBuilde
     builder.append(`import { AtomicIntegerFactory, AtomicBooleanFactory } from '@openland/foundationdb-entity';`);
 }
 
+export function generateAtomicsStore(schema: SchemaModel, builder: StringBuilder) {
+    for (let atomic of schema.atomics) {
+        builder.append('readonly ' + atomic.name + ': ' + atomic.name + 'Factory;');
+    }
+}
+
 export function generateAtomics(schema: SchemaModel, builder: StringBuilder) {
     for (let atomic of schema.atomics) {
         let entityKey = Case.camelCase(atomic.name);
@@ -27,16 +33,16 @@ export function generateAtomics(schema: SchemaModel, builder: StringBuilder) {
 
         // Constructor
         builder.append();
-        builder.append(`static async create(store: EntityStore) {`);
+        builder.append(`static async open(storage: EntityStorage) {`);
         builder.addIndent();
-        builder.append(`let directory = await store.resolveAtomicDirectory('${entityKey}');`);
-        builder.append(`return new ${entityClass}Factory(store, directory);`);
+        builder.append(`let directory = await storage.resolveAtomicDirectory('${entityKey}');`);
+        builder.append(`return new ${entityClass}Factory(storage, directory);`);
         builder.removeIndent();
         builder.append(`}`);
         builder.append();
-        builder.append(`private constructor(store: EntityStore, subspace: Subspace) {`);
+        builder.append(`private constructor(storage: EntityStorage, subspace: Subspace) {`);
         builder.addIndent();
-        builder.append('super(store, subspace);');
+        builder.append('super(storage, subspace);');
         builder.removeIndent();
         builder.append(`}`);
 

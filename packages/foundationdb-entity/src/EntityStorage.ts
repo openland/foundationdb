@@ -1,7 +1,7 @@
 import { createNamedContext } from '@openland/context';
 import { Database, inTx } from '@openland/foundationdb';
 
-export class EntityStore {
+export class EntityStorage {
     readonly db: Database;
     readonly storeId: string;
 

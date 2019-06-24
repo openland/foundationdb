@@ -9,6 +9,6 @@ export function generateHeader(schema: SchemaModel, builder: StringBuilder) {
     builder.append(`// @ts-ignore`);
     builder.append(`import { Subspace } from '@openland/foundationdb';`);
     builder.append(`// @ts-ignore`);
-    builder.append(`import { EntityStore } from '@openland/foundationdb-entity';`);
+    builder.append(`import { EntityStorage } from '@openland/foundationdb-entity';`);
     generateAtomicsHeader(schema, builder);
 }

@@ -1,5 +1,5 @@
 import './atomic.schema'; // For 100% coverage
-import { EntityStore } from '@openland/foundationdb-entity/src/EntityStore';
+import { EntityStorage } from '@openland/foundationdb-entity';
 import { createNamedContext } from '@openland/context';
 import { SimpleAtomicIntegerFactory, SimpleAtomicBooleanFactory } from './atomic.repo';
 import { Database, inTx } from '@openland/foundationdb';
@@ -8,15 +8,15 @@ describe('AtomicInteger', () => {
     it('should default to zero', async () => {
         let testCtx = createNamedContext('test');
         let db = await Database.openTest();
-        let store = new EntityStore(db);
-        let factory = await SimpleAtomicIntegerFactory.create(store);
+        let store = new EntityStorage(db);
+        let factory = await SimpleAtomicIntegerFactory.open(store);
         expect(await factory.get(testCtx, '1')).toBe(0);
     });
     it('should set and get', async () => {
         let testCtx = createNamedContext('test');
         let db = await Database.openTest();
-        let store = new EntityStore(db);
-        let factory = await SimpleAtomicIntegerFactory.create(store);
+        let store = new EntityStorage(db);
+        let factory = await SimpleAtomicIntegerFactory.open(store);
         await inTx(testCtx, async (ctx) => {
             factory.set(ctx, 'some', 1339);
         });
@@ -31,8 +31,8 @@ describe('AtomicInteger', () => {
     it('should increment and decrement', async () => {
         let testCtx = createNamedContext('test');
         let db = await Database.openTest();
-        let store = new EntityStore(db);
-        let factory = await SimpleAtomicIntegerFactory.create(store);
+        let store = new EntityStorage(db);
+        let factory = await SimpleAtomicIntegerFactory.open(store);
 
         await inTx(testCtx, async (ctx) => {
             factory.set(ctx, 'some-1', 1339);
@@ -81,8 +81,8 @@ describe('AtomicBoolean', () => {
     it('should set and get', async () => {
         let testCtx = createNamedContext('test');
         let db = await Database.openTest();
-        let store = new EntityStore(db);
-        let factory = await SimpleAtomicBooleanFactory.create(store);
+        let store = new EntityStorage(db);
+        let factory = await SimpleAtomicBooleanFactory.open(store);
 
         let res = await factory.get(testCtx, 'some-1');
         expect(res).toEqual(false);
@@ -104,8 +104,8 @@ describe('AtomicBoolean', () => {
     it('should invert', async () => {
         let testCtx = createNamedContext('test');
         let db = await Database.openTest();
-        let store = new EntityStore(db);
-        let factory = await SimpleAtomicBooleanFactory.create(store);
+        let store = new EntityStorage(db);
+        let factory = await SimpleAtomicBooleanFactory.open(store);
 
         let res = await factory.get(testCtx, 'some-1');
         expect(res).toEqual(false);

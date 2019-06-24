@@ -4,19 +4,19 @@ import { Context } from '@openland/context';
 // @ts-ignore
 import { Subspace } from '@openland/foundationdb';
 // @ts-ignore
-import { EntityStore } from '@openland/foundationdb-entity';
+import { EntityStorage } from '@openland/foundationdb-entity';
 // @ts-ignore
 import { AtomicIntegerFactory, AtomicBooleanFactory } from '@openland/foundationdb-entity';
 
 export class SimpleAtomicBooleanFactory extends AtomicBooleanFactory {
 
-    static async create(store: EntityStore) {
-        let directory = await store.resolveAtomicDirectory('simpleAtomicBoolean');
-        return new SimpleAtomicBooleanFactory(store, directory);
+    static async open(storage: EntityStorage) {
+        let directory = await storage.resolveAtomicDirectory('simpleAtomicBoolean');
+        return new SimpleAtomicBooleanFactory(storage, directory);
     }
 
-    private constructor(store: EntityStore, subspace: Subspace) {
-        super(store, subspace);
+    private constructor(storage: EntityStorage, subspace: Subspace) {
+        super(storage, subspace);
     }
 
     byId(key: string) {
@@ -38,13 +38,13 @@ export class SimpleAtomicBooleanFactory extends AtomicBooleanFactory {
 
 export class SimpleAtomicIntegerFactory extends AtomicIntegerFactory {
 
-    static async create(store: EntityStore) {
-        let directory = await store.resolveAtomicDirectory('simpleAtomicInteger');
-        return new SimpleAtomicIntegerFactory(store, directory);
+    static async open(storage: EntityStorage) {
+        let directory = await storage.resolveAtomicDirectory('simpleAtomicInteger');
+        return new SimpleAtomicIntegerFactory(storage, directory);
     }
 
-    private constructor(store: EntityStore, subspace: Subspace) {
-        super(store, subspace);
+    private constructor(storage: EntityStorage, subspace: Subspace) {
+        super(storage, subspace);
     }
 
     byId(key: string) {
@@ -70,4 +70,20 @@ export class SimpleAtomicIntegerFactory extends AtomicIntegerFactory {
     decrement(ctx: Context, key: string) {
         return this._decrement(ctx, [key]);
     }
+}
+
+export interface Store {
+    readonly SimpleAtomicBoolean: SimpleAtomicBooleanFactory;
+    readonly SimpleAtomicInteger: SimpleAtomicIntegerFactory;
+}
+
+export async function openStore(storage: EntityStorage): Promise<Store> {
+    let SimpleAtomicBooleanPromise = SimpleAtomicBooleanFactory.open(storage);
+    let SimpleAtomicIntegerPromise = SimpleAtomicIntegerFactory.open(storage);
+    let SimpleAtomicBoolean = await SimpleAtomicBooleanPromise;
+    let SimpleAtomicInteger = await SimpleAtomicIntegerPromise;
+    return {
+        SimpleAtomicBoolean,
+        SimpleAtomicInteger,
+    };
 }

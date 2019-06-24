@@ -1,15 +1,15 @@
 import { Context } from '@openland/context';
 import { AtomicInteger } from './AtomicInteger';
 import { Tuple, Subspace, encoders } from '@openland/foundationdb';
-import { EntityStore } from './EntityStore';
+import { EntityStorage } from './EntityStorage';
 
 export abstract class AtomicIntegerFactory {
 
-    readonly store: EntityStore;
+    readonly storage: EntityStorage;
     readonly directory: Subspace;
 
-    protected constructor(store: EntityStore, subspace: Subspace) {
-        this.store = store;
+    protected constructor(storage: EntityStorage, subspace: Subspace) {
+        this.storage = storage;
         this.directory = subspace;
     }
 
