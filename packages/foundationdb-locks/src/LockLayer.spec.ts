@@ -25,7 +25,7 @@ describe('LockLayer', () => {
         let res = await lock1.tryLock(ctx, 10);
         expect(res).toBe(true);
         await delay(50);
-        res = await lock2.tryLock(ctx, 100);
+        res = await lock2.tryLock(ctx, 1000);
         expect(res).toBe(true);
         res = await lock1.tryLock(ctx);
         expect(res).toBe(false);
