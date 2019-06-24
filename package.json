@@ -9,7 +9,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "yarn compile && yarn tsc --build",
+    "build": "yarn tsc --build && yarn compile && yarn tsc --build",
     "test": "yarn jest",
     "clean": "yarn tsc --build --clean",
     "compile": "yarn ts-node ./packages/foundationdb-compiler/src/main.ts ./packages/foundationdb-entity-specs/src/atomic.schema.ts ./packages/foundationdb-entity-specs/src/atomic.repo.ts",
