@@ -30,6 +30,8 @@ module.exports = {
         '^@openland/foundationdb-locks$': '<rootDir>/packages/foundationdb-locks/src',
         '^@openland/foundationdb-random$': '<rootDir>/packages/foundationdb-random/src',
         '^@openland/foundationdb-singleton$': '<rootDir>/packages/foundationdb-singleton/src',
-        '^@openland/foundationdb-utils$': '<rootDir>/packages/foundationdb-utils/src'
+        '^@openland/foundationdb-utils$': '<rootDir>/packages/foundationdb-utils/src',
+        '^@openland/foundationdb-compiler$': '<rootDir>/packages/foundationdb-compiler/src',
+        '^@openland/foundationdb-entity$': '<rootDir>/packages/foundationdb-entity/src'
     }
 };

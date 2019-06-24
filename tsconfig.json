@@ -41,6 +41,12 @@
         },
         {
             "path": "./packages/foundationdb-events"
+        },
+        {
+            "path": "./packages/foundationdb-entity"
+        },
+        {
+            "path": "./packages/foundationdb-compiler"
         }
     ]
 }

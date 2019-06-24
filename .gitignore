@@ -11,3 +11,5 @@ packages/foundationdb-core/lib
 packages/foundationdb-bus-redis/lib
 packages/foundationdb-bus/lib
 packages/foundationdb-events/lib
+packages/foundationdb-compiler/lib
+packages/foundationdb-entity/lib
