@@ -12,7 +12,7 @@
     "build": "yarn tsc --build",
     "test": "yarn jest",
     "clean": "yarn tsc --build --clean",
-    "compile": "yarn ts-node ./packages/foundationdb-compiler/src/main.ts ./packages/foundationdb-entity/src/tests/atomic.schema.ts ./packages/foundationdb-entity/src/tests/atomic.repo.ts",
+    "compile": "yarn ts-node ./packages/foundationdb-compiler/src/main.ts ./packages/foundationdb-entity-specs/src/atomic.schema.ts ./packages/foundationdb-entity-specs/src/atomic.repo.ts",
     "coverage": "yarn jest --coverage",
     "release": "yarn clean && yarn build && yarn test && yarn lerna publish --force-publish",
     "prepare": "patch-package"
@@ -33,6 +33,8 @@
     "foundationdb": "0.10.2",
     "patch-package": "^6.1.2",
     "ts-node": "^8.3.0",
-    "uuid": "^3.2.1"
+    "uuid": "^3.2.1",
+    "@types/change-case": "^2.3.1",
+    "change-case": "^3.1.0"
   }
 }

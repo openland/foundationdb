@@ -40,13 +40,66 @@ export function generateAtomics(schema: SchemaModel, builder: StringBuilder) {
         builder.removeIndent();
         builder.append(`}`);
 
-        // Get
+        // By Id
         builder.append();
         builder.append(`byId(${atomic.keys.map((v) => v.name + ': ' + v.type).join(', ')}) {`);
         builder.addIndent();
         builder.append(`return this._findById([${atomic.keys.map((v) => v.name).join(', ')}]);`);
         builder.removeIndent();
         builder.append('}');
+
+        builder.append();
+        builder.append(`get(ctx: Context, ${atomic.keys.map((v) => v.name + ': ' + v.type).join(', ')}) {`);
+        builder.addIndent();
+        builder.append(`return this._get(ctx, [${atomic.keys.map((v) => v.name).join(', ')}]);`);
+        builder.removeIndent();
+        builder.append('}');
+
+        if (atomic.kind === 'boolean') {
+            builder.append();
+            builder.append(`set(ctx: Context, ${atomic.keys.map((v) => v.name + ': ' + v.type).join(', ')}, value: boolean) {`);
+            builder.addIndent();
+            builder.append(`return this._set(ctx, [${atomic.keys.map((v) => v.name).join(', ')}], value);`);
+            builder.removeIndent();
+            builder.append('}');
+
+            builder.append();
+            builder.append(`invert(ctx: Context, ${atomic.keys.map((v) => v.name + ': ' + v.type).join(', ')}) {`);
+            builder.addIndent();
+            builder.append(`return this._invert(ctx, [${atomic.keys.map((v) => v.name).join(', ')}]);`);
+            builder.removeIndent();
+            builder.append('}');
+        }
+
+        if (atomic.kind === 'int') {
+            builder.append();
+            builder.append(`set(ctx: Context, ${atomic.keys.map((v) => v.name + ': ' + v.type).join(', ')}, value: number) {`);
+            builder.addIndent();
+            builder.append(`return this._set(ctx, [${atomic.keys.map((v) => v.name).join(', ')}], value);`);
+            builder.removeIndent();
+            builder.append('}');
+
+            builder.append();
+            builder.append(`add(ctx: Context, ${atomic.keys.map((v) => v.name + ': ' + v.type).join(', ')}, value: number) {`);
+            builder.addIndent();
+            builder.append(`return this._add(ctx, [${atomic.keys.map((v) => v.name).join(', ')}], value);`);
+            builder.removeIndent();
+            builder.append('}');
+
+            builder.append();
+            builder.append(`increment(ctx: Context, ${atomic.keys.map((v) => v.name + ': ' + v.type).join(', ')}) {`);
+            builder.addIndent();
+            builder.append(`return this._increment(ctx, [${atomic.keys.map((v) => v.name).join(', ')}]);`);
+            builder.removeIndent();
+            builder.append('}');
+
+            builder.append();
+            builder.append(`decrement(ctx: Context, ${atomic.keys.map((v) => v.name + ': ' + v.type).join(', ')}) {`);
+            builder.addIndent();
+            builder.append(`return this._decrement(ctx, [${atomic.keys.map((v) => v.name).join(', ')}]);`);
+            builder.removeIndent();
+            builder.append('}');
+        }
 
         // Footer
         builder.removeIndent();

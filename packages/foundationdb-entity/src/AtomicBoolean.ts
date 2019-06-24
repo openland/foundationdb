@@ -2,6 +2,7 @@ import { Subspace } from '@openland/foundationdb';
 import { Context } from '@openland/context';
 
 const zero = Buffer.of();
+const zero2 = Buffer.of(0);
 const one = Buffer.from('ff', 'hex');
 
 export class AtomicBoolean {
@@ -16,7 +17,7 @@ export class AtomicBoolean {
     get = async (ctx: Context) => {
         let r = await this.keySpace.get(ctx, this.key);
         if (r) {
-            return r.length > 0;
+            return !r.equals(zero) && !r.equals(zero2);
         } else {
             return false;
         }
@@ -29,7 +30,7 @@ export class AtomicBoolean {
             this.keySpace.set(ctx, this.key, zero);
         }
     }
-    
+
     invert = (ctx: Context) => {
         this.keySpace.bitXor(ctx, this.key, one);
     }

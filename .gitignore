@@ -13,3 +13,4 @@ packages/foundationdb-bus/lib
 packages/foundationdb-events/lib
 packages/foundationdb-compiler/lib
 packages/foundationdb-entity/lib
+packages/foundationdb-entity-specs/lib

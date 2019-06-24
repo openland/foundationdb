@@ -1,5 +1,4 @@
-import { declareSchema, atomicBool } from '../../../foundationdb-compiler/src';
-import { primaryKey, atomicInt } from '../../../foundationdb-compiler/src';
+import { declareSchema, atomicBool, primaryKey, atomicInt } from '@openland/foundationdb-compiler';
 
 export default declareSchema(() => {
     atomicBool('SimpleAtomicBoolean', () => {

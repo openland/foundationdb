@@ -22,6 +22,18 @@ export class SimpleAtomicBooleanFactory extends AtomicBooleanFactory {
     byId(key: string) {
         return this._findById([key]);
     }
+
+    get(ctx: Context, key: string) {
+        return this._get(ctx, [key]);
+    }
+
+    set(ctx: Context, key: string, value: boolean) {
+        return this._set(ctx, [key], value);
+    }
+
+    invert(ctx: Context, key: string) {
+        return this._invert(ctx, [key]);
+    }
 }
 
 export class SimpleAtomicIntegerFactory extends AtomicIntegerFactory {
@@ -37,5 +49,25 @@ export class SimpleAtomicIntegerFactory extends AtomicIntegerFactory {
 
     byId(key: string) {
         return this._findById([key]);
+    }
+
+    get(ctx: Context, key: string) {
+        return this._get(ctx, [key]);
+    }
+
+    set(ctx: Context, key: string, value: number) {
+        return this._set(ctx, [key], value);
+    }
+
+    add(ctx: Context, key: string, value: number) {
+        return this._add(ctx, [key], value);
+    }
+
+    increment(ctx: Context, key: string) {
+        return this._increment(ctx, [key]);
+    }
+
+    decrement(ctx: Context, key: string) {
+        return this._decrement(ctx, [key]);
     }
 }
