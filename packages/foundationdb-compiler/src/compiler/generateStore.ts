@@ -3,7 +3,7 @@ import { SchemaModel } from './../model';
 
 export function generateStore(schema: SchemaModel, builder: StringBuilder) {
     builder.append();
-    builder.append(`export interface Store {`);
+    builder.append(`export interface Store extends BaseStore {`);
     builder.addIndent();
     for (let atomic of schema.atomics) {
         builder.append(`readonly ${atomic.name}: ${atomic.name}Factory;`);
@@ -21,6 +21,7 @@ export function generateStore(schema: SchemaModel, builder: StringBuilder) {
     }
     builder.append('return {');
     builder.addIndent();
+    builder.append('storage,');
     for (let atomic of schema.atomics) {
         builder.append(`${atomic.name},`);
     }

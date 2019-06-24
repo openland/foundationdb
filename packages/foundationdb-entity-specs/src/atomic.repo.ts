@@ -4,7 +4,7 @@ import { Context } from '@openland/context';
 // @ts-ignore
 import { Subspace } from '@openland/foundationdb';
 // @ts-ignore
-import { EntityStorage } from '@openland/foundationdb-entity';
+import { EntityStorage, BaseStore } from '@openland/foundationdb-entity';
 // @ts-ignore
 import { AtomicIntegerFactory, AtomicBooleanFactory } from '@openland/foundationdb-entity';
 
@@ -72,7 +72,7 @@ export class SimpleAtomicIntegerFactory extends AtomicIntegerFactory {
     }
 }
 
-export interface Store {
+export interface Store extends BaseStore {
     readonly SimpleAtomicBoolean: SimpleAtomicBooleanFactory;
     readonly SimpleAtomicInteger: SimpleAtomicIntegerFactory;
 }
@@ -83,6 +83,7 @@ export async function openStore(storage: EntityStorage): Promise<Store> {
     let SimpleAtomicBoolean = await SimpleAtomicBooleanPromise;
     let SimpleAtomicInteger = await SimpleAtomicIntegerPromise;
     return {
+        storage,
         SimpleAtomicBoolean,
         SimpleAtomicInteger,
     };
