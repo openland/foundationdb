@@ -1,0 +1,1 @@
+export type PrimaryKeyType = 'string' | 'number' | 'boolean';

@@ -14,6 +14,7 @@ export class SchemaModel {
     readonly _schema = true;
     readonly usedNames = new Set<string>();
     readonly atomics: AtomicModel[] = [];
+    readonly entities: EntityModel[] = [];
 }
 
 export class AtomicModel {
@@ -24,6 +25,21 @@ export class AtomicModel {
     constructor(name: string, kind: 'int' | 'boolean') {
         this.name = name;
         this.kind = kind;
+    }
+
+    addKey(name: string, type: PrimaryKeyType) {
+        let res = new PrimaryKey(name, type);
+        this.keys.push(res);
+        return res;
+    }
+}
+
+export class EntityModel {
+    readonly name: string;
+    readonly keys: PrimaryKey[] = [];
+
+    constructor(name: string) {
+        this.name = name;
     }
 
     addKey(name: string, type: PrimaryKeyType) {

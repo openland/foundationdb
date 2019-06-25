@@ -1,6 +1,5 @@
 import { Context } from '@openland/context';
-import { BaseLayer, Subspace, Tuple, transactional, encoders, Database } from '@openland/foundationdb';
-import { uniqueSeed } from '@openland/foundationdb-utils';
+import { BaseLayer, Subspace, Tuple, transactional, encoders } from '@openland/foundationdb';
 
 interface LockRecord {
     version: number;

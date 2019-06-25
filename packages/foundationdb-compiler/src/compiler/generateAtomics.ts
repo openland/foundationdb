@@ -3,8 +3,10 @@ import { SchemaModel } from './../model';
 import * as Case from 'change-case';
 
 export function generateAtomicsHeader(schema: SchemaModel, builder: StringBuilder) {
-    builder.append(`// @ts-ignore`);
-    builder.append(`import { AtomicIntegerFactory, AtomicBooleanFactory } from '@openland/foundationdb-entity';`);
+    if (schema.atomics.length > 0) {
+        builder.append(`// @ts-ignore`);
+        builder.append(`import { AtomicIntegerFactory, AtomicBooleanFactory } from '@openland/foundationdb-entity';`);
+    }
 }
 
 export function generateAtomicsStore(schema: SchemaModel, builder: StringBuilder) {
