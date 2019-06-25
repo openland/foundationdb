@@ -7,7 +7,7 @@ sidebar_label: Database
 To start working with client you need to create a Database object. Static method `Database.open(path)` open database synchronously and by default connects to a database that is installed on local machine. First optional argument is a path to a cluster file.
 
 ```typescript
-import { Database } from '@openland/Database';
+import { Database } from '@openland/foundationdb';
 let db = Database.open();
 ```
 
