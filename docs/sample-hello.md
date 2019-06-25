@@ -8,7 +8,7 @@ After [installation](install.md) you can start doing transactions.
 
 ```typescript
 import { createNamedContext } from '@openland/context';
-import { Database, inTx } from '@openland/Database';
+import { Database, inTx } from '@openland/foundationdb';
 
 // Open Database
 let db = Database.open();
