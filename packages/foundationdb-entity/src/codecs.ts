@@ -115,7 +115,7 @@ export const codecs = {
     optional: <T>(src: Codec<T>) => {
         return new OptionalCodec(src);
     },
-    struct: <T>(src: { [index in keyof T]: Codec<any> }) => {
-        return new StructCodec<T>(src);
+    struct: <T extends { [key: string]: Codec<any> }>(src: T) => {
+        return new StructCodec<{ [K in keyof T]: T[K]['_T'] }>(src);
     }
 };
