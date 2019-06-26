@@ -1,12 +1,15 @@
 export interface Codec<T> {
+    readonly _T: T;
     decode(src: any): T;
     encode(src: T): any;
 }
 
 class StructCodec<T> implements Codec<T> {
-    private readonly fields: { [index: string]: Codec<any> };
+    readonly _T!: T;
 
-    constructor(fields: { [index: string]: Codec<any> }) {
+    private readonly fields: { [K in keyof T]: Codec<any> };
+
+    constructor(fields: { [K in keyof T]: Codec<any> }) {
         this.fields = fields;
     }
 
@@ -26,14 +29,16 @@ class StructCodec<T> implements Codec<T> {
     }
 }
 
-const stringCodec: Codec<string> = {
+class StringCodec implements Codec<string> {
+    readonly _T!: string;
+
     decode(src: any) {
         if (typeof src === 'string') {
             return src;
         } else {
             throw Error('Input type is not string');
         }
-    },
+    }
     encode(src: string) {
         if (typeof src === 'string') {
             return src;
@@ -41,16 +46,18 @@ const stringCodec: Codec<string> = {
             throw Error('Input type is not string');
         }
     }
-};
+}
 
-const booleanCodec: Codec<boolean> = {
+class BooleanCodec implements Codec<boolean> {
+    readonly _T!: boolean;
+
     decode(src: any) {
         if (typeof src === 'boolean') {
             return src;
         } else {
             throw Error('Input type is not boolean');
         }
-    },
+    }
     encode(src: boolean) {
         if (typeof src === 'boolean') {
             return src;
@@ -58,16 +65,18 @@ const booleanCodec: Codec<boolean> = {
             throw Error('Input type is not boolean');
         }
     }
-};
+}
 
-const numberCodec: Codec<number> = {
+class NumberCodec implements Codec<number> {
+    readonly _T!: number;
+
     decode(src: any) {
         if (typeof src === 'number') {
             return src;
         } else {
             throw Error('Input type is not number');
         }
-    },
+    }
     encode(src: number) {
         if (typeof src === 'number') {
             return src;
@@ -75,29 +84,36 @@ const numberCodec: Codec<number> = {
             throw Error('Input type is not number');
         }
     }
-};
+}
+
+class OptionalCodec<T> implements Codec<T | null> {
+    readonly _T!: T | null;
+    readonly parent: Codec<T>;
+    constructor(parent: Codec<T>) {
+        this.parent = parent;
+    }
+
+    decode(src2: any) {
+        if (src2 !== undefined && src2 !== null) {
+            return this.parent.decode(src2);
+        }
+        return null;
+    }
+    encode(src2: T | null) {
+        if (src2 !== undefined && src2 !== null) {
+            return this.parent.encode(src2);
+        } else {
+            return null;
+        }
+    }
+}
 
 export const codecs = {
-    string: stringCodec,
-    boolean: booleanCodec,
-    number: numberCodec,
+    string: new StringCodec(),
+    boolean: new BooleanCodec(),
+    number: new NumberCodec(),
     optional: <T>(src: Codec<T>) => {
-        let res: Codec<T | null> = {
-            decode(src2: any) {
-                if (src2 !== undefined && src2 !== null) {
-                    return src.decode(src2);
-                }
-                return null;
-            },
-            encode(src2: T | null) {
-                if (src2 !== undefined && src2 !== null) {
-                    return src.encode(src2);
-                } else {
-                    return null;
-                }
-            }
-        };
-        return res;
+        return new OptionalCodec(src);
     },
     struct: <T>(src: { [index in keyof T]: Codec<any> }) => {
         return new StructCodec<T>(src);
