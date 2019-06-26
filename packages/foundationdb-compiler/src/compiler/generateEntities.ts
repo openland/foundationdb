@@ -36,6 +36,20 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         }
         for (let field of entity.fields) {
             if (field.isNullable) {
+                builder.append(`${field.name}: ${resolveType(field.type, field.enumValues)} | null;`);
+            } else {
+                builder.append(`${field.name}: ${resolveType(field.type, field.enumValues)};`);
+            }
+        }
+        builder.removeIndent();
+        builder.append(`}`);
+
+        // Create Shape
+        builder.append();
+        builder.append(`export interface ${entityClass}CreateShape {`);
+        builder.addIndent();
+        for (let field of entity.fields) {
+            if (field.isNullable) {
                 builder.append(`${field.name}?: ${resolveType(field.type, field.enumValues)} | null | undefined;`);
             } else {
                 builder.append(`${field.name}: ${resolveType(field.type, field.enumValues)};`);
@@ -55,7 +69,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         for (let key of entity.fields) {
             let type: string = resolveType(key.type, []);
             if (key.isNullable) {
-                builder.append(`get ${key.name}(): ${type} | null {  if (this._rawValue.${key.name} !== undefined && this._rawValue.${key.name} !== null) { return this._rawValue.${key.name}; } else { return null; } }`);
+                builder.append(`get ${key.name}(): ${type} | null { return this._rawValue.${key.name}; }`);
             } else {
                 builder.append(`get ${key.name}(): ${type} {  return this._rawValue.${key.name}; }`);
             }
@@ -82,41 +96,59 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         // Indexes
         builder.append(`let secondaryIndexes: SecondaryIndexDescriptor[] = [];`);
 
-        // ts-io type
-        builder.append(`let type = t.type({`);
+        // Codec
+        builder.append(`let codec = c.struct({`);
         builder.addIndent();
         for (let key of entity.keys) {
             if (key.type === 'string') {
-                builder.append(`${key.name}: t.string,`);
+                builder.append(`${key.name}: c.string,`);
             } else if (key.type === 'boolean') {
-                builder.append(`${key.name}: t.boolean,`);
+                builder.append(`${key.name}: c.boolean,`);
             } else if (key.type === 'number') {
-                builder.append(`${key.name}: t.number,`);
+                builder.append(`${key.name}: c.number,`);
+            } else {
+                throw Error('Unsupported primary key type: ' + key.type);
+            }
+        }
+        for (let key of entity.fields) {
+            if (key.type === 'string') {
+                if (key.isNullable) {
+                    builder.append(`${key.name}: c.optional(c.string),`);
+                } else {
+                    builder.append(`${key.name}: c.string,`);
+                }
+            } else if (key.type === 'boolean') {
+                if (key.isNullable) {
+                    builder.append(`${key.name}: c.optional(c.boolean),`);
+                } else {
+                    builder.append(`${key.name}: c.boolean,`);
+                }
+            } else if (key.type === 'number') {
+                if (key.isNullable) {
+                    builder.append(`${key.name}: c.optional(c.number),`);
+                } else {
+                    builder.append(`${key.name}: c.number,`);
+                }
             } else {
                 throw Error('Unsupported primary key type: ' + key.type);
             }
         }
         builder.removeIndent();
         builder.append(`});`);
-        builder.append(`let validator = function (src: any) {`);
-        builder.addIndent();
-        builder.append(`type.decode(src);`);
-        builder.removeIndent();
-        builder.append(`};`);
 
         // Descriptor
-        builder.append(`let descriptor: EntityDescriptor = {`);
+        builder.append(`let descriptor: EntityDescriptor<${entityClass}Shape> = {`);
         builder.addIndent();
         builder.append(`name: '${entity.name}',`);
         builder.append(`storageKey: '${entityKey}',`);
-        builder.append(`subspace, validator, secondaryIndexes, storage`);
+        builder.append(`subspace, codec, secondaryIndexes, storage`);
         builder.removeIndent();
         builder.append(`};`);
         builder.append(`return new ${entityClass}Factory(descriptor);`);
         builder.removeIndent();
         builder.append(`}`);
         builder.append();
-        builder.append(`private constructor(descriptor: EntityDescriptor) {`);
+        builder.append(`private constructor(descriptor: EntityDescriptor<${entityClass}Shape>) {`);
         builder.addIndent();
         builder.append('super(descriptor);');
         builder.removeIndent();
@@ -128,9 +160,9 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
 
         // create
         builder.append();
-        builder.append(`create(ctx: Context, src: ${entityClass}Shape): Promise<${entityClass}> {`);
+        builder.append(`create(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + v.type).join(', ')}, src: ${entityClass}CreateShape): Promise<${entityClass}> {`);
         builder.addIndent();
-        builder.append(`return this._create(ctx, [${entity.keys.map((v) => 'src.' + v.name).join(', ')}], src);`);
+        builder.append(`return this._create(ctx, [${entity.keys.map((v) => v.name).join(', ')}], this.descriptor.codec.normalize({${entity.keys.map((v) => v.name).join(', ')}, ...src }));`);
         builder.removeIndent();
         builder.append(`}`);
 

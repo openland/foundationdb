@@ -18,7 +18,7 @@ describe('Entity', () => {
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
         expect(await factory.findById(testCtx, '1')).toBe(null);
-        let created = await factory.create(testCtx, { id: '1', value: 'value', value2: 2, value3: false });
+        let created = await factory.create(testCtx, '1', { value: 'value', value2: 2, value3: false });
         expect(created.id).toBe('1');
         expect(created.value).toBe('value');
         expect(created.value2).toBe(2);
@@ -41,7 +41,7 @@ describe('Entity', () => {
         await inTx(testCtx, async (ctx) => {
             let pending: any[] = [];
             for (let i = 0; i < 100; i++) {
-                pending.push(factory.create(ctx, { id: 'id-' + i, value: 'value', value2: 2, value3: false }));
+                pending.push(factory.create(ctx, 'id-' + i, { value: 'value', value2: 2, value3: false }));
             }
             await Promise.all(pending);
         });
@@ -58,7 +58,7 @@ describe('Entity', () => {
         let db = await Database.openTest();
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
-        await factory.create(testCtx, { id: '1', value: 'value', value2: 2, value3: false });
+        await factory.create(testCtx, '1', { value: 'value', value2: 2, value3: false });
         let ctx = withReadOnlyTransaction(testCtx);
         let firstRead = await factory.findById(ctx, '1');
         let secondRead = await factory.findById(ctx, '1');
@@ -73,7 +73,7 @@ describe('Entity', () => {
         await inTx(testCtx, async (ctx) => {
             let ex = await factory.findById(ctx, '1');
             expect(ex).toBe(null);
-            let c = factory.create(ctx, { id: '1', value: 'value', value2: 2, value3: false });
+            let c = factory.create(ctx, '1', { value: 'value', value2: 2, value3: false });
             let ex2 = factory.findById(ctx, '1');
             expect(await ex2).toBe(await c);
         });

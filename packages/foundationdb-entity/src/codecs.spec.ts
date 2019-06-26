@@ -74,6 +74,26 @@ describe('Codecs', () => {
         expect(() => codec.decode('')).toThrowError('Input type is not an object');
         expect(() => codec.encode('' as any)).toThrowError('Input type is not an object');
     });
+    it('should ignore null values during encoding', () => {
+        let codec = codecs.struct({
+            name: codecs.optional(codecs.string)
+        });
+        let encoded = codec.encode({ name: null });
+        expect(Object.keys(encoded).length).toBe(0);
+        encoded = codec.encode({} as any);
+        expect(Object.keys(encoded).length).toBe(0);
+    });
+    it('should unwrap undefined or null as null', () => {
+        let codec = codecs.struct({
+            name: codecs.optional(codecs.string)
+        });
+        let decoded = codec.decode({ name: null });
+        expect(Object.keys(decoded).length).toBe(1);
+        expect(decoded.name).toBe(null);
+        decoded = codec.decode({});
+        expect(Object.keys(decoded).length).toBe(1);
+        expect(decoded.name).toBe(null);
+    });
 
     // Enums
     it('should encode and decode enums', () => {

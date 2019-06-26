@@ -9,16 +9,22 @@ function getCacheKey(id: Tuple[]) {
 }
 
 export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
-    readonly descriptor: EntityDescriptor;
+    readonly descriptor: EntityDescriptor<SHAPE>;
 
     private primaryLockCache = new TransactionCache<Mutex>(uniqueSeed());
     private entityCache = new TransactionCache<T>(uniqueSeed());
 
-    protected constructor(descriptor: EntityDescriptor) {
+    protected constructor(descriptor: EntityDescriptor<SHAPE>) {
         this.descriptor = descriptor;
     }
 
     protected async _findById(ctx: Context, id: Tuple[]): Promise<T | null> {
+
+        //
+        // We assume here next things:
+        // * id is a correct tuple and verified by callee
+        // 
+
         return await this.getPrimaryLock(ctx, id).runExclusive(async () => {
 
             // Check Cache
@@ -38,11 +44,11 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             }
 
             if (ex) {
-                // Validate record
-                this.descriptor.validator(ex);
+                // Decode record
+                let decoded = this.descriptor.codec.decode(ex);
 
                 // Create instance
-                let res = this._createEntityInstance(ex);
+                let res = this._createEntityInstance(decoded);
                 this.entityCache.set(ctx, k, res);
                 return res;
             } else {
@@ -53,8 +59,15 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
 
     protected async _create(ctx: Context, id: Tuple[], value: SHAPE): Promise<T> {
 
+        //
+        // We assume here next things:
+        // * id is a correct tuple and verified by callee
+        // * value is in normalized shape. Meaning all undefined are replaced with nulls and 
+        //   there are no unknown fields.
+        //
+
         // Validate input
-        this.descriptor.validator(value);
+        let encoded = this.descriptor.codec.encode(value);
 
         // Check cache
         let k = getCacheKey(id);
@@ -69,7 +82,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
                 if (ex) {
                     throw Error('Entity already exists');
                 }
-                this.descriptor.subspace.set(ctx2, id, value);
+                this.descriptor.subspace.set(ctx2, id, encoded);
             });
         });
 

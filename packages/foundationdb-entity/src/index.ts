@@ -8,3 +8,4 @@ export { Entity } from './Entity';
 export { EntityFactory } from './EntityFactory';
 export { EntityMetadata } from './EntityMetadata';
 export { EntityDescriptor, SecondaryIndexDescriptor } from './EntityDescriptor';
+export { codecs, Codec } from './codecs';

@@ -1,3 +1,4 @@
+import { Codec } from './codecs';
 import { EntityStorage } from './EntityStorage';
 import { Subspace, Tuple } from '@openland/foundationdb';
 
@@ -5,7 +6,7 @@ import { Subspace, Tuple } from '@openland/foundationdb';
  * Descriptor of Entity that represent crucial information 
  * for working with this type of entity.
  */
-export interface EntityDescriptor {
+export interface EntityDescriptor<SHAPE> {
 
     /**
      * Name of entity
@@ -23,9 +24,9 @@ export interface EntityDescriptor {
     subspace: Subspace<Tuple[], any>;
 
     /**
-     * Validator that validate that data from database is in correct shape
+     * Codec for entity serialization
      */
-    validator: (rawValue: any) => void;
+    codec: Codec<SHAPE>;
 
     /**
      * List of secondary index descriptors
