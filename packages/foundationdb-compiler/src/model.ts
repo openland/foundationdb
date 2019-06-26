@@ -1,4 +1,5 @@
 export type PrimaryKeyType = 'string' | 'number' | 'boolean';
+export type FieldType = 'string' | 'number' | 'boolean' | 'enum';
 
 export class PrimaryKey {
     readonly name: string;
@@ -7,6 +8,21 @@ export class PrimaryKey {
     constructor(name: string, type: PrimaryKeyType) {
         this.name = name;
         this.type = type;
+    }
+}
+
+export class Field {
+    readonly name: string;
+    readonly type: FieldType;
+    readonly enumValues: string[];
+    
+    isNullable: boolean = false;
+    isSecure: boolean = false;
+
+    constructor(name: string, type: FieldType, enumValues: string[]) {
+        this.name = name;
+        this.type = type;
+        this.enumValues = enumValues;
     }
 }
 
@@ -37,6 +53,7 @@ export class AtomicModel {
 export class EntityModel {
     readonly name: string;
     readonly keys: PrimaryKey[] = [];
+    readonly fields: Field[] = [];
 
     constructor(name: string) {
         this.name = name;

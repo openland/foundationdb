@@ -7,4 +7,4 @@ export { BaseStore } from './BaseStore';
 export { Entity } from './Entity';
 export { EntityFactory } from './EntityFactory';
 export { EntityMetadata } from './EntityMetadata';
-export { EntityDescriptor } from './EntityDescriptor';
+export { EntityDescriptor, SecondaryIndexDescriptor } from './EntityDescriptor';

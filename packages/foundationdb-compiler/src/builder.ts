@@ -1,4 +1,4 @@
-import { SchemaModel, AtomicModel, PrimaryKeyType, EntityModel } from './model';
+import { SchemaModel, AtomicModel, PrimaryKeyType, EntityModel, FieldType, Field } from './model';
 
 let currentSchema: SchemaModel | null = null;
 let currentAtomic: AtomicModel | null = null;
@@ -64,4 +64,22 @@ export function primaryKey(name: string, type: PrimaryKeyType) {
     if (currentEntity) {
         currentEntity!.addKey(name, type);
     }
+}
+
+export function field(name: string, type: FieldType, enumValues?: string[]) {
+    if (!currentEntity) {
+        throw Error('No entity specified');
+    }
+    let res = new Field(name, type, enumValues ? enumValues : []);
+    currentEntity!.fields.push(res);
+    return {
+        nullable() {
+            res.isNullable = true;
+            return this;
+        },
+        secure() {
+            res.isSecure = true;
+            return this;
+        }
+    };
 }

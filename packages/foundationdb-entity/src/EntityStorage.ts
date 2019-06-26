@@ -1,5 +1,5 @@
 import { createNamedContext } from '@openland/context';
-import { Database, inTx } from '@openland/foundationdb';
+import { Database, inTx, encoders } from '@openland/foundationdb';
 
 export class EntityStorage {
     readonly db: Database;
@@ -13,5 +13,15 @@ export class EntityStorage {
 
     async resolveAtomicDirectory(name: string) {
         return await inTx(createNamedContext('entity'), async (ctx) => await this.db.directories.createOrOpen(ctx, ['com.openland.layers', 'layers', this.storeId, 'atomic', name]));
+    }
+
+    async resolveEntityDirectory(name: string) {
+        return (await inTx(createNamedContext('entity'), async (ctx) => await this.db.directories.createOrOpen(ctx, ['com.openland.layers', 'layers', this.storeId, 'entity', name])))
+            .withKeyEncoding(encoders.tuple)
+            .withValueEncoding(encoders.json);
+    }
+
+    async resolveEntityIndexDirectory(entityName: string, indexName: string) {
+        return await inTx(createNamedContext('entity'), async (ctx) => await this.db.directories.createOrOpen(ctx, ['com.openland.layers', 'layers', this.storeId, 'entity', entityName, '__indexes', indexName]));
     }
 }

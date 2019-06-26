@@ -17,6 +17,7 @@
         "@openland/foundationdb-utils": "^3.3.1",
         "@openland/log": "*",
         "@types/uuid": "^3.4.3",
-        "uuid": "^3.2.1"
+        "uuid": "^3.2.1",
+        "io-ts": "^1.10.2"
     }
 }

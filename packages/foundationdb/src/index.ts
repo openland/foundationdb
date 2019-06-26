@@ -10,7 +10,6 @@ export { Directory } from './Directory';
 export { DirectoryLayer } from './DirectoryLayer';
 export { getTransaction } from './getTransaction';
 export { transactional } from './transactional';
-
 export { Layer, BaseLayer } from './Layer';
-
 export { isSubspaceEquals, syncSubspaces, deleteMissing, copySubspace } from './operations';
+export { TransactionCache } from './TransactionCache';
