@@ -43,17 +43,11 @@ export class SimpleEntity extends Entity<SimpleEntityShape> {
     }
     get value3(): boolean | null { return this._rawValue.value3; }
     set value3(value: boolean | null) {
-        console.warn('value3');
         let normalized = this.descriptor.codec.fields.value3.normalize(value);
-        console.warn('value3-1');
         if (this._rawValue.value3 !== normalized) {
-            console.warn('value3-2');
             this._rawValue.value3 = normalized;
-            console.warn('value3-3');
             this._updatedValues.value3 = normalized;
-            console.warn('value3-4');
             this.invalidate();
-            console.warn('value3-5');
         }
     }
 }
