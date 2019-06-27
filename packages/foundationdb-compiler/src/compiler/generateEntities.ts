@@ -6,7 +6,7 @@ import * as Case from 'change-case';
 export function generateEntitiesHeader(schema: SchemaModel, builder: StringBuilder) {
     if (schema.entities.length > 0) {
         builder.append(`// @ts-ignore`);
-        builder.append(`import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor } from '@openland/foundationdb-entity';`);
+        builder.append(`import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata } from '@openland/foundationdb-entity';`);
     }
 }
 
@@ -176,7 +176,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
 
         // Create Instance
         builder.append();
-        builder.append(`protected _createEntityInstance(value: any): ${entityClass} {`);
+        builder.append(`protected _createEntityInstance(value: ShapeWithMetadata<${entityClass}Shape>): ${entityClass} {`);
         builder.addIndent();
         builder.append(`return new ${entityClass}([${entity.keys.map((v) => 'value.' + v.name).join(', ')}], value, this.descriptor);`);
         builder.removeIndent();

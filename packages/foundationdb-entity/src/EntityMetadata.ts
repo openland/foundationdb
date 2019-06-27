@@ -2,11 +2,12 @@
  * Metadata of Entity Record
  */
 export interface EntityMetadata {
+
     /**
      * Version Code. Incremented with each change.
      */
     versionCode: number;
-    
+
     /**
      * Date when record is created. Used local machine time.
      */

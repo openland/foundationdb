@@ -1,1 +1,1 @@
-export type PrimaryKeyType = 'string' | 'number' | 'boolean';
+export type PrimaryKeyType = string | number | boolean;

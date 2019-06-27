@@ -6,7 +6,7 @@ import { Subspace } from '@openland/foundationdb';
 // @ts-ignore
 import { EntityStorage, BaseStore, codecs as c } from '@openland/foundationdb-entity';
 // @ts-ignore
-import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor } from '@openland/foundationdb-entity';
+import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata } from '@openland/foundationdb-entity';
 
 export interface SimpleEntityShape {
     id: string;
@@ -59,7 +59,7 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
         return this._findById(ctx, [id]);
     }
 
-    protected _createEntityInstance(value: any): SimpleEntity {
+    protected _createEntityInstance(value: ShapeWithMetadata<SimpleEntityShape>): SimpleEntity {
         return new SimpleEntity([value.id], value, this.descriptor);
     }
 }

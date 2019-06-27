@@ -1,4 +1,4 @@
-const typeSymbol: unique symbol = Symbol('type');
+export const typeSymbol: unique symbol = Symbol('type');
 
 /**
  * Codec performs type-safe serialization to json
@@ -28,7 +28,7 @@ export interface Codec<T> {
 class StructCodec<T> implements Codec<T> {
     readonly [typeSymbol]!: T;
 
-    private readonly fields: { [K in keyof T]: Codec<any> };
+    readonly fields: { [K in keyof T]: Codec<any> };
 
     constructor(fields: { [K in keyof T]: Codec<any> }) {
         this.fields = fields;
@@ -176,6 +176,37 @@ class OptionalCodec<T> implements Codec<T | null> {
     }
 }
 
+class DefaultCodec<T> implements Codec<T> {
+    readonly [typeSymbol]!: T;
+    private readonly defaultValue: () => T;
+    private readonly parent: Codec<T | null>;
+
+    constructor(defaultValue: () => T, parent: Codec<T | null>) {
+        this.defaultValue = defaultValue;
+        this.parent = parent;
+    }
+
+    decode(src2: any) {
+        if (src2 !== undefined && src2 !== null) {
+            return this.parent.decode(src2)!;
+        }
+        return this.defaultValue();
+    }
+    encode(src2: T | null) {
+        if (src2 !== undefined && src2 !== null) {
+            return this.parent.encode(src2)!;
+        } else {
+            return this.defaultValue();
+        }
+    }
+    normalize(src: any) {
+        if (src !== undefined && src !== null) {
+            return this.parent.normalize(src)!;
+        }
+        return this.defaultValue();
+    }
+}
+
 class EnumCodec<T> implements Codec<T> {
     readonly [typeSymbol]!: T;
     private readonly values: Set<string>;
@@ -209,16 +240,32 @@ class EnumCodec<T> implements Codec<T> {
 }
 
 export const codecs = {
-    string: new StringCodec(),
-    boolean: new BooleanCodec(),
-    number: new NumberCodec(),
+    string: new StringCodec() as Codec<string>,
+    boolean: new BooleanCodec() as Codec<boolean>,
+    number: new NumberCodec() as Codec<number>,
     enum: <T extends string[]>(...values: T) => {
-        return new EnumCodec<T[number]>(values);
+        return new EnumCodec<T[number]>(values) as Codec<T[number]>;
     },
     optional: <T>(src: Codec<T>) => {
-        return new OptionalCodec<T>(src);
+        return new OptionalCodec<T>(src) as Codec<T | null>;
     },
     struct: <T extends { [key: string]: Codec<any> }>(src: T) => {
-        return new StructCodec<{ [K in keyof T]: T[K][typeof typeSymbol] }>(src);
-    }
+        return new StructCodec<{ [K in keyof T]: T[K][typeof typeSymbol] }>(src) as Codec<{ [K in keyof T]: T[K][typeof typeSymbol] }>;
+    },
+    union: <T1, T2>(a: Codec<T1>, b: Codec<T2>) => {
+        if (!(a instanceof StructCodec)) {
+            throw Error('Union is possible only for struct codecs');
+        }
+        if (!(b instanceof StructCodec)) {
+            throw Error('Union is possible only for struct codecs');
+        }
+        let fields: { [K in keyof (T1 & T2)]: Codec<any> } = {
+            ...a.fields,
+            ...b.fields
+        } as any;
+        return new StructCodec<{ [K in keyof (T1 & T2)]: (T1 & T2)[K] }>(fields) as Codec<{ [K in keyof (T1 & T2)]: (T1 & T2)[K] }>;
+    },
+    default: <T>(src: Codec<T | null>, value: (() => T) | T) => {
+        return new DefaultCodec<T>(() => typeof value === 'function' ? src.normalize((value as any)())! : src.normalize(value)!, src) as Codec<T>;
+    },
 };

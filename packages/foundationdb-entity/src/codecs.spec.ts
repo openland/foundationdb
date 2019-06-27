@@ -44,6 +44,22 @@ describe('Codecs', () => {
         expect(codecs.optional(codecs.boolean).encode(undefined)).toBe(null);
     });
 
+    // Default
+    it('should bypass values for non-null/undefined values', () => {
+        expect(codecs.optional(codecs.string).decode('!!!')).toBe('!!!');
+        expect(codecs.optional(codecs.string).encode('!!!')).toBe('!!!');
+    });
+    it('should return default value', () => {
+        expect(codecs.default(codecs.boolean, false).decode(null)).toBe(false);
+        expect(codecs.default(codecs.boolean, () => false).decode(null)).toBe(false);
+        expect(codecs.default(codecs.boolean, false).decode(undefined)).toBe(false);
+        expect(codecs.default(codecs.boolean, () => false).decode(undefined)).toBe(false);
+        expect(codecs.default(codecs.boolean, true).encode(null)).toBe(true);
+        expect(codecs.default(codecs.boolean, () => true).encode(null)).toBe(true);
+        expect(codecs.default(codecs.boolean, true).encode(undefined)).toBe(true);
+        expect(codecs.default(codecs.boolean, () => true).encode(undefined)).toBe(true);
+    });
+
     // Structs
     it('should encode and decode simple struct', () => {
         let codec = codecs.struct({
@@ -105,5 +121,30 @@ describe('Codecs', () => {
         let codec = codecs.enum('1', '2');
         expect(() => codec.decode('3')).toThrowError();
         expect(() => codec.encode('3' as any)).toThrowError();
+    });
+
+    // Union
+    it('should union types', () => {
+        let codec1 = codecs.struct({
+            name: codecs.string
+        });
+        let codec2 = codecs.struct({
+            metadata: codecs.string
+        });
+        let codec3 = codecs.union(codec1, codec2);
+        let decoded = codec3.decode({
+            name: 'name1',
+            metadata: 'metadata2'
+        });
+        expect(Object.keys(decoded).length).toBe(2);
+        expect(decoded.name).toBe('name1');
+        expect(decoded.metadata).toBe('metadata2');
+        let encoded = codec3.encode({
+            name: 'name1',
+            metadata: 'metadata2'
+        });
+        expect(Object.keys(encoded).length).toBe(2);
+        expect(encoded.name).toBe('name1');
+        expect(encoded.metadata).toBe('metadata2');
     });
 });

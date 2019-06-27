@@ -23,6 +23,7 @@ describe('Entity', () => {
         expect(created.value).toBe('value');
         expect(created.value2).toBe(2);
         expect(created.value3).toBe(false);
+        expect(created.metadata.versionCode).toBe(0);
 
         let loaded = await factory.findById(testCtx, '1');
         expect(loaded).not.toBe(null);
@@ -31,6 +32,7 @@ describe('Entity', () => {
         expect(loaded.value).toBe('value');
         expect(loaded.value2).toBe(2);
         expect(loaded.value3).toBe(false);
+        expect(loaded.metadata.versionCode).toBe(0);
     });
 
     it('should be able to create entity in parallel', async () => {
