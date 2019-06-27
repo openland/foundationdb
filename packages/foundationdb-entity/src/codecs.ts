@@ -25,7 +25,7 @@ export interface Codec<T> {
     normalize(src: any): T;
 }
 
-class StructCodec<T> implements Codec<T> {
+export class StructCodec<T> implements Codec<T> {
     readonly [typeSymbol]!: T;
 
     readonly fields: { [K in keyof T]: Codec<any> };
@@ -250,7 +250,7 @@ export const codecs = {
         return new OptionalCodec<T>(src) as Codec<T | null>;
     },
     struct: <T extends { [key: string]: Codec<any> }>(src: T) => {
-        return new StructCodec<{ [K in keyof T]: T[K][typeof typeSymbol] }>(src) as Codec<{ [K in keyof T]: T[K][typeof typeSymbol] }>;
+        return new StructCodec<{ [K in keyof T]: T[K][typeof typeSymbol] }>(src);
     },
     union: <T1, T2>(a: Codec<T1>, b: Codec<T2>) => {
         if (!(a instanceof StructCodec)) {

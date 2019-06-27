@@ -68,11 +68,33 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         }
         for (let key of entity.fields) {
             let type: string = resolveType(key.type, []);
+            
+            // Getter
             if (key.isNullable) {
                 builder.append(`get ${key.name}(): ${type} | null { return this._rawValue.${key.name}; }`);
+
             } else {
                 builder.append(`get ${key.name}(): ${type} {  return this._rawValue.${key.name}; }`);
+
             }
+
+            // Setter
+            if (key.isNullable) {
+                builder.append(`set ${key.name}(value: ${type} | null) {`);
+            } else {
+                builder.append(`set ${key.name}(value: ${type}) {`);
+            }
+            builder.addIndent();
+            builder.append(`let normalized = this.descriptor.codec.fields.${key.name}.normalize(value);`);
+            builder.append(`if (this._rawValue.${key.name} !== normalized) {`);
+            builder.addIndent();
+            builder.append(`this._rawValue.${key.name} = normalized;`);
+            builder.append(`this._updatedValues.${key.name} = normalized;`);
+            builder.append(`this.invalidate();`);
+            builder.removeIndent();
+            builder.append(`}`);
+            builder.removeIndent();
+            builder.append(`}`);
         }
         builder.removeIndent();
         builder.append(`}`);
@@ -176,9 +198,9 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
 
         // Create Instance
         builder.append();
-        builder.append(`protected _createEntityInstance(value: ShapeWithMetadata<${entityClass}Shape>): ${entityClass} {`);
+        builder.append(`protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<${entityClass}Shape>): ${entityClass} {`);
         builder.addIndent();
-        builder.append(`return new ${entityClass}([${entity.keys.map((v) => 'value.' + v.name).join(', ')}], value, this.descriptor);`);
+        builder.append(`return new ${entityClass}([${entity.keys.map((v) => 'value.' + v.name).join(', ')}], value, this.descriptor, this._flush, ctx);`);
         builder.removeIndent();
         builder.append(`}`);
 

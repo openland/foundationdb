@@ -80,4 +80,27 @@ describe('Entity', () => {
             expect(await ex2).toBe(await c);
         });
     });
+
+    it('should update', async () => {
+        let testCtx = createNamedContext('test');
+        let db = await Database.openTest();
+        let store = new EntityStorage(db);
+        let factory = await SimpleEntityFactory.open(store);
+
+        // Create New
+        await inTx(testCtx, async (ctx) => {
+            await factory.create(ctx, '1', { value: 'value', value2: 2, value3: false });
+        });
+
+        let read = await factory.findById(testCtx, '1');
+        expect(read.value).toBe('value');
+
+        // Update
+        await inTx(testCtx, async (ctx) => {
+            let ex = await factory.findById(ctx, '1');
+            ex.value = 'value2';
+        });
+        read = await factory.findById(testCtx, '1');
+        expect(read.value).toBe('value2');
+    });
 });

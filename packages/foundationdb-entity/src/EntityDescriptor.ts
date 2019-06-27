@@ -1,6 +1,6 @@
-import { Codec } from './codecs';
-import { EntityStorage } from './EntityStorage';
 import { Subspace, Tuple } from '@openland/foundationdb';
+import { Codec, StructCodec } from './codecs';
+import { EntityStorage } from './EntityStorage';
 
 /**
  * Descriptor of Entity that represent crucial information 
@@ -26,7 +26,7 @@ export interface EntityDescriptor<SHAPE> {
     /**
      * Codec for entity serialization
      */
-    codec: Codec<SHAPE>;
+    codec: StructCodec<SHAPE>;
 
     /**
      * List of secondary index descriptors

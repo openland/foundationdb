@@ -6,9 +6,10 @@ import { EntityDescriptor } from './EntityDescriptor';
 import { EntityMetadata } from './EntityMetadata';
 import { codecs, Codec } from './codecs';
 import { ShapeWithMetadata } from './ShapeWithMetadata';
+import { PrimaryKeyType } from './PrimaryKeyType';
 
-function getCacheKey(id: Tuple[]) {
-    return encoders.tuple.pack(id).toString('hex');
+function getCacheKey(id: ReadonlyArray<PrimaryKeyType>) {
+    return encoders.tuple.pack(id as any /* WTF, TS? */).toString('hex');
 }
 
 const metadataCodec = codecs.struct({
@@ -29,17 +30,17 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     protected constructor(descriptor: EntityDescriptor<SHAPE>) {
         Object.freeze(descriptor);
         this.descriptor = descriptor;
-        this.codec = codecs.union(metadataCodec, descriptor.codec);
+        this.codec = codecs.union(descriptor.codec, metadataCodec);
     }
 
-    protected async _findById(ctx: Context, id: Tuple[]): Promise<T | null> {
+    protected async _findById(ctx: Context, id: PrimaryKeyType[]): Promise<T | null> {
 
         //
         // We assume here next things:
         // * id is a correct tuple and verified by callee
         // 
 
-        return await this.getPrimaryLock(ctx, id).runExclusive(async () => {
+        return await this._getPrimaryLock(ctx, id).runExclusive(async () => {
 
             // Check Cache
             let k = getCacheKey(id);
@@ -59,10 +60,10 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
 
             if (ex) {
                 // Decode record
-                let decoded = this.decode(ex);
+                let decoded = this._decode(ex);
 
                 // Create instance
-                let res = this._createEntityInstance(decoded);
+                let res = this._createEntityInstance(ctx, decoded);
                 this.entityCache.set(ctx, k, res);
                 return res;
             } else {
@@ -71,7 +72,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         });
     }
 
-    protected async _create(ctx: Context, id: Tuple[], value: SHAPE): Promise<T> {
+    protected async _create(ctx: Context, id: PrimaryKeyType[], value: SHAPE): Promise<T> {
 
         //
         // We assume here next things:
@@ -87,7 +88,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             createdAt: now,
             updatedAt: now
         };
-        let encoded = this.encode(value, metadata);
+        let encoded = this._encode(value, metadata);
 
         // Check cache
         let k = getCacheKey(id);
@@ -96,7 +97,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         }
 
         // Check Primary Index and write result
-        await this.getPrimaryLock(ctx, id).runExclusive(async () => {
+        await this._getPrimaryLock(ctx, id).runExclusive(async () => {
             await inTx(ctx, async (ctx2) => {
                 let ex = await this.descriptor.subspace.get(ctx2, id);
                 if (ex) {
@@ -112,20 +113,32 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         }
 
         // Create Instance
-        let res = this._createEntityInstance({ ...value, _metadata: metadata });
+        let res = this._createEntityInstance(ctx, { ...value, _metadata: metadata });
         this.entityCache.set(ctx, k, res);
         return res;
     }
 
-    private encode(value: SHAPE, metadata: EntityMetadata) {
+    // Need to be arrow function since we are passing this function to entity instances
+    protected _flush = async (ctx: Context, id: ReadonlyArray<PrimaryKeyType>, oldValue: ShapeWithMetadata<SHAPE>, newValue: ShapeWithMetadata<SHAPE>) => {
+        await this._getPrimaryLock(ctx, id).runExclusive(async () => {
+            
+            // Encode value before any write
+            let encoded = this.codec.encode(newValue);
+            
+            // Write primary key index value
+            this.descriptor.subspace.set(ctx, id as any, encoded);
+        });
+    }
+
+    private _encode(value: SHAPE, metadata: EntityMetadata) {
         return this.codec.encode({ ...value, _metadata: metadata });
     }
 
-    private decode(value: any) {
+    private _decode(value: any) {
         return this.codec.decode(value);
     }
 
-    private getPrimaryLock(ctx: Context, id: Tuple[]) {
+    private _getPrimaryLock(ctx: Context, id: ReadonlyArray<PrimaryKeyType>) {
         let k = getCacheKey(id);
         let ex = this.primaryLockCache.get(ctx, k);
         if (!ex) {
@@ -137,5 +150,5 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         }
     }
 
-    protected abstract _createEntityInstance(value: ShapeWithMetadata<SHAPE>): T;
+    protected abstract _createEntityInstance(ctx: Context, value: ShapeWithMetadata<SHAPE>): T;
 }

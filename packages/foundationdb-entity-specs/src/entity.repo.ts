@@ -24,8 +24,38 @@ export interface SimpleEntityCreateShape {
 export class SimpleEntity extends Entity<SimpleEntityShape> {
     get id(): string { return this._rawValue.id; }
     get value(): string {  return this._rawValue.value; }
+    set value(value: string) {
+        let normalized = this.descriptor.codec.fields.value.normalize(value);
+        if (this._rawValue.value !== normalized) {
+            this._rawValue.value = normalized;
+            this._updatedValues.value = normalized;
+            this.invalidate();
+        }
+    }
     get value2(): number {  return this._rawValue.value2; }
+    set value2(value: number) {
+        let normalized = this.descriptor.codec.fields.value2.normalize(value);
+        if (this._rawValue.value2 !== normalized) {
+            this._rawValue.value2 = normalized;
+            this._updatedValues.value2 = normalized;
+            this.invalidate();
+        }
+    }
     get value3(): boolean | null { return this._rawValue.value3; }
+    set value3(value: boolean | null) {
+        console.warn('value3');
+        let normalized = this.descriptor.codec.fields.value3.normalize(value);
+        console.warn('value3-1');
+        if (this._rawValue.value3 !== normalized) {
+            console.warn('value3-2');
+            this._rawValue.value3 = normalized;
+            console.warn('value3-3');
+            this._updatedValues.value3 = normalized;
+            console.warn('value3-4');
+            this.invalidate();
+            console.warn('value3-5');
+        }
+    }
 }
 
 export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, SimpleEntity> {
@@ -59,8 +89,8 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
         return this._findById(ctx, [id]);
     }
 
-    protected _createEntityInstance(value: ShapeWithMetadata<SimpleEntityShape>): SimpleEntity {
-        return new SimpleEntity([value.id], value, this.descriptor);
+    protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<SimpleEntityShape>): SimpleEntity {
+        return new SimpleEntity([value.id], value, this.descriptor, this._flush, ctx);
     }
 }
 
