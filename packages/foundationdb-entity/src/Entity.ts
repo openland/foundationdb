@@ -29,7 +29,7 @@ export abstract class Entity<T> {
     /**
      * Flag if we have ben scheduled changes
      */
-    private invalidated = false;
+    private _invalidated = false;
 
     /**
      * Flush mutex to avoid consistency problems during accidental parallel flushes
@@ -76,10 +76,10 @@ export abstract class Entity<T> {
         if (this._tx.isCompleted) {
             throw Error('You can\'t update entity when transaction is in completed state.');
         }
-        if (this.invalidated) {
+        if (this._invalidated) {
             return;
         }
-        this.invalidated = true;
+        this._invalidated = true;
         this._tx.beforeCommit((ctx) => this.flush(ctx));
     }
 
@@ -91,10 +91,10 @@ export abstract class Entity<T> {
         await this.mutex.runExclusive(async () => {
 
             // Check if we have something to flush
-            if (!this.invalidated) {
+            if (!this._invalidated) {
                 return;
             }
-            this.invalidated = false;
+            this._invalidated = false;
 
             // Calculate updated shape
             let changes = { ...this._updatedValues }; // Save changes for rollback
