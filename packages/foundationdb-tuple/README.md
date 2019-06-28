@@ -2,16 +2,32 @@
 Subset of official tuple encoding that is safe to use in JavaScript environments. 
 We are intentionally NOT supporting deprecated or questional tuple item types. If you think we are wrong, open an issue - we are usually answering within an hour.
 
+## Example
+
+Tuple items can be: `number`, `boolean`, `string`, `Buffer`, `null`, float values wrapped in `Float` class:
+
+```typescript
+
+import * as Tuple from '@openland/foundationdb-tuple';
+
+// Encode tuple
+let encoded = Tuple.pack(['user', 1, 'score', new Tuple.Float(0.4)]);
+
+// Decode tuple
+let decoded = Tuple.unpack(encoded);
+
+```
+
 ## Supported types
 * Null
 * Boolean
 * Text String
 * Byte String
 * Integer
-* Double (without NaN and Inf values)
+* Float (without NaN and Inf values) (NOTE: They are encoded as Double)
 
 ## Not supported types
-* (0x03, 0x04 and 0x05) Nested Tuple. We haven't found good usecase for nested tuples
+* (0x03, 0x04 and 0x05) Nested Tuple. We haven't found good usecase for nested tuples.
 * (0x0a and 0x0b Codes) Negative arbitrary-precision Integer. They are reserved now and when it will be officially specified we could use this encoding for BigInts.
 * (0x1d and 0x1e Codes) Positive arbitrary-precision Integer. They are reserved now and when it will be officially specified we could use this encoding for BigInts.
 * (0x20 and 0x22 Codes) Float and Long Double. Double is enougth and mixing this two types of encoding can cause ordering problems since they are encoded in different way. Original library (node-foundationdb) can read float and then write to a double. This can cause very nasty bugs in practice.

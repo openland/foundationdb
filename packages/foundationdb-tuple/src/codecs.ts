@@ -1,3 +1,4 @@
+import { Float } from './Float';
 import { BufferWriter, BufferReader } from './utils/buffer';
 import { TupleCodec } from './codecs';
 import { normalizeInteger } from './utils/normalizeInteger';
@@ -209,11 +210,11 @@ const adjustDouble = (data: Buffer, isEncode: boolean) => {
     return data;
 };
 
-export const DoubleCodec: TupleCodec<{ type: 'double', value: number }> = {
+export const DoubleCodec: TupleCodec<Float> = {
     is(code: number) {
         return code === 0x21;
     },
-    pack(src: { type: 'double', value: number }, writer: BufferWriter) {
+    pack(src: Float, writer: BufferWriter) {
         let normalized = normalizeDouble(src.value);
         writer.writeByte(0x21);
 
@@ -236,6 +237,6 @@ export const DoubleCodec: TupleCodec<{ type: 'double', value: number }> = {
         // other funky float values.
         // We throw error if we detect NaN to avoid inconsistent data.
         const value = normalizeDouble(numBuf.readDoubleBE(0));
-        return { type: 'double', value: value };
+        return new Float(value);
     }
 };

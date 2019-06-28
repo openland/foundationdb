@@ -1,3 +1,4 @@
+import { Float } from './Float';
 import { BufferWriter, BufferReader } from './utils/buffer';
 import { NullCodec, TupleCodec, BooleanCodec, ByteStringCodec, TextStringCodec, IntegerCodec, DoubleCodec } from './codecs';
 
@@ -84,9 +85,9 @@ describe('Tuple Codecs', () => {
         expect(DoubleCodec.is(0x21)).toBe(true);
         expect(DoubleCodec.is(0x22)).toBe(false);
         expect(DoubleCodec.is(0x20)).toBe(false);
-        testEncoding(DoubleCodec, { type: 'double', value: -42 }, Buffer.from('213fbaffffffffffff', 'hex'));
-        testFailedEncoding(DoubleCodec, { type: 'double', value: NaN });
-        testFailedEncoding(DoubleCodec, { type: 'double', value: Infinity });
-        testFailedEncoding(DoubleCodec, { type: 'double', value: -Infinity });
+        testEncoding(DoubleCodec, new Float(-42), Buffer.from('213fbaffffffffffff', 'hex'));
+        testFailedEncoding(DoubleCodec, new Float(NaN));
+        testFailedEncoding(DoubleCodec, new Float(Infinity));
+        testFailedEncoding(DoubleCodec, new Float(-Infinity));
     });
 });
