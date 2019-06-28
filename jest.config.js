@@ -32,6 +32,7 @@ module.exports = {
         '^@openland/foundationdb-singleton$': '<rootDir>/packages/foundationdb-singleton/src',
         '^@openland/foundationdb-utils$': '<rootDir>/packages/foundationdb-utils/src',
         '^@openland/foundationdb-compiler$': '<rootDir>/packages/foundationdb-compiler/src',
-        '^@openland/foundationdb-entity$': '<rootDir>/packages/foundationdb-entity/src'
+        '^@openland/foundationdb-entity$': '<rootDir>/packages/foundationdb-entity/src',
+        '^@openland/foundationdb-tuple$': '<rootDir>/packages/foundationdb-tuple/src'
     }
 };

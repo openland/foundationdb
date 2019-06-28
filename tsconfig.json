@@ -50,6 +50,9 @@
         },
         {
             "path": "./packages/foundationdb-entity-specs"
+        },
+        {
+            "path": "./packages/foundationdb-tuple"
         }
     ]
 }
