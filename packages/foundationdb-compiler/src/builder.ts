@@ -1,5 +1,52 @@
 import { SchemaModel, AtomicModel, PrimaryKeyType, EntityModel, FieldType, Field } from './model';
 
+const reservedFieldNames = [
+    'do', 'if', 'in', 'for', 'let', 'new', 'try', 'var', 'case', 'else',
+    'enum', 'eval', 'null', 'this', 'true', 'void', 'with', 'break', 'catch',
+    'class', 'const', 'false', 'super', 'throw', 'while', 'yield', 'delete',
+    'export', 'import', 'public', 'return', 'static', 'switch', 'typeof',
+    'default', 'extends', 'finally', 'package', 'private', 'continue',
+    'debugger', 'function', 'arguments', 'interface', 'protected',
+    'implements', 'instanceof', 'NaN', 'Infinity', 'undefined', 'async',
+
+    'createdAt', 'updatedAt', 'deletedAt'
+];
+
+const fieldRegex = RegExp('/^[a-z][a-zA-Z0-9]*$/').compile();
+const entityRegex = RegExp('/^[A-Z][a-zA-Z0-9]*$/').compile();
+
+const reservedEntityNames = [
+    'Entity', 'Tuple', 'EntityFactory', 'Store', 'Context', 'Subspace', 'EntityStorage',
+    'BaseStore', 'EntityDescriptor', 'SecondaryIndexDescriptor', 'ShapeWithMetadata'
+];
+
+function checkValidEntityName(name: string) {
+    if (name.length === 0) {
+        throw Error('Field name can\'t be empty');
+    }
+    if (reservedEntityNames.indexOf(name) >= 0) {
+        throw Error('Field name is invalid');
+    }
+    if (!entityRegex.test(name)) {
+        throw Error('Field name is invalid');
+    }
+}
+
+function checkValidFieldName(name: string) {
+    if (name.length === 0) {
+        throw Error('Field name can\'t be empty');
+    }
+    if (name.startsWith('_')) {
+        throw Error('Field can\'t start with underscore');
+    }
+    if (reservedFieldNames.indexOf(name) >= 0) {
+        throw Error('Field name is invalid');
+    }
+    if (!fieldRegex.test(name)) {
+        throw Error('Field name is invalid');
+    }
+}
+
 let currentSchema: SchemaModel | null = null;
 let currentAtomic: AtomicModel | null = null;
 let currentEntity: EntityModel | null = null;
@@ -13,6 +60,7 @@ export function declareSchema(schema: () => void) {
 }
 
 export function atomicInt(name: string, schema: () => void) {
+    checkValidEntityName(name);
     if (currentAtomic || currentEntity) {
         throw Error('You can\'t nest declarations');
     }
@@ -27,6 +75,7 @@ export function atomicInt(name: string, schema: () => void) {
 }
 
 export function atomicBool(name: string, schema: () => void) {
+    checkValidEntityName(name);
     if (currentAtomic || currentEntity) {
         throw Error('You can\'t nest declarations');
     }
@@ -41,6 +90,7 @@ export function atomicBool(name: string, schema: () => void) {
 }
 
 export function entity(name: string, schema: () => void) {
+    checkValidEntityName(name);
     if (currentAtomic || currentEntity) {
         throw Error('You can\'t nest declarations');
     }
@@ -55,6 +105,7 @@ export function entity(name: string, schema: () => void) {
 }
 
 export function primaryKey(name: string, type: PrimaryKeyType) {
+    checkValidFieldName(name);
     if (!currentAtomic && !currentEntity) {
         throw Error('No entity specified');
     }
@@ -67,6 +118,7 @@ export function primaryKey(name: string, type: PrimaryKeyType) {
 }
 
 export function field(name: string, type: FieldType, enumValues?: string[]) {
+    checkValidFieldName(name);
     if (!currentEntity) {
         throw Error('No entity specified');
     }
