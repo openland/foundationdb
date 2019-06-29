@@ -123,15 +123,15 @@ describe('Codecs', () => {
         expect(() => codec.encode('3' as any)).toThrowError();
     });
 
-    // Union
-    it('should union types', () => {
+    // Merge
+    it('should merge types', () => {
         let codec1 = codecs.struct({
             name: codecs.string
         });
         let codec2 = codecs.struct({
             metadata: codecs.string
         });
-        let codec3 = codecs.union(codec1, codec2);
+        let codec3 = codecs.merge(codec1, codec2);
         let decoded = codec3.decode({
             name: 'name1',
             metadata: 'metadata2'
@@ -146,5 +146,24 @@ describe('Codecs', () => {
         expect(Object.keys(encoded).length).toBe(2);
         expect(encoded.name).toBe('name1');
         expect(encoded.metadata).toBe('metadata2');
+    });
+
+    // Union
+    it('should union types', () => {
+        let codec = codecs.union({
+            name: codecs.struct({
+                display: codecs.string
+            }),
+            name2: codecs.struct({
+                display2: codecs.string
+            })
+        });
+
+        let encoded = codec.encode({ type: 'name', display: '123' });
+        expect(encoded.type).toBe('name');
+        expect(encoded.display).toBe('123');
+        let decoded = codec.decode(encoded);
+        expect(decoded.type).toBe('name');
+        expect((decoded as any).display).toBe('123');
     });
 });

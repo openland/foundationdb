@@ -69,6 +69,60 @@ export class StructCodec<T> implements Codec<T> {
     }
 }
 
+export class UnionCodec<T> implements Codec<T> {
+    readonly [typeSymbol]!: T;
+    readonly keys: { [key: string]: StructCodec<any> };
+
+    constructor(keys: { [key: string]: StructCodec<any> }) {
+        this.keys = keys;
+    }
+
+    decode(src: any): T {
+        let type = src.type as string;
+        if (typeof type !== 'string') {
+            throw Error('.type field is not string, got: ' + type);
+        }
+        let codec = this.keys[type];
+        if (!codec) {
+            throw Error('type ' + type + ' is not found');
+        }
+        return {
+            type,
+            ...codec.decode(src)
+        };
+    }
+
+    encode(src: T) {
+        let type = (src as any).type as string;
+        if (typeof type !== 'string') {
+            throw Error('.type field is not string, got: ' + type);
+        }
+        let codec = this.keys[type];
+        if (!codec) {
+            throw Error('type ' + type + ' is not found');
+        }
+        return {
+            type,
+            ...codec.encode(src)
+        };
+    }
+
+    normalize(src: any): T {
+        let type = src.type as string;
+        if (typeof type !== 'string') {
+            throw Error('.type field is not string, got: ' + type);
+        }
+        let codec = this.keys[type];
+        if (!codec) {
+            throw Error('type ' + type + ' is not found');
+        }
+        return {
+            type,
+            ...codec.normalize(src)
+        };
+    }
+}
+
 class StringCodec implements Codec<string> {
     readonly [typeSymbol]!: string;
 
@@ -309,6 +363,18 @@ class EnumCodec<T> implements Codec<T> {
     }
 }
 
+//
+// Declares type as K (key) from keys of source object to a values from same keys.
+// Then [keyof T] converts type to a union by taking value by key name. 
+//
+type ValuesToUnion<T> = { [K in keyof T]: T[K] }[keyof T];
+
+// 
+// This will merge two maps to a single map and make intellisence looks much better.
+// You have to inline this type to avoid hiding actual types.
+//
+// type NiceMerge<T1, T2> = { [K in keyof (T1 & T2)]: (T1 & T2)[K] };
+
 export const codecs = {
     string: new StringCodec() as Codec<string>,
     boolean: new BooleanCodec() as Codec<boolean>,
@@ -324,7 +390,15 @@ export const codecs = {
     struct: <T extends { [key: string]: Codec<any> }>(src: T) => {
         return new StructCodec<{ [K in keyof T]: T[K][typeof typeSymbol] }>(src);
     },
-    union: <T1, T2>(a: Codec<T1>, b: Codec<T2>) => {
+    union: <T extends { [key: string]: StructCodec<any> }>(src: T) => {
+        return new UnionCodec<ValuesToUnion<{
+            [K in keyof T]:
+            /* NiceMerge<{type: K}, T[K][typeof typeSymbol] -> */
+            { [K2 in keyof ({ type: K } & T[K][typeof typeSymbol])]: ({ type: K } & T[K][typeof typeSymbol])[K2] } }
+        /** <- */
+        >>(src);
+    },
+    merge: <T1, T2>(a: Codec<T1>, b: Codec<T2>) => {
         if (!(a instanceof StructCodec)) {
             throw Error('Union is possible only for struct codecs');
         }
@@ -335,6 +409,8 @@ export const codecs = {
             ...a.fields,
             ...b.fields
         } as any;
+
+        // NiceMerge inline
         return new StructCodec<{ [K in keyof (T1 & T2)]: (T1 & T2)[K] }>(fields) as Codec<{ [K in keyof (T1 & T2)]: (T1 & T2)[K] }>;
     },
     default: <T>(src: Codec<T | null>, value: (() => T) | T) => {

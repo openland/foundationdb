@@ -31,7 +31,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     protected constructor(descriptor: EntityDescriptor<SHAPE>) {
         Object.freeze(descriptor);
         this.descriptor = descriptor;
-        this.codec = codecs.union(descriptor.codec, metadataCodec);
+        this.codec = codecs.merge(descriptor.codec, metadataCodec);
     }
 
     protected async _findById(ctx: Context, _id: PrimaryKeyType[]): Promise<T | null> {
