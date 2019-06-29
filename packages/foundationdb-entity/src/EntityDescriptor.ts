@@ -29,6 +29,11 @@ export interface EntityDescriptor<SHAPE> {
     codec: StructCodec<SHAPE>;
 
     /**
+     * Primary Key Descriptors
+     */
+    primaryKeys: PrimaryKeyDescriptor[];
+
+    /**
      * List of secondary index descriptors
      */
     secondaryIndexes: SecondaryIndexDescriptor[];
@@ -37,6 +42,22 @@ export interface EntityDescriptor<SHAPE> {
      * Reference to the underlying storage
      */
     storage: EntityStorage;
+}
+
+/**
+ * Primary key descriptor
+ */
+export interface PrimaryKeyDescriptor {
+    
+    /**
+     * Name of primary key
+     */
+    name: string;
+    
+    /**
+     * Type of primary key
+     */
+    type: 'string' | 'boolean' | 'integer' | 'float';
 }
 
 /**

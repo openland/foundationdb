@@ -8,4 +8,9 @@ export default declareSchema(() => {
         field('value2', 'number');
         field('value3', 'boolean').nullable();
     });
+
+    entity('SimpleEntity2', () => {
+        primaryKey('id', 'number');
+        field('value', 'string');
+    });
 });

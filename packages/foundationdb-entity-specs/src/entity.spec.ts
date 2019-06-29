@@ -1,4 +1,4 @@
-import { SimpleEntityFactory } from './entity.repo';
+import { SimpleEntityFactory, SimpleEntity2Factory } from './entity.repo';
 import { EntityStorage } from '@openland/foundationdb-entity';
 import { Database, withReadOnlyTransaction, inTx } from '@openland/foundationdb';
 import { createNamedContext } from '@openland/context';
@@ -221,5 +221,16 @@ describe('Entity', () => {
         });
         let res = await factory.descriptor.subspace.get(testCtx, ['1']);
         expect(res.unknownField).toBe('unknown value');
+    });
+
+    it('should throw on invalid key numbers', async () => {
+        let testCtx = createNamedContext('test');
+        let db = await Database.openTest();
+        let store = new EntityStorage(db);
+        let factory = await SimpleEntity2Factory.open(store);
+        await expect(factory.findById(testCtx, 0.1)).rejects.toThrowError();
+        await expect(inTx(testCtx, async (ctx) => {
+            return await factory.create(ctx, 0.1, { value: 'hello world1' });
+        })).rejects.toThrowError();
     });
 });

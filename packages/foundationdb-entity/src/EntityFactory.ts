@@ -1,3 +1,4 @@
+import { TupleItem, Float } from '@openland/foundationdb-tuple';
 import { uniqueSeed, Mutex } from '@openland/foundationdb-utils';
 import { Context } from '@openland/context';
 import { TransactionCache, encoders, inTx } from '@openland/foundationdb';
@@ -8,7 +9,7 @@ import { codecs, Codec } from './codecs';
 import { ShapeWithMetadata } from './ShapeWithMetadata';
 import { PrimaryKeyType } from './PrimaryKeyType';
 
-function getCacheKey(id: ReadonlyArray<PrimaryKeyType>) {
+function getCacheKey(id: ReadonlyArray<TupleItem>) {
     return encoders.tuple.pack(id as any /* WTF, TS? */).toString('hex');
 }
 
@@ -33,12 +34,10 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         this.codec = codecs.union(descriptor.codec, metadataCodec);
     }
 
-    protected async _findById(ctx: Context, id: PrimaryKeyType[]): Promise<T | null> {
+    protected async _findById(ctx: Context, _id: PrimaryKeyType[]): Promise<T | null> {
 
-        //
-        // We assume here next things:
-        // * id is a correct tuple and verified by callee
-        // 
+        // Validate input
+        let id = this._resolvePrimaryKey(_id);
 
         return await this._getPrimaryLock(ctx, id).runExclusive(async () => {
 
@@ -72,16 +71,16 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         });
     }
 
-    protected async _create(ctx: Context, id: PrimaryKeyType[], value: SHAPE): Promise<T> {
+    protected async _create(ctx: Context, _id: PrimaryKeyType[], value: SHAPE): Promise<T> {
 
         //
         // We assume here next things:
-        // * id is a correct tuple and verified by callee
         // * value is in normalized shape. Meaning all undefined are replaced with nulls and 
         //   there are no unknown fields.
         //
 
         // Validate input
+        let id = this._resolvePrimaryKey(_id);
         let now = Date.now();
         let metadata: EntityMetadata = {
             versionCode: 0,
@@ -119,7 +118,8 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     }
 
     // Need to be arrow function since we are passing this function to entity instances
-    protected _flush = async (ctx: Context, id: ReadonlyArray<PrimaryKeyType>, oldValue: ShapeWithMetadata<SHAPE>, newValue: ShapeWithMetadata<SHAPE>) => {
+    protected _flush = async (ctx: Context, _id: ReadonlyArray<PrimaryKeyType>, oldValue: ShapeWithMetadata<SHAPE>, newValue: ShapeWithMetadata<SHAPE>) => {
+        let id = this._resolvePrimaryKey(_id);
         await this._getPrimaryLock(ctx, id).runExclusive(async () => {
 
             // Encode value before any write
@@ -138,7 +138,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         return { ...value, ...this.codec.decode(value) };
     }
 
-    private _getPrimaryLock(ctx: Context, id: ReadonlyArray<PrimaryKeyType>) {
+    private _getPrimaryLock(ctx: Context, id: ReadonlyArray<TupleItem>) {
         let k = getCacheKey(id);
         let ex = this.primaryLockCache.get(ctx, k);
         if (!ex) {
@@ -151,4 +151,35 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     }
 
     protected abstract _createEntityInstance(ctx: Context, value: ShapeWithMetadata<SHAPE>): T;
+
+    private _resolvePrimaryKey(id: ReadonlyArray<PrimaryKeyType>) {
+        if (this.descriptor.primaryKeys.length !== id.length) {
+            throw Error('Invalid primary key');
+        }
+        let res: TupleItem[] = [];
+        for (let i = 0; i < id.length; i++) {
+            let key = this.descriptor.primaryKeys[i];
+            if (key.type === 'boolean') {
+                if (typeof id[i] !== 'boolean') {
+                    throw Error('Unexpected key');
+                }
+                res.push(id[i]);
+            } else if (key.type === 'integer') {
+                if (typeof id[i] !== 'number') {
+                    throw Error('Unexpected key');
+                }
+                res.push(id[i]);
+            } else if (key.type === 'float') {
+                if (typeof id[i] !== 'number') {
+                    throw Error('Unexpected key');
+                }
+                res.push(new Float(id[i] as number));
+            } else if (key.type === 'string') {
+                res.push(id[i]);
+            } else {
+                throw Error('Unknown primary key');
+            }
+        }
+        return res;
+    }
 }

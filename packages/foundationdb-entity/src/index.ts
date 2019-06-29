@@ -7,7 +7,7 @@ export { BaseStore } from './BaseStore';
 export { Entity } from './Entity';
 export { EntityFactory } from './EntityFactory';
 export { EntityMetadata } from './EntityMetadata';
-export { EntityDescriptor, SecondaryIndexDescriptor } from './EntityDescriptor';
+export { EntityDescriptor, SecondaryIndexDescriptor, PrimaryKeyDescriptor } from './EntityDescriptor';
 export { codecs, Codec, typeSymbol } from './codecs';
 export { ShapeWithMetadata } from './ShapeWithMetadata';
 export { PrimaryKeyType } from './PrimaryKeyType';

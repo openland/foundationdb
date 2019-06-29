@@ -6,7 +6,7 @@ import { Subspace } from '@openland/foundationdb';
 // @ts-ignore
 import { EntityStorage, BaseStore, codecs as c } from '@openland/foundationdb-entity';
 // @ts-ignore
-import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata } from '@openland/foundationdb-entity';
+import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata, PrimaryKeyDescriptor } from '@openland/foundationdb-entity';
 
 export interface SimpleEntityShape {
     id: string;
@@ -57,6 +57,8 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
     static async open(storage: EntityStorage) {
         let subspace = await storage.resolveEntityDirectory('simpleEntity');
         let secondaryIndexes: SecondaryIndexDescriptor[] = [];
+        let primaryKeys: PrimaryKeyDescriptor[] = [];
+        primaryKeys.push({ name: 'id', type: 'string' });
         let codec = c.struct({
             id: c.string,
             value: c.string,
@@ -66,7 +68,7 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
         let descriptor: EntityDescriptor<SimpleEntityShape> = {
             name: 'SimpleEntity',
             storageKey: 'simpleEntity',
-            subspace, codec, secondaryIndexes, storage
+            subspace, codec, secondaryIndexes, storage, primaryKeys
         };
         return new SimpleEntityFactory(descriptor);
     }
@@ -88,14 +90,75 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
     }
 }
 
+export interface SimpleEntity2Shape {
+    id: number;
+    value: string;
+}
+
+export interface SimpleEntity2CreateShape {
+    value: string;
+}
+
+export class SimpleEntity2 extends Entity<SimpleEntity2Shape> {
+    get id(): number { return this._rawValue.id; }
+    get value(): string {  return this._rawValue.value; }
+    set value(value: string) {
+        let normalized = this.descriptor.codec.fields.value.normalize(value);
+        if (this._rawValue.value !== normalized) {
+            this._rawValue.value = normalized;
+            this._updatedValues.value = normalized;
+            this.invalidate();
+        }
+    }
+}
+
+export class SimpleEntity2Factory extends EntityFactory<SimpleEntity2Shape, SimpleEntity2> {
+
+    static async open(storage: EntityStorage) {
+        let subspace = await storage.resolveEntityDirectory('simpleEntity2');
+        let secondaryIndexes: SecondaryIndexDescriptor[] = [];
+        let primaryKeys: PrimaryKeyDescriptor[] = [];
+        primaryKeys.push({ name: 'id', type: 'integer' });
+        let codec = c.struct({
+            id: c.number,
+            value: c.string,
+        });
+        let descriptor: EntityDescriptor<SimpleEntity2Shape> = {
+            name: 'SimpleEntity2',
+            storageKey: 'simpleEntity2',
+            subspace, codec, secondaryIndexes, storage, primaryKeys
+        };
+        return new SimpleEntity2Factory(descriptor);
+    }
+
+    private constructor(descriptor: EntityDescriptor<SimpleEntity2Shape>) {
+        super(descriptor);
+    }
+
+    create(ctx: Context, id: number, src: SimpleEntity2CreateShape): Promise<SimpleEntity2> {
+        return this._create(ctx, [id], this.descriptor.codec.normalize({id, ...src }));
+    }
+
+    findById(ctx: Context, id: number): Promise<SimpleEntity2 | null> {
+        return this._findById(ctx, [id]);
+    }
+
+    protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<SimpleEntity2Shape>): SimpleEntity2 {
+        return new SimpleEntity2([value.id], value, this.descriptor, this._flush, ctx);
+    }
+}
+
 export interface Store extends BaseStore {
     readonly SimpleEntity: SimpleEntityFactory;
+    readonly SimpleEntity2: SimpleEntity2Factory;
 }
 
 export async function openStore(storage: EntityStorage): Promise<Store> {
     let SimpleEntityPromise = SimpleEntityFactory.open(storage);
+    let SimpleEntity2Promise = SimpleEntity2Factory.open(storage);
     return {
         storage,
         SimpleEntity: await SimpleEntityPromise,
+        SimpleEntity2: await SimpleEntity2Promise,
     };
 }

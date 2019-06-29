@@ -6,7 +6,7 @@ import * as Case from 'change-case';
 export function generateEntitiesHeader(schema: SchemaModel, builder: StringBuilder) {
     if (schema.entities.length > 0) {
         builder.append(`// @ts-ignore`);
-        builder.append(`import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata } from '@openland/foundationdb-entity';`);
+        builder.append(`import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata, PrimaryKeyDescriptor } from '@openland/foundationdb-entity';`);
     }
 }
 
@@ -68,7 +68,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         }
         for (let key of entity.fields) {
             let type: string = resolveType(key.type, []);
-            
+
             // Getter
             if (key.isNullable) {
                 builder.append(`get ${key.name}(): ${type} | null { return this._rawValue.${key.name}; }`);
@@ -118,6 +118,20 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         // Indexes
         builder.append(`let secondaryIndexes: SecondaryIndexDescriptor[] = [];`);
 
+        // Primary Keys
+        builder.append(`let primaryKeys: PrimaryKeyDescriptor[] = [];`);
+        for (let key of entity.keys) {
+            if (key.type === 'string') {
+                builder.append(`primaryKeys.push({ name: '${key.name}', type: 'string' });`);
+            } else if (key.type === 'boolean') {
+                builder.append(`primaryKeys.push({ name: '${key.name}', type: 'boolean' });`);
+            } else if (key.type === 'number') {
+                builder.append(`primaryKeys.push({ name: '${key.name}', type: 'integer' });`);
+            } else {
+                throw Error('Unsupported primary key type: ' + key.type);
+            }
+        }
+
         // Codec
         builder.append(`let codec = c.struct({`);
         builder.addIndent();
@@ -163,7 +177,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         builder.addIndent();
         builder.append(`name: '${entity.name}',`);
         builder.append(`storageKey: '${entityKey}',`);
-        builder.append(`subspace, codec, secondaryIndexes, storage`);
+        builder.append(`subspace, codec, secondaryIndexes, storage, primaryKeys`);
         builder.removeIndent();
         builder.append(`};`);
         builder.append(`return new ${entityClass}Factory(descriptor);`);
