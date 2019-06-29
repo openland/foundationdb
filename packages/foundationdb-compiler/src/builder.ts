@@ -67,7 +67,7 @@ export function atomicInt(name: string, schema: () => void) {
     if (currentSchema!.usedNames.has(name)) {
         throw Error('Duplicate atomic with name ' + name);
     }
-    currentAtomic = new AtomicModel(name, 'int');
+    currentAtomic = new AtomicModel(name, 'integer');
     schema();
     currentSchema!.usedNames.add(name);
     currentSchema!.atomics.push(currentAtomic!!);
@@ -117,6 +117,21 @@ export function primaryKey(name: string, type: PrimaryKeyType) {
     }
 }
 
+class FieldBuilder {
+    readonly res: Field;
+    constructor(res: Field) {
+        this.res = res;
+    }
+    nullable = () => {
+        this.res.isNullable = true;
+        return this;
+    }
+    secure = () => {
+        this.res.isSecure = true;
+        return this;
+    }
+}
+
 export function field(name: string, type: FieldType, enumValues?: string[]) {
     checkValidFieldName(name);
     if (!currentEntity) {
@@ -124,14 +139,6 @@ export function field(name: string, type: FieldType, enumValues?: string[]) {
     }
     let res = new Field(name, type, enumValues ? enumValues : []);
     currentEntity!.fields.push(res);
-    return {
-        nullable() {
-            res.isNullable = true;
-            return this;
-        },
-        secure() {
-            res.isSecure = true;
-            return this;
-        }
-    };
+
+    return new FieldBuilder(res);
 }

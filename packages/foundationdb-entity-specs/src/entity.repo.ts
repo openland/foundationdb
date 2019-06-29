@@ -66,7 +66,7 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
         let codec = c.struct({
             id: c.string,
             value: c.string,
-            value2: c.number,
+            value2: c.integer,
             value3: c.optional(c.boolean),
         });
         let descriptor: EntityDescriptor<SimpleEntityShape> = {
@@ -126,7 +126,7 @@ export class SimpleEntity2Factory extends EntityFactory<SimpleEntity2Shape, Simp
         let fields: FieldDescriptor[] = [];
         fields.push({ name: 'value', type: 'string', nullable: false, secure: false });
         let codec = c.struct({
-            id: c.number,
+            id: c.integer,
             value: c.string,
         });
         let descriptor: EntityDescriptor<SimpleEntity2Shape> = {
@@ -154,17 +154,144 @@ export class SimpleEntity2Factory extends EntityFactory<SimpleEntity2Shape, Simp
     }
 }
 
+export interface AllFieldsShape {
+    key1: boolean;
+    key2: number;
+    key3: number;
+    key4: string;
+    value1: boolean;
+    value2: number;
+    value3: number;
+    value4: string;
+    value5: 'enum1' | 'enum2';
+}
+
+export interface AllFieldsCreateShape {
+    value1: boolean;
+    value2: number;
+    value3: number;
+    value4: string;
+    value5: 'enum1' | 'enum2';
+}
+
+export class AllFields extends Entity<AllFieldsShape> {
+    get key1(): boolean { return this._rawValue.key1; }
+    get key2(): number { return this._rawValue.key2; }
+    get key3(): number { return this._rawValue.key3; }
+    get key4(): string { return this._rawValue.key4; }
+    get value1(): boolean {  return this._rawValue.value1; }
+    set value1(value: boolean) {
+        let normalized = this.descriptor.codec.fields.value1.normalize(value);
+        if (this._rawValue.value1 !== normalized) {
+            this._rawValue.value1 = normalized;
+            this._updatedValues.value1 = normalized;
+            this.invalidate();
+        }
+    }
+    get value2(): number {  return this._rawValue.value2; }
+    set value2(value: number) {
+        let normalized = this.descriptor.codec.fields.value2.normalize(value);
+        if (this._rawValue.value2 !== normalized) {
+            this._rawValue.value2 = normalized;
+            this._updatedValues.value2 = normalized;
+            this.invalidate();
+        }
+    }
+    get value3(): number {  return this._rawValue.value3; }
+    set value3(value: number) {
+        let normalized = this.descriptor.codec.fields.value3.normalize(value);
+        if (this._rawValue.value3 !== normalized) {
+            this._rawValue.value3 = normalized;
+            this._updatedValues.value3 = normalized;
+            this.invalidate();
+        }
+    }
+    get value4(): string {  return this._rawValue.value4; }
+    set value4(value: string) {
+        let normalized = this.descriptor.codec.fields.value4.normalize(value);
+        if (this._rawValue.value4 !== normalized) {
+            this._rawValue.value4 = normalized;
+            this._updatedValues.value4 = normalized;
+            this.invalidate();
+        }
+    }
+    get value5(): 'enum1' | 'enum2' {  return this._rawValue.value5; }
+    set value5(value: 'enum1' | 'enum2') {
+        let normalized = this.descriptor.codec.fields.value5.normalize(value);
+        if (this._rawValue.value5 !== normalized) {
+            this._rawValue.value5 = normalized;
+            this._updatedValues.value5 = normalized;
+            this.invalidate();
+        }
+    }
+}
+
+export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
+
+    static async open(storage: EntityStorage) {
+        let subspace = await storage.resolveEntityDirectory('allFields');
+        let secondaryIndexes: SecondaryIndexDescriptor[] = [];
+        let primaryKeys: PrimaryKeyDescriptor[] = [];
+        primaryKeys.push({ name: 'key1', type: 'boolean' });
+        primaryKeys.push({ name: 'key2', type: 'integer' });
+        primaryKeys.push({ name: 'key3', type: 'float' });
+        primaryKeys.push({ name: 'key4', type: 'string' });
+        let fields: FieldDescriptor[] = [];
+        fields.push({ name: 'value1', type: 'boolean', nullable: false, secure: false });
+        fields.push({ name: 'value2', type: 'integer', nullable: false, secure: false });
+        fields.push({ name: 'value3', type: 'float', nullable: false, secure: false });
+        fields.push({ name: 'value4', type: 'string', nullable: false, secure: false });
+        fields.push({ name: 'value5', type: 'enum', enumValues: ['enum1', 'enum2'], nullable: false, secure: false });
+        let codec = c.struct({
+            key1: c.boolean,
+            key2: c.integer,
+            key3: c.float,
+            key4: c.string,
+            value1: c.boolean,
+            value2: c.integer,
+            value3: c.float,
+            value4: c.string,
+            value5: c.enum('enum1', 'enum2'),
+        });
+        let descriptor: EntityDescriptor<AllFieldsShape> = {
+            name: 'AllFields',
+            storageKey: 'allFields',
+            subspace, codec, secondaryIndexes, storage, primaryKeys, fields
+        };
+        return new AllFieldsFactory(descriptor);
+    }
+
+    private constructor(descriptor: EntityDescriptor<AllFieldsShape>) {
+        super(descriptor);
+    }
+
+    create(ctx: Context, key1: boolean, key2: number, key3: number, key4: string, src: AllFieldsCreateShape): Promise<AllFields> {
+        return this._create(ctx, [key1, key2, key3, key4], this.descriptor.codec.normalize({key1, key2, key3, key4, ...src }));
+    }
+
+    findById(ctx: Context, key1: boolean, key2: number, key3: number, key4: string): Promise<AllFields | null> {
+        return this._findById(ctx, [key1, key2, key3, key4]);
+    }
+
+    protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<AllFieldsShape>): AllFields {
+        return new AllFields([value.key1, value.key2, value.key3, value.key4], value, this.descriptor, this._flush, ctx);
+    }
+}
+
 export interface Store extends BaseStore {
     readonly SimpleEntity: SimpleEntityFactory;
     readonly SimpleEntity2: SimpleEntity2Factory;
+    readonly AllFields: AllFieldsFactory;
 }
 
 export async function openStore(storage: EntityStorage): Promise<Store> {
     let SimpleEntityPromise = SimpleEntityFactory.open(storage);
     let SimpleEntity2Promise = SimpleEntity2Factory.open(storage);
+    let AllFieldsPromise = AllFieldsFactory.open(storage);
     return {
         storage,
         SimpleEntity: await SimpleEntityPromise,
         SimpleEntity2: await SimpleEntity2Promise,
+        AllFields: await AllFieldsPromise,
     };
 }

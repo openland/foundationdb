@@ -20,7 +20,7 @@ export function generateAtomics(schema: SchemaModel, builder: StringBuilder) {
         let entityKey = Case.camelCase(atomic.name);
         let entityClass = Case.pascalCase(atomic.name);
         let baseClass: string;
-        if (atomic.kind === 'int') {
+        if (atomic.kind === 'integer') {
             baseClass = 'AtomicIntegerFactory';
         } else if (atomic.kind === 'boolean') {
             baseClass = 'AtomicBooleanFactory';
@@ -79,7 +79,7 @@ export function generateAtomics(schema: SchemaModel, builder: StringBuilder) {
             builder.append('}');
         }
 
-        if (atomic.kind === 'int') {
+        if (atomic.kind === 'integer') {
             builder.append();
             builder.append(`set(ctx: Context, ${atomic.keys.map((v) => v.name + ': ' + v.type).join(', ')}, value: number) {`);
             builder.addIndent();

@@ -1,5 +1,5 @@
-export type PrimaryKeyType = 'string' | 'number' | 'boolean';
-export type FieldType = 'string' | 'number' | 'boolean' | 'enum';
+export type PrimaryKeyType = 'string' | 'integer' | 'float' | 'boolean';
+export type FieldType = 'string' | 'integer' | 'float' | 'boolean' | 'enum';
 
 export class PrimaryKey {
     readonly name: string;
@@ -15,7 +15,7 @@ export class Field {
     readonly name: string;
     readonly type: FieldType;
     readonly enumValues: string[];
-    
+
     isNullable: boolean = false;
     isSecure: boolean = false;
 
@@ -35,10 +35,10 @@ export class SchemaModel {
 
 export class AtomicModel {
     readonly name: string;
-    readonly kind: 'int' | 'boolean';
+    readonly kind: 'integer' | 'boolean';
     readonly keys: PrimaryKey[] = [];
 
-    constructor(name: string, kind: 'int' | 'boolean') {
+    constructor(name: string, kind: 'integer' | 'boolean') {
         this.name = name;
         this.kind = kind;
     }

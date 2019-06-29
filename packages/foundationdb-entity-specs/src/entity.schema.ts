@@ -1,16 +1,27 @@
-import { declareSchema } from '@openland/foundationdb-compiler';
-import { entity, primaryKey, field } from '@openland/foundationdb-compiler/lib/builder';
+import { declareSchema, entity, primaryKey, field } from '@openland/foundationdb-compiler';
 
 export default declareSchema(() => {
     entity('SimpleEntity', () => {
         primaryKey('id', 'string');
         field('value', 'string');
-        field('value2', 'number');
+        field('value2', 'integer');
         field('value3', 'boolean').nullable();
     });
 
     entity('SimpleEntity2', () => {
-        primaryKey('id', 'number');
+        primaryKey('id', 'integer');
         field('value', 'string');
+    });
+
+    entity('AllFields', () => {
+        primaryKey('key1', 'boolean');
+        primaryKey('key2', 'integer');
+        primaryKey('key3', 'float');
+        primaryKey('key4', 'string');
+        field('value1', 'boolean');
+        field('value2', 'integer');
+        field('value3', 'float');
+        field('value4', 'string');
+        field('value5', 'enum', ['enum1', 'enum2']);
     });
 });

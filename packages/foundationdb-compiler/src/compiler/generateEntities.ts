@@ -15,8 +15,12 @@ function resolveType(type: FieldType, enumValues: string[]) {
         return 'string';
     } else if (type === 'boolean') {
         return 'boolean';
-    } else if (type === 'number') {
+    } else if (type === 'integer') {
         return 'number';
+    } else if (type === 'float') {
+        return 'number';
+    } else if (type === 'enum') {
+        return enumValues.map((v) => `'${v}'`).join(' | ');
     } else {
         throw Error('Unsupported primary key type: ' + type);
     }
@@ -67,7 +71,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
             builder.append(`get ${key.name}(): ${type} { return this._rawValue.${key.name}; }`);
         }
         for (let key of entity.fields) {
-            let type: string = resolveType(key.type, []);
+            let type: string = resolveType(key.type, key.enumValues);
 
             // Getter
             if (key.isNullable) {
@@ -125,13 +129,15 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                 builder.append(`primaryKeys.push({ name: '${key.name}', type: 'string' });`);
             } else if (key.type === 'boolean') {
                 builder.append(`primaryKeys.push({ name: '${key.name}', type: 'boolean' });`);
-            } else if (key.type === 'number') {
+            } else if (key.type === 'integer') {
                 builder.append(`primaryKeys.push({ name: '${key.name}', type: 'integer' });`);
+            } else if (key.type === 'float') {
+                builder.append(`primaryKeys.push({ name: '${key.name}', type: 'float' });`);
             } else {
                 throw Error('Unsupported primary key type: ' + key.type);
             }
         }
-        
+
         // Fields
         builder.append(`let fields: FieldDescriptor[] = [];`);
         for (let key of entity.fields) {
@@ -139,8 +145,12 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                 builder.append(`fields.push({ name: '${key.name}', type: 'string', nullable: ${key.isNullable}, secure: ${key.isSecure} });`);
             } else if (key.type === 'boolean') {
                 builder.append(`fields.push({ name: '${key.name}', type: 'boolean', nullable: ${key.isNullable}, secure: ${key.isSecure} });`);
-            } else if (key.type === 'number') {
+            } else if (key.type === 'integer') {
                 builder.append(`fields.push({ name: '${key.name}', type: 'integer', nullable: ${key.isNullable}, secure: ${key.isSecure} });`);
+            } else if (key.type === 'float') {
+                builder.append(`fields.push({ name: '${key.name}', type: 'float', nullable: ${key.isNullable}, secure: ${key.isSecure} });`);
+            } else if (key.type === 'enum') {
+                builder.append(`fields.push({ name: '${key.name}', type: 'enum', enumValues: [${key.enumValues.map((v) => `'${v}'`).join(', ')}], nullable: ${key.isNullable}, secure: ${key.isSecure} });`);
             } else {
                 throw Error('Unsupported field type: ' + key.type);
             }
@@ -154,8 +164,10 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                 builder.append(`${key.name}: c.string,`);
             } else if (key.type === 'boolean') {
                 builder.append(`${key.name}: c.boolean,`);
-            } else if (key.type === 'number') {
-                builder.append(`${key.name}: c.number,`);
+            } else if (key.type === 'integer') {
+                builder.append(`${key.name}: c.integer,`);
+            } else if (key.type === 'float') {
+                builder.append(`${key.name}: c.float,`);
             } else {
                 throw Error('Unsupported primary key type: ' + key.type);
             }
@@ -173,11 +185,23 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                 } else {
                     builder.append(`${key.name}: c.boolean,`);
                 }
-            } else if (key.type === 'number') {
+            } else if (key.type === 'integer') {
                 if (key.isNullable) {
-                    builder.append(`${key.name}: c.optional(c.number),`);
+                    builder.append(`${key.name}: c.optional(c.integer),`);
                 } else {
-                    builder.append(`${key.name}: c.number,`);
+                    builder.append(`${key.name}: c.integer,`);
+                }
+            } else if (key.type === 'float') {
+                if (key.isNullable) {
+                    builder.append(`${key.name}: c.optional(c.float),`);
+                } else {
+                    builder.append(`${key.name}: c.float,`);
+                }
+            } else if (key.type === 'enum') {
+                if (key.isNullable) {
+                    builder.append(`${key.name}: c.optional(c.enum(${key.enumValues.map((v) => `'${v}'`).join(', ')})),`);
+                } else {
+                    builder.append(`${key.name}: c.enum(${key.enumValues.map((v) => `'${v}'`).join(', ')}),`);
                 }
             } else {
                 throw Error('Unsupported field type: ' + key.type);
@@ -210,7 +234,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
 
         // create
         builder.append();
-        builder.append(`create(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + v.type).join(', ')}, src: ${entityClass}CreateShape): Promise<${entityClass}> {`);
+        builder.append(`create(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type, [])).join(', ')}, src: ${entityClass}CreateShape): Promise<${entityClass}> {`);
         builder.addIndent();
         builder.append(`return this._create(ctx, [${entity.keys.map((v) => v.name).join(', ')}], this.descriptor.codec.normalize({${entity.keys.map((v) => v.name).join(', ')}, ...src }));`);
         builder.removeIndent();
@@ -218,7 +242,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
 
         // findById
         builder.append();
-        builder.append(`findById(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + v.type).join(', ')}): Promise<${entityClass} | null> {`);
+        builder.append(`findById(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type, [])).join(', ')}): Promise<${entityClass} | null> {`);
         builder.addIndent();
         builder.append(`return this._findById(ctx, [${entity.keys.map((v) => v.name).join(', ')}]);`);
         builder.removeIndent();
