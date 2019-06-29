@@ -8,6 +8,9 @@ export function normalizeInteger(src: number): number {
     if (typeof src !== 'number') {
         throw Error('Input is not integer');
     }
+    if (Object.is(src, -0)) {
+        return 0;
+    }
     if (!Number.isFinite(src)) {
         throw Error('Number ' + src + ' is not finite');
     }
@@ -17,5 +20,5 @@ export function normalizeInteger(src: number): number {
     if (!Number.isSafeInteger(src)) {
         throw Error('Number ' + src + ' is not a safe integer');
     }
-    return src | 0;
+    return src;
 }

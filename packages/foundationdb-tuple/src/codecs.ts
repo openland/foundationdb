@@ -83,9 +83,10 @@ function readBuffer(reader: BufferReader) {
             /**
              * If zero byte is not escaped then stop reading
              */
-            if (reader.completed || reader.readByte() !== 0xff) {
+            if (reader.completed || reader.peek() !== 0xff) {
                 break;
             }
+            reader.expect(0xff);
         }
         writer.writeByte(byte);
     }

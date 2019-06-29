@@ -20,12 +20,12 @@ export function pack(src: TupleItem[]): Buffer {
             TextStringCodec.pack(itm, writer);
         } else if (typeof itm === 'boolean') {
             BooleanCodec.pack(itm, writer);
-        } else if (itm === null) {
-            NullCodec.pack(itm, writer);
         } else if (Buffer.isBuffer(itm)) {
             ByteStringCodec.pack(itm, writer);
         } else if (itm instanceof Float) {
             DoubleCodec.pack(itm, writer);
+        } else if (itm === null) {
+            NullCodec.pack(itm, writer);
         } else {
             throw Error('Unknown tuple item: ' + itm);
         }
@@ -39,7 +39,7 @@ export function pack(src: TupleItem[]): Buffer {
 export function unpack(src: Buffer): TupleItem[] {
     let res: TupleItem[] = [];
     let reader = new BufferReader(src);
-    while (reader.completed) {
+    while (!reader.completed) {
         let code = reader.peek();
         if (IntegerCodec.is(code)) {
             res.push(IntegerCodec.unpack(reader));

@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`tuple should encode floats 1`] = `"21c00921fb54442d1821bff0000000000000217fffffffffffffff21800000000000000021c630000000000000"`;
+
+exports[`tuple should encode integers 1`] = `"14150113fe1502150a1627101b040000000000001412d8ef124e0e"`;
+
+exports[`tuple should encode mixed data 1`] = `"02757365720015010273636f72650021bfd999999999999a"`;
+
+exports[`tuple should encode strings 1`] = `"02000268656c6c6f210002f09fa4a300023f3f000200ff000200ffc3bf00ff00"`;
