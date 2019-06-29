@@ -34,6 +34,11 @@ export interface EntityDescriptor<SHAPE> {
     primaryKeys: PrimaryKeyDescriptor[];
 
     /**
+     * Field Descriptors
+     */
+    fields: FieldDescriptor[];
+
+    /**
      * List of secondary index descriptors
      */
     secondaryIndexes: SecondaryIndexDescriptor[];
@@ -48,16 +53,47 @@ export interface EntityDescriptor<SHAPE> {
  * Primary key descriptor
  */
 export interface PrimaryKeyDescriptor {
-    
+
     /**
      * Name of primary key
      */
     name: string;
-    
+
     /**
      * Type of primary key
      */
     type: 'string' | 'boolean' | 'integer' | 'float';
+}
+
+/**
+ * Field Descriptor
+ */
+export interface FieldDescriptor {
+
+    /**
+     * Name of field
+     */
+    name: string;
+
+    /**
+     * Type of field
+     */
+    type: 'string' | 'boolean' | 'integer' | 'float' | 'enum';
+
+    /**
+     * Enum values for enum type
+     */
+    enumValues?: string[];
+
+    /**
+     * If field is nullable
+     */
+    nullable: boolean;
+
+    /**
+     * If field contains sensitive information
+     */
+    secure: boolean;
 }
 
 /**

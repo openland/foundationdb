@@ -6,7 +6,7 @@ import { Subspace } from '@openland/foundationdb';
 // @ts-ignore
 import { EntityStorage, BaseStore, codecs as c } from '@openland/foundationdb-entity';
 // @ts-ignore
-import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata, PrimaryKeyDescriptor } from '@openland/foundationdb-entity';
+import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata, PrimaryKeyDescriptor, FieldDescriptor } from '@openland/foundationdb-entity';
 
 export interface SimpleEntityShape {
     id: string;
@@ -59,6 +59,10 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
         let secondaryIndexes: SecondaryIndexDescriptor[] = [];
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'id', type: 'string' });
+        let fields: FieldDescriptor[] = [];
+        fields.push({ name: 'value', type: 'string', nullable: false, secure: false });
+        fields.push({ name: 'value2', type: 'integer', nullable: false, secure: false });
+        fields.push({ name: 'value3', type: 'boolean', nullable: true, secure: false });
         let codec = c.struct({
             id: c.string,
             value: c.string,
@@ -68,7 +72,7 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
         let descriptor: EntityDescriptor<SimpleEntityShape> = {
             name: 'SimpleEntity',
             storageKey: 'simpleEntity',
-            subspace, codec, secondaryIndexes, storage, primaryKeys
+            subspace, codec, secondaryIndexes, storage, primaryKeys, fields
         };
         return new SimpleEntityFactory(descriptor);
     }
@@ -119,6 +123,8 @@ export class SimpleEntity2Factory extends EntityFactory<SimpleEntity2Shape, Simp
         let secondaryIndexes: SecondaryIndexDescriptor[] = [];
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'id', type: 'integer' });
+        let fields: FieldDescriptor[] = [];
+        fields.push({ name: 'value', type: 'string', nullable: false, secure: false });
         let codec = c.struct({
             id: c.number,
             value: c.string,
@@ -126,7 +132,7 @@ export class SimpleEntity2Factory extends EntityFactory<SimpleEntity2Shape, Simp
         let descriptor: EntityDescriptor<SimpleEntity2Shape> = {
             name: 'SimpleEntity2',
             storageKey: 'simpleEntity2',
-            subspace, codec, secondaryIndexes, storage, primaryKeys
+            subspace, codec, secondaryIndexes, storage, primaryKeys, fields
         };
         return new SimpleEntity2Factory(descriptor);
     }

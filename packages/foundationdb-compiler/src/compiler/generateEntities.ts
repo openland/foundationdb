@@ -6,7 +6,7 @@ import * as Case from 'change-case';
 export function generateEntitiesHeader(schema: SchemaModel, builder: StringBuilder) {
     if (schema.entities.length > 0) {
         builder.append(`// @ts-ignore`);
-        builder.append(`import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata, PrimaryKeyDescriptor } from '@openland/foundationdb-entity';`);
+        builder.append(`import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata, PrimaryKeyDescriptor, FieldDescriptor } from '@openland/foundationdb-entity';`);
     }
 }
 
@@ -131,6 +131,20 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                 throw Error('Unsupported primary key type: ' + key.type);
             }
         }
+        
+        // Fields
+        builder.append(`let fields: FieldDescriptor[] = [];`);
+        for (let key of entity.fields) {
+            if (key.type === 'string') {
+                builder.append(`fields.push({ name: '${key.name}', type: 'string', nullable: ${key.isNullable}, secure: ${key.isSecure} });`);
+            } else if (key.type === 'boolean') {
+                builder.append(`fields.push({ name: '${key.name}', type: 'boolean', nullable: ${key.isNullable}, secure: ${key.isSecure} });`);
+            } else if (key.type === 'number') {
+                builder.append(`fields.push({ name: '${key.name}', type: 'integer', nullable: ${key.isNullable}, secure: ${key.isSecure} });`);
+            } else {
+                throw Error('Unsupported field type: ' + key.type);
+            }
+        }
 
         // Codec
         builder.append(`let codec = c.struct({`);
@@ -166,7 +180,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                     builder.append(`${key.name}: c.number,`);
                 }
             } else {
-                throw Error('Unsupported primary key type: ' + key.type);
+                throw Error('Unsupported field type: ' + key.type);
             }
         }
         builder.removeIndent();
@@ -177,7 +191,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         builder.addIndent();
         builder.append(`name: '${entity.name}',`);
         builder.append(`storageKey: '${entityKey}',`);
-        builder.append(`subspace, codec, secondaryIndexes, storage, primaryKeys`);
+        builder.append(`subspace, codec, secondaryIndexes, storage, primaryKeys, fields`);
         builder.removeIndent();
         builder.append(`};`);
         builder.append(`return new ${entityClass}Factory(descriptor);`);
