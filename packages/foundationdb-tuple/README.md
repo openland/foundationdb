@@ -4,7 +4,7 @@ We are intentionally NOT supporting deprecated or questional tuple item types. I
 
 ## Example
 
-Tuple items can be: `number`, `boolean`, `string`, `Buffer`, `null`, float values wrapped in `Float` class:
+Tuple items can be: `number` (only for integer values!), `number` wrapped in `Float` (for float values), `boolean`, `string`, `Buffer`, `null`:
 
 ```typescript
 
