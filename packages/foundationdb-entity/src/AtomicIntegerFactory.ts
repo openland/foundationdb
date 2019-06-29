@@ -1,6 +1,6 @@
 import { Context } from '@openland/context';
 import { AtomicInteger } from './AtomicInteger';
-import { Tuple, Subspace, encoders } from '@openland/foundationdb';
+import { TupleItem, Subspace, encoders } from '@openland/foundationdb';
 import { EntityStorage } from './EntityStorage';
 
 export abstract class AtomicIntegerFactory {
@@ -13,27 +13,27 @@ export abstract class AtomicIntegerFactory {
         this.directory = subspace;
     }
 
-    protected _findById(key: Tuple[]) {
+    protected _findById(key: TupleItem[]) {
         return new AtomicInteger(encoders.tuple.pack(key), this.directory);
     }
 
-    protected _get(ctx: Context, key: Tuple[]) {
+    protected _get(ctx: Context, key: TupleItem[]) {
         return this._findById(key).get(ctx);
     }
 
-    protected _set(ctx: Context, key: Tuple[], value: number) {
+    protected _set(ctx: Context, key: TupleItem[], value: number) {
         this._findById(key).set(ctx, value);
     }
 
-    protected _add(ctx: Context, key: Tuple[], value: number) {
+    protected _add(ctx: Context, key: TupleItem[], value: number) {
         this._findById(key).add(ctx, value);
     }
 
-    protected _increment(ctx: Context, key: Tuple[]) {
+    protected _increment(ctx: Context, key: TupleItem[]) {
         this._findById(key).increment(ctx);
     }
 
-    protected _decrement(ctx: Context, key: Tuple[]) {
+    protected _decrement(ctx: Context, key: TupleItem[]) {
         this._findById(key).decrement(ctx);
     }
 }

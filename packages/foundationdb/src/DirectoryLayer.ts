@@ -1,20 +1,21 @@
+import { TupleItem } from '@openland/foundationdb-tuple';
 import { DirectorySubspace, Directory } from './Directory';
 import { Database } from './Database';
 import { Context } from '@openland/context';
 import { HighContentionAllocator } from './directory/HighContentionAllocator';
 import { Subspace } from './Subspace';
-import { encoders, Tuple } from './encoding';
+import { encoders } from './encoding';
 import { transactional } from './transactional';
 
 class Node {
-    readonly subspace!: Subspace<Tuple[]>;
+    readonly subspace!: Subspace<TupleItem[]>;
     readonly path: string[];
     readonly targetPath: string[];
     readonly exists: boolean;
     readonly layer!: Buffer;
 
     constructor(
-        subspace: Subspace<Tuple[]> | null,
+        subspace: Subspace<TupleItem[]> | null,
         path: string[],
         targetPath: string[],
         layer: Buffer | null
@@ -44,9 +45,9 @@ function hasPrefix(src: Buffer, value: Buffer) {
 
 export class DirectoryLayer {
     private readonly VERSION = [1, 0, 0];
-    private readonly nodeSS: Subspace<Tuple[]>;
-    private readonly contentSS: Subspace<Tuple[]>;
-    private readonly rootNode: Subspace<Tuple[]>;
+    private readonly nodeSS: Subspace<TupleItem[]>;
+    private readonly contentSS: Subspace<TupleItem[]>;
+    private readonly rootNode: Subspace<TupleItem[]>;
     private readonly allocator: HighContentionAllocator;
     readonly db: Database;
 
@@ -255,7 +256,7 @@ export class DirectoryLayer {
         return node;
     }
 
-    private nodeWithPrefix(prefix: Buffer): Subspace<Tuple[]> {
+    private nodeWithPrefix(prefix: Buffer): Subspace<TupleItem[]> {
         return this.nodeSS.subspace([prefix]);
     }
 

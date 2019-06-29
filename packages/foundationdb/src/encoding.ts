@@ -1,4 +1,4 @@
-import * as tuple from './tuple/tuple';
+import * as Tuple from '@openland/foundationdb-tuple';
 
 /**
  * Transformer of values
@@ -7,11 +7,6 @@ export interface Transformer<T1, T2> {
     unpack(src: T1): T2;
     pack(src: T2): T1;
 }
-
-/**
- * Type represented tuple item that is limited to only integers, strings and booleans.
- */
-export type Tuple = (string | number | boolean | Buffer);
 
 const zero = Buffer.of();
 const one = Buffer.from('ff', 'hex');
@@ -24,12 +19,12 @@ const jsonTransformer: Transformer<Buffer, any> = {
         return Buffer.from(JSON.stringify(src), 'utf-8');
     }
 };
-const tupleTransformer: Transformer<Buffer, Tuple[]> = {
+const tupleTransformer: Transformer<Buffer, Tuple.TupleItem[]> = {
     unpack(src: Buffer) {
-        return tuple.unpack(src) as Tuple[];
+        return Tuple.unpack(src);
     },
-    pack(src: Tuple[]) {
-        return tuple.pack(src) as Buffer;
+    pack(src: Tuple.TupleItem[]) {
+        return Tuple.pack(src);
     }
 };
 

@@ -1,6 +1,6 @@
 import { uniqueSeed, Mutex } from '@openland/foundationdb-utils';
 import { Context } from '@openland/context';
-import { Tuple, TransactionCache, encoders, inTx } from '@openland/foundationdb';
+import { TransactionCache, encoders, inTx } from '@openland/foundationdb';
 import { Entity } from './Entity';
 import { EntityDescriptor } from './EntityDescriptor';
 import { EntityMetadata } from './EntityMetadata';

@@ -1,10 +1,11 @@
 import { Subspace } from './../Subspace';
 import { Context } from '@openland/context';
 import { TransactionOptionCode } from 'foundationdb';
-import { encoders, Tuple } from '../encoding';
+import { encoders } from '../encoding';
 import { getTransaction } from '../getTransaction';
 import { keyIncrement } from '../utils';
 import { transactional } from '../transactional';
+import { TupleItem } from '@openland/foundationdb-tuple';
 
 //
 // Port from https://github.com/apple/foundationdb/blob/master/bindings/go/src/fdb/directory/allocator.go
@@ -16,10 +17,10 @@ increment.writeUInt32LE(1, 0);
 
 export class HighContentionAllocator {
 
-    private readonly counters: Subspace<Tuple[]>;
-    private readonly recent: Subspace<Tuple[]>;
+    private readonly counters: Subspace<TupleItem[]>;
+    private readonly recent: Subspace<TupleItem[]>;
 
-    constructor(subspace: Subspace<Tuple[]>) {
+    constructor(subspace: Subspace<TupleItem[]>) {
         this.counters = subspace.subspace([0]);
         this.recent = subspace.subspace([1]);
     }

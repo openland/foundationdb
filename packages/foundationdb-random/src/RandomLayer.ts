@@ -1,5 +1,5 @@
 import { uniqueSeed, delay } from '@openland/foundationdb-utils';
-import { Subspace, BaseLayer, encoders, inTx, Tuple } from '@openland/foundationdb';
+import { Subspace, BaseLayer, encoders, inTx, TupleItem } from '@openland/foundationdb';
 import { Context, createNamedContext } from '@openland/context';
 import { RandomIDFactory } from './random/RandomIDFactory';
 
@@ -8,7 +8,7 @@ export class RandomLayer extends BaseLayer {
     readonly displayName: string = 'Random Layer';
 
     private readonly seed = uniqueSeed();
-    private nodeIdKeyspace!: Subspace<Tuple[], any>;
+    private nodeIdKeyspace!: Subspace<TupleItem[], any>;
     private isStopped = false;
     private randomFactory!: RandomIDFactory;
 

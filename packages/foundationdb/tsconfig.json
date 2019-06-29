@@ -7,5 +7,7 @@
     "experimentalDecorators": true,
     "esModuleInterop": true
   },
-  "references": []
+  "references": [{
+    "path": "../foundationdb-tuple"
+  }]
 }

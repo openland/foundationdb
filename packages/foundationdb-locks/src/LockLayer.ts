@@ -1,5 +1,5 @@
 import { Context } from '@openland/context';
-import { BaseLayer, Subspace, Tuple, transactional, encoders } from '@openland/foundationdb';
+import { BaseLayer, Subspace, TupleItem, transactional, encoders } from '@openland/foundationdb';
 
 interface LockRecord {
     version: number;
@@ -12,7 +12,7 @@ interface LockRecord {
 
 export class LockLayer extends BaseLayer {
     displayName = 'Lock Layer';
-    private locksSubspace!: Subspace<Tuple[], LockRecord>;
+    private locksSubspace!: Subspace<TupleItem[], LockRecord>;
 
     @transactional
     async tryLock(ctx: Context, key: string, seed: string, opts?: { version?: number, timeout?: number, refreshIndex?: number }): Promise<false | number> {

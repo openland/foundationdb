@@ -1,5 +1,5 @@
-import { Subspace, Tuple } from '@openland/foundationdb';
-import { Codec, StructCodec } from './codecs';
+import { Subspace, TupleItem } from '@openland/foundationdb';
+import { StructCodec } from './codecs';
 import { EntityStorage } from './EntityStorage';
 
 /**
@@ -21,7 +21,7 @@ export interface EntityDescriptor<SHAPE> {
     /**
      * Subspace of entity values
      */
-    subspace: Subspace<Tuple[], any>;
+    subspace: Subspace<TupleItem[], any>;
 
     /**
      * Codec for entity serialization
@@ -72,5 +72,5 @@ export interface SecondaryIndexDescriptor {
     /**
      * Subspace of index data
      */
-    subspace: Subspace<Tuple[], any>;
+    subspace: Subspace<TupleItem[], any>;
 }
