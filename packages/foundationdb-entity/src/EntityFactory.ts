@@ -121,21 +121,21 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     // Need to be arrow function since we are passing this function to entity instances
     protected _flush = async (ctx: Context, id: ReadonlyArray<PrimaryKeyType>, oldValue: ShapeWithMetadata<SHAPE>, newValue: ShapeWithMetadata<SHAPE>) => {
         await this._getPrimaryLock(ctx, id).runExclusive(async () => {
-            
+
             // Encode value before any write
-            let encoded = this.codec.encode(newValue);
-            
+            let encoded = { ...newValue, ...this.codec.encode(newValue) };
+
             // Write primary key index value
             this.descriptor.subspace.set(ctx, id as any, encoded);
         });
     }
 
     private _encode(value: SHAPE, metadata: EntityMetadata) {
-        return this.codec.encode({ ...value, _metadata: metadata });
+        return { ...value, ...this.codec.encode({ ...value, _metadata: metadata }) };
     }
 
     private _decode(value: any) {
-        return this.codec.decode(value);
+        return { ...value, ...this.codec.decode(value) };
     }
 
     private _getPrimaryLock(ctx: Context, id: ReadonlyArray<PrimaryKeyType>) {

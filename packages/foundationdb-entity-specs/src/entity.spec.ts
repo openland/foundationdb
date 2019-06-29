@@ -202,4 +202,24 @@ describe('Entity', () => {
         });
         expect(() => res.value = 'hey!').toThrowError('You can\'t update entity when transaction is in completed state.');
     });
+
+    it('should preserve unknown fields', async () => {
+        let testCtx = createNamedContext('test');
+        let db = await Database.openTest();
+        let store = new EntityStorage(db);
+        let factory = await SimpleEntityFactory.open(store);
+        await inTx(testCtx, async (ctx) => {
+            return await factory.create(ctx, '1', { value: 'hello world1', value2: 2, value3: false });
+        });
+        await inTx(testCtx, async (ctx) => {
+            let ex = await factory.descriptor.subspace.get(ctx, ['1']);
+            factory.descriptor.subspace.set(ctx, ['1'], { ...ex, unknownField: 'unknown value' });
+        });
+        await inTx(testCtx, async (ctx) => {
+            let st = await factory.findById(ctx, '1');
+            st.value = 'value';
+        });
+        let res = await factory.descriptor.subspace.get(testCtx, ['1']);
+        expect(res.unknownField).toBe('unknown value');
+    });
 });

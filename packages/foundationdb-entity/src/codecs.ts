@@ -142,7 +142,77 @@ class NumberCodec implements Codec<number> {
         if (typeof src === 'number') {
             return src;
         } else {
-            throw Error('Input type is not a string');
+            throw Error('Input type is not a number');
+        }
+    }
+}
+
+class IntegerCodec implements Codec<number> {
+    readonly [typeSymbol]!: number;
+
+    decode(src: any) {
+        if (typeof src === 'number') {
+            if (!Number.isSafeInteger(src)) {
+                throw Error('Number ' + src + ' is not a safe integer');
+            }
+            return src;
+        } else {
+            throw Error('Input type is not a number');
+        }
+    }
+    encode(src: number) {
+        if (typeof src === 'number') {
+            if (!Number.isSafeInteger(src)) {
+                throw Error('Number ' + src + ' is not a safe integer');
+            }
+            return src;
+        } else {
+            throw Error('Input type is not a number');
+        }
+    }
+    normalize(src: any) {
+        if (typeof src === 'number') {
+            if (!Number.isSafeInteger(src)) {
+                throw Error('Number ' + src + ' is not a safe integer');
+            }
+            return src;
+        } else {
+            throw Error('Input type is not a number');
+        }
+    }
+}
+
+class FloatCodec implements Codec<number> {
+    readonly [typeSymbol]!: number;
+
+    decode(src: any) {
+        if (typeof src === 'number') {
+            if (!Number.isFinite(src)) {
+                throw Error('Number ' + src + ' is not finite');
+            }
+            return src;
+        } else {
+            throw Error('Input type is not a number');
+        }
+    }
+    encode(src: number) {
+        if (typeof src === 'number') {
+            if (!Number.isFinite(src)) {
+                throw Error('Number ' + src + ' is not finite');
+            }
+            return src;
+        } else {
+            throw Error('Input type is not a number');
+        }
+    }
+    normalize(src: any) {
+        if (typeof src === 'number') {
+            if (!Number.isFinite(src)) {
+                throw Error('Number ' + src + ' is not finite');
+            }
+            return src;
+        } else {
+            throw Error('Input type is not a number');
         }
     }
 }
@@ -243,6 +313,8 @@ export const codecs = {
     string: new StringCodec() as Codec<string>,
     boolean: new BooleanCodec() as Codec<boolean>,
     number: new NumberCodec() as Codec<number>,
+    integer: new IntegerCodec() as Codec<number>,
+    float: new FloatCodec() as Codec<number>,
     enum: <T extends string[]>(...values: T) => {
         return new EnumCodec<T[number]>(values) as Codec<T[number]>;
     },
