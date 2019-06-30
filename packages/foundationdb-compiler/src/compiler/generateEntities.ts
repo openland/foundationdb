@@ -267,6 +267,14 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         builder.removeIndent();
         builder.append(`}`);
 
+        // watch
+        builder.append();
+        builder.append(`watch(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type)).join(', ')}): Watch {`);
+        builder.addIndent();
+        builder.append(`return this._watch(ctx, [${entity.keys.map((v) => v.name).join(', ')}]);`);
+        builder.removeIndent();
+        builder.append(`}`);
+
         // Create Instance
         builder.append();
         builder.append(`protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<${entityClass}Shape>): ${entityClass} {`);

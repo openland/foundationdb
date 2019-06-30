@@ -1,7 +1,7 @@
 import { TupleItem, Float } from '@openland/foundationdb-tuple';
 import { uniqueSeed, Mutex } from '@openland/foundationdb-utils';
 import { Context } from '@openland/context';
-import { TransactionCache, encoders, inTx } from '@openland/foundationdb';
+import { TransactionCache, encoders, inTx, Watch } from '@openland/foundationdb';
 import { Entity } from './Entity';
 import { EntityDescriptor } from './EntityDescriptor';
 import { EntityMetadata } from './EntityMetadata';
@@ -32,6 +32,11 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         Object.freeze(descriptor);
         this.descriptor = descriptor;
         this.codec = codecs.merge(descriptor.codec, metadataCodec);
+    }
+
+    protected _watch(ctx: Context, _id: PrimaryKeyType[]): Watch {
+        let id = this._resolvePrimaryKey(_id);
+        return this.descriptor.subspace.watch(ctx, id);
     }
 
     protected async _findById(ctx: Context, _id: PrimaryKeyType[]): Promise<T | null> {

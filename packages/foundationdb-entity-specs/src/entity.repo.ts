@@ -2,7 +2,7 @@
 // @ts-ignore
 import { Context } from '@openland/context';
 // @ts-ignore
-import { Subspace } from '@openland/foundationdb';
+import { Subspace, Watch } from '@openland/foundationdb';
 // @ts-ignore
 import { EntityStorage, BaseStore, codecs as c } from '@openland/foundationdb-entity';
 // @ts-ignore
@@ -89,6 +89,10 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
         return this._findById(ctx, [id]);
     }
 
+    watch(ctx: Context, id: string): Watch {
+        return this._watch(ctx, [id]);
+    }
+
     protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<SimpleEntityShape>): SimpleEntity {
         return new SimpleEntity([value.id], value, this.descriptor, this._flush, ctx);
     }
@@ -147,6 +151,10 @@ export class SimpleEntity2Factory extends EntityFactory<SimpleEntity2Shape, Simp
 
     findById(ctx: Context, id: number): Promise<SimpleEntity2 | null> {
         return this._findById(ctx, [id]);
+    }
+
+    watch(ctx: Context, id: number): Watch {
+        return this._watch(ctx, [id]);
     }
 
     protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<SimpleEntity2Shape>): SimpleEntity2 {
@@ -310,6 +318,10 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
 
     findById(ctx: Context, key1: boolean, key2: number, key3: number, key4: string): Promise<AllFields | null> {
         return this._findById(ctx, [key1, key2, key3, key4]);
+    }
+
+    watch(ctx: Context, key1: boolean, key2: number, key3: number, key4: string): Watch {
+        return this._watch(ctx, [key1, key2, key3, key4]);
     }
 
     protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<AllFieldsShape>): AllFields {

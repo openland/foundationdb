@@ -2,7 +2,7 @@
 // @ts-ignore
 import { Context } from '@openland/context';
 // @ts-ignore
-import { Subspace } from '@openland/foundationdb';
+import { Subspace, Watch } from '@openland/foundationdb';
 // @ts-ignore
 import { EntityStorage, BaseStore, codecs as c } from '@openland/foundationdb-entity';
 // @ts-ignore
