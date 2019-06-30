@@ -1,4 +1,4 @@
-import { SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType, StructType, UnionType, OptionalType } from './model';
+import { SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType, StructType, UnionType, OptionalType, EntityIndexModel } from './model';
 
 const reservedFieldNames = [
     'do', 'if', 'in', 'for', 'let', 'new', 'try', 'var', 'case', 'else',
@@ -173,4 +173,12 @@ export function field(name: string, type: SchemaType) {
     currentEntity!.fields.push(res);
 
     return new FieldBuilder(res);
+}
+
+export function uniqueIndex(name: string, fields: string[]) {
+    checkValidFieldName(name);
+    if (!currentEntity) {
+        throw Error('No entity specified');
+    }
+    currentEntity!.indexes.push(new EntityIndexModel(name, { type: 'unique', fields: fields }));
 }

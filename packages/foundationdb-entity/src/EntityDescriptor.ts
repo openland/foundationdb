@@ -100,6 +100,10 @@ export type FieldType =
     { type: 'union', types: { [key: string]: { [key: string]: FieldType } } } |
     { type: 'optional', inner: FieldType };
 
+export type IndexType =
+    { type: 'unique', fields: string[] } |
+    { type: 'range', fields: string[] };
+
 /**
  * Secondary Index Implementation
  */
@@ -118,12 +122,7 @@ export interface SecondaryIndexDescriptor {
     /**
      * Types of index
      */
-    type: 'range' | 'unique';
-
-    /**
-     * Fields that is used in index
-     */
-    fields: string[];
+    type: IndexType;
 
     /**
      * Optional condition for partial indexes

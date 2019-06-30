@@ -272,6 +272,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
     static async open(storage: EntityStorage) {
         let subspace = await storage.resolveEntityDirectory('allFields');
         let secondaryIndexes: SecondaryIndexDescriptor[] = [];
+        secondaryIndexes.push({ name: 'uniqIndex', storageKey: 'uniqIndex', type: { type: 'unique', fields: ['key1', 'key2'] }, subspace: await storage.resolveEntityIndexDirectory('allFields', 'uniqIndex') });
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'key1', type: 'boolean' });
         primaryKeys.push({ name: 'key2', type: 'integer' });

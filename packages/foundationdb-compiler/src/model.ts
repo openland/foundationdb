@@ -102,10 +102,26 @@ export class AtomicModel {
     }
 }
 
+type EntityIndexType = {
+    type: 'unique'
+    fields: string[]
+};
+
+export class EntityIndexModel {
+    readonly name: string;
+    readonly type: EntityIndexType;
+    
+    constructor(name: string, type: EntityIndexType) {
+        this.name = name;
+        this.type = type;
+    }
+}
+
 export class EntityModel {
     readonly name: string;
     readonly keys: PrimaryKey[] = [];
     readonly fields: Field[] = [];
+    readonly indexes: EntityIndexModel[] = [];
 
     constructor(name: string) {
         this.name = name;

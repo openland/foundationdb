@@ -184,6 +184,15 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
 
         // Indexes
         builder.append(`let secondaryIndexes: SecondaryIndexDescriptor[] = [];`);
+        for (let index of entity.indexes) {
+            let type: string;
+            if (index.type.type === 'unique') {
+                type = `{ type: 'unique', fields: [${index.type.fields.map((v) => `'${v}'`).join(', ')}] }`;
+            } else {
+                throw Error('Unknown index type');
+            }
+            builder.append(`secondaryIndexes.push({ name: '${index.name}', storageKey: '${index.name}', type: ${type}, subspace: await storage.resolveEntityIndexDirectory('${entityKey}', '${index.name}') });`);
+        }
 
         // Primary Keys
         builder.append(`let primaryKeys: PrimaryKeyDescriptor[] = [];`);

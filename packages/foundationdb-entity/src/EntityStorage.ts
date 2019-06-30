@@ -22,6 +22,8 @@ export class EntityStorage {
     }
 
     async resolveEntityIndexDirectory(entityName: string, indexName: string) {
-        return await inTx(createNamedContext('entity'), async (ctx) => await this.db.directories.createOrOpen(ctx, ['com.openland.layers', 'layers', this.storeId, 'entity', entityName, '__indexes', indexName]));
+        return (await inTx(createNamedContext('entity'), async (ctx) => await this.db.directories.createOrOpen(ctx, ['com.openland.layers', 'layers', this.storeId, 'entity', entityName, '__indexes', indexName])))
+            .withKeyEncoding(encoders.tuple)
+            .withValueEncoding(encoders.json);
     }
 }
