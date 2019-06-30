@@ -166,6 +166,7 @@ export interface AllFieldsShape {
     value5: 'value1' | 'value2';
     value6: (string)[];
     value7: { name: string, type: number };
+    value8: { type: 'something', name: string } | { type: 'something_2', name: string };
 }
 
 export interface AllFieldsCreateShape {
@@ -176,6 +177,7 @@ export interface AllFieldsCreateShape {
     value5: 'value1' | 'value2';
     value6: (string)[];
     value7: { name: string, type: number };
+    value8: { type: 'something', name: string } | { type: 'something_2', name: string };
 }
 
 export class AllFields extends Entity<AllFieldsShape> {
@@ -246,6 +248,15 @@ export class AllFields extends Entity<AllFieldsShape> {
             this.invalidate();
         }
     }
+    get value8(): { type: 'something', name: string } | { type: 'something_2', name: string } { return this._rawValue.value8; }
+    set value8(value: { type: 'something', name: string } | { type: 'something_2', name: string }) {
+        let normalized = this.descriptor.codec.fields.value8.normalize(value);
+        if (this._rawValue.value8 !== normalized) {
+            this._rawValue.value8 = normalized;
+            this._updatedValues.value8 = normalized;
+            this.invalidate();
+        }
+    }
 }
 
 export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
@@ -266,6 +277,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
         fields.push({ name: 'value5', type: { type: 'enum', values: ['value1', 'value2'] }, nullable: false, secure: false });
         fields.push({ name: 'value6', type: { type: 'array', inner: { type: 'string' } }, nullable: false, secure: false });
         fields.push({ name: 'value7', type: { type: 'struct', fields: { name: { type: 'string' }, type: { type: 'integer' } } }, nullable: false, secure: false });
+        fields.push({ name: 'value8', type: { type: 'union', types: { something: { name: { type: 'string' } }, something_2: { name: { type: 'string' } } } }, nullable: false, secure: false });
         let codec = c.struct({
             key1: c.boolean,
             key2: c.integer,
@@ -278,6 +290,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
             value5: c.enum('value1', 'value2'),
             value6: c.array(c.string),
             value7: c.struct({ name: c.string, type: c.integer }),
+            value8: c.union({ something: c.struct({ name: c.string }), something_2: c.struct({ name: c.string }) }),
         });
         let descriptor: EntityDescriptor<AllFieldsShape> = {
             name: 'AllFields',

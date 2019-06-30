@@ -101,7 +101,8 @@ export type FieldType =
     { type: 'string' } |
     { type: 'enum', values: string[] } |
     { type: 'array', inner: FieldType } |
-    { type: 'struct', fields: { [key: string]: FieldType } };
+    { type: 'struct', fields: { [key: string]: FieldType } } |
+    { type: 'union', types: { [key: string]: { [key: string]: FieldType } } };
 
 /**
  * Secondary Index Implementation

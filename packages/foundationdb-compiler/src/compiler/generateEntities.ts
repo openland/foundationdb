@@ -1,4 +1,4 @@
-import { SchemaType, EnumType, ArrayType, StructType } from './../model';
+import { SchemaType, EnumType, ArrayType, StructType, UnionType } from './../model';
 import { StringBuilder } from './StringBuilder';
 import { SchemaModel } from '../model';
 import * as Case from 'change-case';
@@ -27,6 +27,15 @@ function resolveType(type: SchemaType): string {
         let fields = (type as StructType).fields;
         let keys = Object.keys(fields).map((v) => v + ': ' + resolveType(fields[v]));
         return `{ ${keys.join(', ')} }`;
+    } else if (type.type === 'union') {
+        let fields = (type as UnionType).fields;
+        let kinds: string[] = [];
+        for (let k of Object.keys(fields)) {
+            let fields2 = (fields[k] as StructType).fields;
+            let keys = Object.keys(fields2).map((v) => v + ': ' + resolveType(fields2[v]));
+            kinds.push(`{ type: '${k}', ${keys.join(', ')} }`);
+        }
+        return kinds.join(' | ');
     } else {
         throw Error('Unsupported type: ' + JSON.stringify(type));
     }
@@ -49,6 +58,15 @@ function resolveDescriptorType(type: SchemaType): string {
         let fields = (type as StructType).fields;
         let keys = Object.keys(fields).map((v) => v + ': ' + resolveDescriptorType(fields[v]));
         return `{ type: 'struct', fields: { ${keys.join(', ')} } }`;
+    } else if (type.type === 'union') {
+        let fields = (type as UnionType).fields;
+        let kinds: string[] = [];
+        for (let k of Object.keys(fields)) {
+            let fields2 = (fields[k] as StructType).fields;
+            let keys = Object.keys(fields2).map((v) => v + ': ' + resolveDescriptorType(fields2[v]));
+            kinds.push(`${k}: { ${keys.join(', ')} }`);
+        }
+        return `{ type: 'union', types: { ${kinds.join(', ')} } }`;
     } else {
         throw Error('Unsupported type: ' + JSON.stringify(type));
     }
@@ -71,9 +89,12 @@ function resolveCodec(type: SchemaType): string {
         let fields = (type as StructType).fields;
         let keys = Object.keys(fields).map((v) => v + ': ' + resolveCodec(fields[v]));
         return `c.struct({ ${keys.join(', ')} })`;
+    } else if (type.type === 'union') {
+        let fields = (type as UnionType).fields;
+        let keys = Object.keys(fields).map((v) => v + ': ' + resolveCodec(fields[v]));
+        return `c.union({ ${keys.join(', ')} })`;
     } else {
-        // throw Error('Unsupported field type: ' + type.type);
-        return 'c.string';
+        throw Error('Unsupported field type: ' + type.type);
     }
 }
 

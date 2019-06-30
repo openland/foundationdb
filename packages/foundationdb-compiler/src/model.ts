@@ -2,7 +2,7 @@ export type PrimaryKeyType = 'string' | 'integer' | 'float' | 'boolean';
 export type FieldType = 'string' | 'integer' | 'float' | 'boolean' | 'enum';
 
 export abstract class SchemaType {
-    abstract readonly type: 'string' | 'integer' | 'float' | 'boolean' | 'enum' | 'array' | 'struct';
+    abstract readonly type: 'string' | 'integer' | 'float' | 'boolean' | 'enum' | 'array' | 'struct' | 'union';
 }
 export class StringType extends SchemaType {
     readonly type = 'string';
@@ -36,6 +36,14 @@ export class StructType extends SchemaType {
     readonly type = 'struct';
     readonly fields: { [key: string]: SchemaType };
     constructor(fields: { [key: string]: SchemaType }) {
+        super();
+        this.fields = fields;
+    }
+}
+export class UnionType extends SchemaType {
+    readonly type = 'union';
+    readonly fields: { [key: string]: StructType };
+    constructor(fields: { [key: string]: StructType }) {
         super();
         this.fields = fields;
     }

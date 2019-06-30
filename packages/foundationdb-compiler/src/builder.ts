@@ -1,4 +1,4 @@
-import { SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType, StructType } from './model';
+import { SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType, StructType, UnionType } from './model';
 
 const reservedFieldNames = [
     'do', 'if', 'in', 'for', 'let', 'new', 'try', 'var', 'case', 'else',
@@ -158,6 +158,10 @@ export function array(src: SchemaType) {
 
 export function struct(feilds: { [key: string]: SchemaType }) {
     return new StructType(feilds);
+}
+
+export function union(fields: { [key: string]: StructType }) {
+    return new UnionType(fields);
 }
 
 export function field(name: string, type: SchemaType) {
