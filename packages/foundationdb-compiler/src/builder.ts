@@ -1,4 +1,4 @@
-import { SchemaModel, AtomicModel, PrimaryKeyType, EntityModel, FieldType, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType } from './model';
+import { SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType, StructType } from './model';
 
 const reservedFieldNames = [
     'do', 'if', 'in', 'for', 'let', 'new', 'try', 'var', 'case', 'else',
@@ -154,6 +154,10 @@ export function enumString(...args: string[]) {
 
 export function array(src: SchemaType) {
     return new ArrayType(src);
+}
+
+export function struct(feilds: { [key: string]: SchemaType }) {
+    return new StructType(feilds);
 }
 
 export function field(name: string, type: SchemaType) {

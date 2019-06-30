@@ -1,4 +1,4 @@
-import { SchemaType, EnumType, ArrayType } from './../model';
+import { SchemaType, EnumType, ArrayType, StructType } from './../model';
 import { StringBuilder } from './StringBuilder';
 import { SchemaModel } from '../model';
 import * as Case from 'change-case';
@@ -23,6 +23,10 @@ function resolveType(type: SchemaType): string {
         return (type as EnumType).values.map((v) => `'${v}'`).join(' | ');
     } else if (type.type === 'array') {
         return '(' + resolveType((type as ArrayType).inner) + ')[]';
+    } else if (type.type === 'struct') {
+        let fields = (type as StructType).fields;
+        let keys = Object.keys(fields).map((v) => v + ': ' + resolveType(fields[v]));
+        return `{ ${keys.join(', ')} }`;
     } else {
         throw Error('Unsupported type: ' + JSON.stringify(type));
     }
@@ -41,6 +45,10 @@ function resolveDescriptorType(type: SchemaType): string {
         return `{ type: 'enum', values: [${(type as EnumType).values.map((v) => `'${v}'`).join(', ')}] }`;
     } else if (type.type === 'array') {
         return `{ type: 'array', inner: ${resolveDescriptorType((type as ArrayType).inner)} }`;
+    } else if (type.type === 'struct') {
+        let fields = (type as StructType).fields;
+        let keys = Object.keys(fields).map((v) => v + ': ' + resolveDescriptorType(fields[v]));
+        return `{ type: 'struct', fields: { ${keys.join(', ')} } }`;
     } else {
         throw Error('Unsupported type: ' + JSON.stringify(type));
     }
@@ -59,8 +67,13 @@ function resolveCodec(type: SchemaType): string {
         return `c.enum(${(type as EnumType).values.map((v) => `'${v}'`).join(', ')})`;
     } else if (type.type === 'array') {
         return `c.array(${resolveCodec((type as ArrayType).inner)})`;
+    } else if (type.type === 'struct') {
+        let fields = (type as StructType).fields;
+        let keys = Object.keys(fields).map((v) => v + ': ' + resolveCodec(fields[v]));
+        return `c.struct({ ${keys.join(', ')} })`;
     } else {
-        throw Error('Unsupported field type: ' + type.type);
+        // throw Error('Unsupported field type: ' + type.type);
+        return 'c.string';
     }
 }
 
@@ -74,6 +87,9 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         builder.append(`export interface ${entityClass}Shape {`);
         builder.addIndent();
         for (let key of entity.keys) {
+            if (key.type.type !== 'string' && key.type.type !== 'integer' && key.type.type !== 'boolean' && key.type.type !== 'float') {
+                throw Error('Unsupported primary key type: ' + key.type.type);
+            }
             builder.append(`${key.name}: ${resolveType(key.type)};`);
         }
         for (let field of entity.fields) {
@@ -116,7 +132,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                 builder.append(`get ${key.name}(): ${type} | null { return this._rawValue.${key.name}; }`);
 
             } else {
-                builder.append(`get ${key.name}(): ${type} {  return this._rawValue.${key.name}; }`);
+                builder.append(`get ${key.name}(): ${type} { return this._rawValue.${key.name}; }`);
 
             }
 
@@ -234,7 +250,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         builder.append();
         builder.append(`create(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type)).join(', ')}, src: ${entityClass}CreateShape): Promise<${entityClass}> {`);
         builder.addIndent();
-        builder.append(`return this._create(ctx, [${entity.keys.map((v) => v.name).join(', ')}], this.descriptor.codec.normalize({${entity.keys.map((v) => v.name).join(', ')}, ...src }));`);
+        builder.append(`return this._create(ctx, [${entity.keys.map((v) => v.name).join(', ')}], this.descriptor.codec.normalize({ ${entity.keys.map((v) => v.name).join(', ')}, ...src }));`);
         builder.removeIndent();
         builder.append(`}`);
 

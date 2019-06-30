@@ -1,4 +1,4 @@
-import { declareSchema, entity, primaryKey, field, string, integer, boolean, enumString, array, float } from '@openland/foundationdb-compiler';
+import { declareSchema, entity, primaryKey, field, string, integer, boolean, enumString, array, float, struct } from '@openland/foundationdb-compiler';
 
 export default declareSchema(() => {
     entity('SimpleEntity', () => {
@@ -24,6 +24,10 @@ export default declareSchema(() => {
         field('value4', string());
         field('value5', enumString('value1', 'value2'));
         field('value6', array(string()));
+        field('value7', struct({
+            name: string(),
+            type: integer()
+        }));
         // field('value6',)
     });
 });

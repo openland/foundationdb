@@ -100,7 +100,8 @@ export type FieldType =
     { type: 'boolean' } |
     { type: 'string' } |
     { type: 'enum', values: string[] } |
-    { type: 'array', inner: FieldType };
+    { type: 'array', inner: FieldType } |
+    { type: 'struct', fields: { [key: string]: FieldType } };
 
 /**
  * Secondary Index Implementation

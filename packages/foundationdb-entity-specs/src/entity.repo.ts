@@ -23,7 +23,7 @@ export interface SimpleEntityCreateShape {
 
 export class SimpleEntity extends Entity<SimpleEntityShape> {
     get id(): string { return this._rawValue.id; }
-    get value(): string {  return this._rawValue.value; }
+    get value(): string { return this._rawValue.value; }
     set value(value: string) {
         let normalized = this.descriptor.codec.fields.value.normalize(value);
         if (this._rawValue.value !== normalized) {
@@ -32,7 +32,7 @@ export class SimpleEntity extends Entity<SimpleEntityShape> {
             this.invalidate();
         }
     }
-    get value2(): number {  return this._rawValue.value2; }
+    get value2(): number { return this._rawValue.value2; }
     set value2(value: number) {
         let normalized = this.descriptor.codec.fields.value2.normalize(value);
         if (this._rawValue.value2 !== normalized) {
@@ -82,7 +82,7 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
     }
 
     create(ctx: Context, id: string, src: SimpleEntityCreateShape): Promise<SimpleEntity> {
-        return this._create(ctx, [id], this.descriptor.codec.normalize({id, ...src }));
+        return this._create(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
     findById(ctx: Context, id: string): Promise<SimpleEntity | null> {
@@ -105,7 +105,7 @@ export interface SimpleEntity2CreateShape {
 
 export class SimpleEntity2 extends Entity<SimpleEntity2Shape> {
     get id(): number { return this._rawValue.id; }
-    get value(): string {  return this._rawValue.value; }
+    get value(): string { return this._rawValue.value; }
     set value(value: string) {
         let normalized = this.descriptor.codec.fields.value.normalize(value);
         if (this._rawValue.value !== normalized) {
@@ -142,7 +142,7 @@ export class SimpleEntity2Factory extends EntityFactory<SimpleEntity2Shape, Simp
     }
 
     create(ctx: Context, id: number, src: SimpleEntity2CreateShape): Promise<SimpleEntity2> {
-        return this._create(ctx, [id], this.descriptor.codec.normalize({id, ...src }));
+        return this._create(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
     findById(ctx: Context, id: number): Promise<SimpleEntity2 | null> {
@@ -165,6 +165,7 @@ export interface AllFieldsShape {
     value4: string;
     value5: 'value1' | 'value2';
     value6: (string)[];
+    value7: { name: string, type: number };
 }
 
 export interface AllFieldsCreateShape {
@@ -174,6 +175,7 @@ export interface AllFieldsCreateShape {
     value4: string;
     value5: 'value1' | 'value2';
     value6: (string)[];
+    value7: { name: string, type: number };
 }
 
 export class AllFields extends Entity<AllFieldsShape> {
@@ -181,7 +183,7 @@ export class AllFields extends Entity<AllFieldsShape> {
     get key2(): number { return this._rawValue.key2; }
     get key3(): number { return this._rawValue.key3; }
     get key4(): string { return this._rawValue.key4; }
-    get value1(): boolean {  return this._rawValue.value1; }
+    get value1(): boolean { return this._rawValue.value1; }
     set value1(value: boolean) {
         let normalized = this.descriptor.codec.fields.value1.normalize(value);
         if (this._rawValue.value1 !== normalized) {
@@ -190,7 +192,7 @@ export class AllFields extends Entity<AllFieldsShape> {
             this.invalidate();
         }
     }
-    get value2(): number {  return this._rawValue.value2; }
+    get value2(): number { return this._rawValue.value2; }
     set value2(value: number) {
         let normalized = this.descriptor.codec.fields.value2.normalize(value);
         if (this._rawValue.value2 !== normalized) {
@@ -199,7 +201,7 @@ export class AllFields extends Entity<AllFieldsShape> {
             this.invalidate();
         }
     }
-    get value3(): number {  return this._rawValue.value3; }
+    get value3(): number { return this._rawValue.value3; }
     set value3(value: number) {
         let normalized = this.descriptor.codec.fields.value3.normalize(value);
         if (this._rawValue.value3 !== normalized) {
@@ -208,7 +210,7 @@ export class AllFields extends Entity<AllFieldsShape> {
             this.invalidate();
         }
     }
-    get value4(): string {  return this._rawValue.value4; }
+    get value4(): string { return this._rawValue.value4; }
     set value4(value: string) {
         let normalized = this.descriptor.codec.fields.value4.normalize(value);
         if (this._rawValue.value4 !== normalized) {
@@ -217,7 +219,7 @@ export class AllFields extends Entity<AllFieldsShape> {
             this.invalidate();
         }
     }
-    get value5(): 'value1' | 'value2' {  return this._rawValue.value5; }
+    get value5(): 'value1' | 'value2' { return this._rawValue.value5; }
     set value5(value: 'value1' | 'value2') {
         let normalized = this.descriptor.codec.fields.value5.normalize(value);
         if (this._rawValue.value5 !== normalized) {
@@ -226,12 +228,21 @@ export class AllFields extends Entity<AllFieldsShape> {
             this.invalidate();
         }
     }
-    get value6(): (string)[] {  return this._rawValue.value6; }
+    get value6(): (string)[] { return this._rawValue.value6; }
     set value6(value: (string)[]) {
         let normalized = this.descriptor.codec.fields.value6.normalize(value);
         if (this._rawValue.value6 !== normalized) {
             this._rawValue.value6 = normalized;
             this._updatedValues.value6 = normalized;
+            this.invalidate();
+        }
+    }
+    get value7(): { name: string, type: number } { return this._rawValue.value7; }
+    set value7(value: { name: string, type: number }) {
+        let normalized = this.descriptor.codec.fields.value7.normalize(value);
+        if (this._rawValue.value7 !== normalized) {
+            this._rawValue.value7 = normalized;
+            this._updatedValues.value7 = normalized;
             this.invalidate();
         }
     }
@@ -254,6 +265,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
         fields.push({ name: 'value4', type: { type: 'string' }, nullable: false, secure: false });
         fields.push({ name: 'value5', type: { type: 'enum', values: ['value1', 'value2'] }, nullable: false, secure: false });
         fields.push({ name: 'value6', type: { type: 'array', inner: { type: 'string' } }, nullable: false, secure: false });
+        fields.push({ name: 'value7', type: { type: 'struct', fields: { name: { type: 'string' }, type: { type: 'integer' } } }, nullable: false, secure: false });
         let codec = c.struct({
             key1: c.boolean,
             key2: c.integer,
@@ -265,6 +277,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
             value4: c.string,
             value5: c.enum('value1', 'value2'),
             value6: c.array(c.string),
+            value7: c.struct({ name: c.string, type: c.integer }),
         });
         let descriptor: EntityDescriptor<AllFieldsShape> = {
             name: 'AllFields',
@@ -279,7 +292,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
     }
 
     create(ctx: Context, key1: boolean, key2: number, key3: number, key4: string, src: AllFieldsCreateShape): Promise<AllFields> {
-        return this._create(ctx, [key1, key2, key3, key4], this.descriptor.codec.normalize({key1, key2, key3, key4, ...src }));
+        return this._create(ctx, [key1, key2, key3, key4], this.descriptor.codec.normalize({ key1, key2, key3, key4, ...src }));
     }
 
     findById(ctx: Context, key1: boolean, key2: number, key3: number, key4: string): Promise<AllFields | null> {
