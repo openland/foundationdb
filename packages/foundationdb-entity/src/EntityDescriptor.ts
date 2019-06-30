@@ -81,11 +81,6 @@ export interface FieldDescriptor {
     type: FieldType;
 
     /**
-     * If field is nullable
-     */
-    nullable: boolean;
-
-    /**
      * If field contains sensitive information
      */
     secure: boolean;
@@ -102,7 +97,8 @@ export type FieldType =
     { type: 'enum', values: string[] } |
     { type: 'array', inner: FieldType } |
     { type: 'struct', fields: { [key: string]: FieldType } } |
-    { type: 'union', types: { [key: string]: { [key: string]: FieldType } } };
+    { type: 'union', types: { [key: string]: { [key: string]: FieldType } } } |
+    { type: 'optional', inner: FieldType };
 
 /**
  * Secondary Index Implementation

@@ -18,7 +18,7 @@ export interface SimpleEntityShape {
 export interface SimpleEntityCreateShape {
     value: string;
     value2: number;
-    value3?: boolean | null | undefined;
+    value3: boolean | null;
 }
 
 export class SimpleEntity extends Entity<SimpleEntityShape> {
@@ -60,9 +60,9 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'id', type: 'string' });
         let fields: FieldDescriptor[] = [];
-        fields.push({ name: 'value', type: { type: 'string' }, nullable: false, secure: false });
-        fields.push({ name: 'value2', type: { type: 'integer' }, nullable: false, secure: false });
-        fields.push({ name: 'value3', type: { type: 'boolean' }, nullable: true, secure: false });
+        fields.push({ name: 'value', type: { type: 'string' }, secure: false });
+        fields.push({ name: 'value2', type: { type: 'integer' }, secure: false });
+        fields.push({ name: 'value3', type: { type: 'optional', inner: { type: 'boolean' } }, secure: false });
         let codec = c.struct({
             id: c.string,
             value: c.string,
@@ -124,7 +124,7 @@ export class SimpleEntity2Factory extends EntityFactory<SimpleEntity2Shape, Simp
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'id', type: 'integer' });
         let fields: FieldDescriptor[] = [];
-        fields.push({ name: 'value', type: { type: 'string' }, nullable: false, secure: false });
+        fields.push({ name: 'value', type: { type: 'string' }, secure: false });
         let codec = c.struct({
             id: c.integer,
             value: c.string,
@@ -166,7 +166,7 @@ export interface AllFieldsShape {
     value5: 'value1' | 'value2';
     value6: (string)[];
     value7: { name: string, type: number };
-    value8: { type: 'something', name: string } | { type: 'something_2', name: string };
+    value8: { type: 'something', name: string } | { type: 'something_2', name: string } | null;
 }
 
 export interface AllFieldsCreateShape {
@@ -177,7 +177,7 @@ export interface AllFieldsCreateShape {
     value5: 'value1' | 'value2';
     value6: (string)[];
     value7: { name: string, type: number };
-    value8: { type: 'something', name: string } | { type: 'something_2', name: string };
+    value8: { type: 'something', name: string } | { type: 'something_2', name: string } | null;
 }
 
 export class AllFields extends Entity<AllFieldsShape> {
@@ -248,8 +248,8 @@ export class AllFields extends Entity<AllFieldsShape> {
             this.invalidate();
         }
     }
-    get value8(): { type: 'something', name: string } | { type: 'something_2', name: string } { return this._rawValue.value8; }
-    set value8(value: { type: 'something', name: string } | { type: 'something_2', name: string }) {
+    get value8(): { type: 'something', name: string } | { type: 'something_2', name: string } | null { return this._rawValue.value8; }
+    set value8(value: { type: 'something', name: string } | { type: 'something_2', name: string } | null) {
         let normalized = this.descriptor.codec.fields.value8.normalize(value);
         if (this._rawValue.value8 !== normalized) {
             this._rawValue.value8 = normalized;
@@ -270,14 +270,14 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
         primaryKeys.push({ name: 'key3', type: 'float' });
         primaryKeys.push({ name: 'key4', type: 'string' });
         let fields: FieldDescriptor[] = [];
-        fields.push({ name: 'value1', type: { type: 'boolean' }, nullable: false, secure: false });
-        fields.push({ name: 'value2', type: { type: 'integer' }, nullable: false, secure: false });
-        fields.push({ name: 'value3', type: { type: 'float' }, nullable: false, secure: false });
-        fields.push({ name: 'value4', type: { type: 'string' }, nullable: false, secure: false });
-        fields.push({ name: 'value5', type: { type: 'enum', values: ['value1', 'value2'] }, nullable: false, secure: false });
-        fields.push({ name: 'value6', type: { type: 'array', inner: { type: 'string' } }, nullable: false, secure: false });
-        fields.push({ name: 'value7', type: { type: 'struct', fields: { name: { type: 'string' }, type: { type: 'integer' } } }, nullable: false, secure: false });
-        fields.push({ name: 'value8', type: { type: 'union', types: { something: { name: { type: 'string' } }, something_2: { name: { type: 'string' } } } }, nullable: false, secure: false });
+        fields.push({ name: 'value1', type: { type: 'boolean' }, secure: false });
+        fields.push({ name: 'value2', type: { type: 'integer' }, secure: false });
+        fields.push({ name: 'value3', type: { type: 'float' }, secure: false });
+        fields.push({ name: 'value4', type: { type: 'string' }, secure: false });
+        fields.push({ name: 'value5', type: { type: 'enum', values: ['value1', 'value2'] }, secure: false });
+        fields.push({ name: 'value6', type: { type: 'array', inner: { type: 'string' } }, secure: false });
+        fields.push({ name: 'value7', type: { type: 'struct', fields: { name: { type: 'string' }, type: { type: 'integer' } } }, secure: false });
+        fields.push({ name: 'value8', type: { type: 'optional', inner: { type: 'union', types: { something: { name: { type: 'string' } }, something_2: { name: { type: 'string' } } } } }, secure: false });
         let codec = c.struct({
             key1: c.boolean,
             key2: c.integer,
@@ -290,7 +290,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
             value5: c.enum('value1', 'value2'),
             value6: c.array(c.string),
             value7: c.struct({ name: c.string, type: c.integer }),
-            value8: c.union({ something: c.struct({ name: c.string }), something_2: c.struct({ name: c.string }) }),
+            value8: c.optional(c.union({ something: c.struct({ name: c.string }), something_2: c.struct({ name: c.string }) })),
         });
         let descriptor: EntityDescriptor<AllFieldsShape> = {
             name: 'AllFields',

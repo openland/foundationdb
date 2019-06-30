@@ -1,4 +1,4 @@
-import { SchemaType, EnumType, ArrayType, StructType, UnionType } from './../model';
+import { SchemaType, EnumType, ArrayType, StructType, UnionType, OptionalType } from './../model';
 import { StringBuilder } from './StringBuilder';
 import { SchemaModel } from '../model';
 import * as Case from 'change-case';
@@ -36,6 +36,8 @@ function resolveType(type: SchemaType): string {
             kinds.push(`{ type: '${k}', ${keys.join(', ')} }`);
         }
         return kinds.join(' | ');
+    } else if (type.type === 'optional') {
+        return resolveType((type as OptionalType).inner) + ' | null';
     } else {
         throw Error('Unsupported type: ' + JSON.stringify(type));
     }
@@ -67,6 +69,8 @@ function resolveDescriptorType(type: SchemaType): string {
             kinds.push(`${k}: { ${keys.join(', ')} }`);
         }
         return `{ type: 'union', types: { ${kinds.join(', ')} } }`;
+    } else if (type.type === 'optional') {
+        return `{ type: 'optional', inner: ${resolveDescriptorType((type as OptionalType).inner)} }`;
     } else {
         throw Error('Unsupported type: ' + JSON.stringify(type));
     }
@@ -93,6 +97,8 @@ function resolveCodec(type: SchemaType): string {
         let fields = (type as UnionType).fields;
         let keys = Object.keys(fields).map((v) => v + ': ' + resolveCodec(fields[v]));
         return `c.union({ ${keys.join(', ')} })`;
+    } else if (type.type === 'optional') {
+        return `c.optional(${resolveCodec((type as OptionalType).inner)})`;
     } else {
         throw Error('Unsupported field type: ' + type.type);
     }
@@ -114,11 +120,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
             builder.append(`${key.name}: ${resolveType(key.type)};`);
         }
         for (let field of entity.fields) {
-            if (field.isNullable) {
-                builder.append(`${field.name}: ${resolveType(field.type)} | null;`);
-            } else {
-                builder.append(`${field.name}: ${resolveType(field.type)};`);
-            }
+            builder.append(`${field.name}: ${resolveType(field.type)};`);
         }
         builder.removeIndent();
         builder.append(`}`);
@@ -128,11 +130,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         builder.append(`export interface ${entityClass}CreateShape {`);
         builder.addIndent();
         for (let field of entity.fields) {
-            if (field.isNullable) {
-                builder.append(`${field.name}?: ${resolveType(field.type)} | null | undefined;`);
-            } else {
-                builder.append(`${field.name}: ${resolveType(field.type)};`);
-            }
+            builder.append(`${field.name}: ${resolveType(field.type)};`);
         }
         builder.removeIndent();
         builder.append(`}`);
@@ -149,20 +147,10 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
             let type: string = resolveType(key.type);
 
             // Getter
-            if (key.isNullable) {
-                builder.append(`get ${key.name}(): ${type} | null { return this._rawValue.${key.name}; }`);
-
-            } else {
-                builder.append(`get ${key.name}(): ${type} { return this._rawValue.${key.name}; }`);
-
-            }
+            builder.append(`get ${key.name}(): ${type} { return this._rawValue.${key.name}; }`);
 
             // Setter
-            if (key.isNullable) {
-                builder.append(`set ${key.name}(value: ${type} | null) {`);
-            } else {
-                builder.append(`set ${key.name}(value: ${type}) {`);
-            }
+            builder.append(`set ${key.name}(value: ${type}) {`);
             builder.addIndent();
             builder.append(`let normalized = this.descriptor.codec.fields.${key.name}.normalize(value);`);
             builder.append(`if (this._rawValue.${key.name} !== normalized) {`);
@@ -216,7 +204,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         // Fields
         builder.append(`let fields: FieldDescriptor[] = [];`);
         for (let key of entity.fields) {
-            builder.append(`fields.push({ name: '${key.name}', type: ${resolveDescriptorType(key.type)}, nullable: ${key.isNullable}, secure: ${key.isSecure} });`);
+            builder.append(`fields.push({ name: '${key.name}', type: ${resolveDescriptorType(key.type)}, secure: ${key.isSecure} });`);
         }
 
         // Codec
@@ -236,11 +224,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
             }
         }
         for (let key of entity.fields) {
-            if (key.isNullable) {
-                builder.append(`${key.name}: c.optional(${resolveCodec(key.type)}),`);
-            } else {
-                builder.append(`${key.name}: ${resolveCodec(key.type)},`);
-            }
+            builder.append(`${key.name}: ${resolveCodec(key.type)},`);
         }
         builder.removeIndent();
         builder.append(`});`);

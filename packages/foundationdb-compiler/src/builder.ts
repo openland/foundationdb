@@ -1,4 +1,4 @@
-import { SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType, StructType, UnionType } from './model';
+import { SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType, StructType, UnionType, OptionalType } from './model';
 
 const reservedFieldNames = [
     'do', 'if', 'in', 'for', 'let', 'new', 'try', 'var', 'case', 'else',
@@ -122,10 +122,6 @@ class FieldBuilder {
     constructor(res: Field) {
         this.res = res;
     }
-    nullable = () => {
-        this.res.isNullable = true;
-        return this;
-    }
     secure = () => {
         this.res.isSecure = true;
         return this;
@@ -162,6 +158,10 @@ export function struct(feilds: { [key: string]: SchemaType }) {
 
 export function union(fields: { [key: string]: StructType }) {
     return new UnionType(fields);
+}
+
+export function optional(src: SchemaType) {
+    return new OptionalType(src);
 }
 
 export function field(name: string, type: SchemaType) {

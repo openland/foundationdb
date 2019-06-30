@@ -1,8 +1,7 @@
 export type PrimaryKeyType = 'string' | 'integer' | 'float' | 'boolean';
-export type FieldType = 'string' | 'integer' | 'float' | 'boolean' | 'enum';
 
 export abstract class SchemaType {
-    abstract readonly type: 'string' | 'integer' | 'float' | 'boolean' | 'enum' | 'array' | 'struct' | 'union';
+    abstract readonly type: 'string' | 'integer' | 'float' | 'boolean' | 'enum' | 'array' | 'struct' | 'union' | 'optional';
 }
 export class StringType extends SchemaType {
     readonly type = 'string';
@@ -48,6 +47,14 @@ export class UnionType extends SchemaType {
         this.fields = fields;
     }
 }
+export class OptionalType extends SchemaType {
+    readonly type = 'optional';
+    readonly inner: SchemaType;
+    constructor(inner: SchemaType) {
+        super();
+        this.inner = inner;
+    }
+}
 
 export class PrimaryKey {
     readonly name: string;
@@ -63,7 +70,6 @@ export class Field {
     readonly name: string;
     readonly type: SchemaType;
 
-    isNullable: boolean = false;
     isSecure: boolean = false;
 
     constructor(name: string, type: SchemaType) {
