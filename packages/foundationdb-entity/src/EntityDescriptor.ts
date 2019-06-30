@@ -78,12 +78,7 @@ export interface FieldDescriptor {
     /**
      * Type of field
      */
-    type: 'string' | 'boolean' | 'integer' | 'float' | 'enum';
-
-    /**
-     * Enum values for enum type
-     */
-    enumValues?: string[];
+    type: FieldType;
 
     /**
      * If field is nullable
@@ -95,6 +90,17 @@ export interface FieldDescriptor {
      */
     secure: boolean;
 }
+
+/**
+ * Type of field
+ */
+export type FieldType =
+    { type: 'integer' } |
+    { type: 'float' } |
+    { type: 'boolean' } |
+    { type: 'string' } |
+    { type: 'enum', values: string[] } |
+    { type: 'array', inner: FieldType };
 
 /**
  * Secondary Index Implementation

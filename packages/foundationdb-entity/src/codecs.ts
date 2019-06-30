@@ -123,6 +123,33 @@ export class UnionCodec<T> implements Codec<T> {
     }
 }
 
+export class ArrayCodec<T> implements Codec<T[]> {
+    readonly [typeSymbol]!: T[];
+    readonly inner: Codec<T>;
+    constructor(inner: Codec<T>) {
+        this.inner = inner;
+    }
+
+    decode(src: any) {
+        if (!Array.isArray(src)) {
+            throw Error('Input type is not an array');
+        }
+        return src.map((v) => this.inner.decode(v));
+    }
+    encode(src: T[]) {
+        if (!Array.isArray(src)) {
+            throw Error('Input type is not an array');
+        }
+        return src.map((v) => this.inner.encode(v));
+    }
+    normalize(src: any) {
+        if (!Array.isArray(src)) {
+            throw Error('Input type is not an array');
+        }
+        return src.map((v) => this.inner.normalize(v));
+    }
+}
+
 class StringCodec implements Codec<string> {
     readonly [typeSymbol]!: string;
 
@@ -383,6 +410,9 @@ export const codecs = {
     float: new FloatCodec() as Codec<number>,
     enum: <T extends string[]>(...values: T) => {
         return new EnumCodec<T[number]>(values) as Codec<T[number]>;
+    },
+    array: <T>(src: Codec<T>) => {
+        return new ArrayCodec<T>(src) as Codec<T[]>;
     },
     optional: <T>(src: Codec<T>) => {
         return new OptionalCodec<T>(src) as Codec<T | null>;

@@ -60,9 +60,9 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'id', type: 'string' });
         let fields: FieldDescriptor[] = [];
-        fields.push({ name: 'value', type: 'string', nullable: false, secure: false });
-        fields.push({ name: 'value2', type: 'integer', nullable: false, secure: false });
-        fields.push({ name: 'value3', type: 'boolean', nullable: true, secure: false });
+        fields.push({ name: 'value', type: { type: 'string' }, nullable: false, secure: false });
+        fields.push({ name: 'value2', type: { type: 'integer' }, nullable: false, secure: false });
+        fields.push({ name: 'value3', type: { type: 'boolean' }, nullable: true, secure: false });
         let codec = c.struct({
             id: c.string,
             value: c.string,
@@ -124,7 +124,7 @@ export class SimpleEntity2Factory extends EntityFactory<SimpleEntity2Shape, Simp
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'id', type: 'integer' });
         let fields: FieldDescriptor[] = [];
-        fields.push({ name: 'value', type: 'string', nullable: false, secure: false });
+        fields.push({ name: 'value', type: { type: 'string' }, nullable: false, secure: false });
         let codec = c.struct({
             id: c.integer,
             value: c.string,
@@ -163,7 +163,8 @@ export interface AllFieldsShape {
     value2: number;
     value3: number;
     value4: string;
-    value5: 'enum1' | 'enum2';
+    value5: 'value1' | 'value2';
+    value6: (string)[];
 }
 
 export interface AllFieldsCreateShape {
@@ -171,7 +172,8 @@ export interface AllFieldsCreateShape {
     value2: number;
     value3: number;
     value4: string;
-    value5: 'enum1' | 'enum2';
+    value5: 'value1' | 'value2';
+    value6: (string)[];
 }
 
 export class AllFields extends Entity<AllFieldsShape> {
@@ -215,12 +217,21 @@ export class AllFields extends Entity<AllFieldsShape> {
             this.invalidate();
         }
     }
-    get value5(): 'enum1' | 'enum2' {  return this._rawValue.value5; }
-    set value5(value: 'enum1' | 'enum2') {
+    get value5(): 'value1' | 'value2' {  return this._rawValue.value5; }
+    set value5(value: 'value1' | 'value2') {
         let normalized = this.descriptor.codec.fields.value5.normalize(value);
         if (this._rawValue.value5 !== normalized) {
             this._rawValue.value5 = normalized;
             this._updatedValues.value5 = normalized;
+            this.invalidate();
+        }
+    }
+    get value6(): (string)[] {  return this._rawValue.value6; }
+    set value6(value: (string)[]) {
+        let normalized = this.descriptor.codec.fields.value6.normalize(value);
+        if (this._rawValue.value6 !== normalized) {
+            this._rawValue.value6 = normalized;
+            this._updatedValues.value6 = normalized;
             this.invalidate();
         }
     }
@@ -237,11 +248,12 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
         primaryKeys.push({ name: 'key3', type: 'float' });
         primaryKeys.push({ name: 'key4', type: 'string' });
         let fields: FieldDescriptor[] = [];
-        fields.push({ name: 'value1', type: 'boolean', nullable: false, secure: false });
-        fields.push({ name: 'value2', type: 'integer', nullable: false, secure: false });
-        fields.push({ name: 'value3', type: 'float', nullable: false, secure: false });
-        fields.push({ name: 'value4', type: 'string', nullable: false, secure: false });
-        fields.push({ name: 'value5', type: 'enum', enumValues: ['enum1', 'enum2'], nullable: false, secure: false });
+        fields.push({ name: 'value1', type: { type: 'boolean' }, nullable: false, secure: false });
+        fields.push({ name: 'value2', type: { type: 'integer' }, nullable: false, secure: false });
+        fields.push({ name: 'value3', type: { type: 'float' }, nullable: false, secure: false });
+        fields.push({ name: 'value4', type: { type: 'string' }, nullable: false, secure: false });
+        fields.push({ name: 'value5', type: { type: 'enum', values: ['value1', 'value2'] }, nullable: false, secure: false });
+        fields.push({ name: 'value6', type: { type: 'array', inner: { type: 'string' } }, nullable: false, secure: false });
         let codec = c.struct({
             key1: c.boolean,
             key2: c.integer,
@@ -251,7 +263,8 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
             value2: c.integer,
             value3: c.float,
             value4: c.string,
-            value5: c.enum('enum1', 'enum2'),
+            value5: c.enum('value1', 'value2'),
+            value6: c.array(c.string),
         });
         let descriptor: EntityDescriptor<AllFieldsShape> = {
             name: 'AllFields',

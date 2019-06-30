@@ -1,11 +1,43 @@
 export type PrimaryKeyType = 'string' | 'integer' | 'float' | 'boolean';
 export type FieldType = 'string' | 'integer' | 'float' | 'boolean' | 'enum';
 
+export abstract class SchemaType {
+    abstract readonly type: 'string' | 'integer' | 'float' | 'boolean' | 'enum' | 'array';
+}
+export class StringType extends SchemaType {
+    readonly type = 'string';
+}
+export class IntegerType extends SchemaType {
+    readonly type = 'integer';
+}
+export class FloatType extends SchemaType {
+    readonly type = 'float';
+}
+export class BooleanType extends SchemaType {
+    readonly type = 'boolean';
+}
+export class EnumType extends SchemaType {
+    readonly type = 'enum';
+    readonly values: string[];
+    constructor(values: string[]) {
+        super();
+        this.values = values;
+    }
+}
+export class ArrayType extends SchemaType {
+    readonly type = 'array';
+    readonly inner: SchemaType;
+    constructor(inner: SchemaType) {
+        super();
+        this.inner = inner;
+    }
+}
+
 export class PrimaryKey {
     readonly name: string;
-    readonly type: PrimaryKeyType;
+    readonly type: SchemaType;
 
-    constructor(name: string, type: PrimaryKeyType) {
+    constructor(name: string, type: SchemaType) {
         this.name = name;
         this.type = type;
     }
@@ -13,16 +45,14 @@ export class PrimaryKey {
 
 export class Field {
     readonly name: string;
-    readonly type: FieldType;
-    readonly enumValues: string[];
+    readonly type: SchemaType;
 
     isNullable: boolean = false;
     isSecure: boolean = false;
 
-    constructor(name: string, type: FieldType, enumValues: string[]) {
+    constructor(name: string, type: SchemaType) {
         this.name = name;
         this.type = type;
-        this.enumValues = enumValues;
     }
 }
 
@@ -43,7 +73,7 @@ export class AtomicModel {
         this.kind = kind;
     }
 
-    addKey(name: string, type: PrimaryKeyType) {
+    addKey(name: string, type: SchemaType) {
         let res = new PrimaryKey(name, type);
         this.keys.push(res);
         return res;
@@ -59,7 +89,7 @@ export class EntityModel {
         this.name = name;
     }
 
-    addKey(name: string, type: PrimaryKeyType) {
+    addKey(name: string, type: SchemaType) {
         let res = new PrimaryKey(name, type);
         this.keys.push(res);
         return res;

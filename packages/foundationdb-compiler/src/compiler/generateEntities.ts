@@ -1,4 +1,4 @@
-import { FieldType } from './../model';
+import { SchemaType, EnumType, ArrayType } from './../model';
 import { StringBuilder } from './StringBuilder';
 import { SchemaModel } from '../model';
 import * as Case from 'change-case';
@@ -10,19 +10,57 @@ export function generateEntitiesHeader(schema: SchemaModel, builder: StringBuild
     }
 }
 
-function resolveType(type: FieldType, enumValues: string[]) {
-    if (type === 'string') {
+function resolveType(type: SchemaType): string {
+    if (type.type === 'string') {
         return 'string';
-    } else if (type === 'boolean') {
+    } else if (type.type === 'boolean') {
         return 'boolean';
-    } else if (type === 'integer') {
+    } else if (type.type === 'integer') {
         return 'number';
-    } else if (type === 'float') {
+    } else if (type.type === 'float') {
         return 'number';
-    } else if (type === 'enum') {
-        return enumValues.map((v) => `'${v}'`).join(' | ');
+    } else if (type.type === 'enum') {
+        return (type as EnumType).values.map((v) => `'${v}'`).join(' | ');
+    } else if (type.type === 'array') {
+        return '(' + resolveType((type as ArrayType).inner) + ')[]';
     } else {
-        throw Error('Unsupported primary key type: ' + type);
+        throw Error('Unsupported type: ' + JSON.stringify(type));
+    }
+}
+
+function resolveDescriptorType(type: SchemaType): string {
+    if (type.type === 'string') {
+        return `{ type: 'string' }`;
+    } else if (type.type === 'boolean') {
+        return `{ type: 'boolean' }`;
+    } else if (type.type === 'integer') {
+        return `{ type: 'integer' }`;
+    } else if (type.type === 'float') {
+        return `{ type: 'float' }`;
+    } else if (type.type === 'enum') {
+        return `{ type: 'enum', values: [${(type as EnumType).values.map((v) => `'${v}'`).join(', ')}] }`;
+    } else if (type.type === 'array') {
+        return `{ type: 'array', inner: ${resolveDescriptorType((type as ArrayType).inner)} }`;
+    } else {
+        throw Error('Unsupported type: ' + JSON.stringify(type));
+    }
+}
+
+function resolveCodec(type: SchemaType): string {
+    if (type.type === 'string') {
+        return 'c.string';
+    } else if (type.type === 'boolean') {
+        return 'c.boolean';
+    } else if (type.type === 'integer') {
+        return 'c.integer';
+    } else if (type.type === 'float') {
+        return 'c.float';
+    } else if (type.type === 'enum') {
+        return `c.enum(${(type as EnumType).values.map((v) => `'${v}'`).join(', ')})`;
+    } else if (type.type === 'array') {
+        return `c.array(${resolveCodec((type as ArrayType).inner)})`;
+    } else {
+        throw Error('Unsupported field type: ' + type.type);
     }
 }
 
@@ -36,13 +74,13 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         builder.append(`export interface ${entityClass}Shape {`);
         builder.addIndent();
         for (let key of entity.keys) {
-            builder.append(`${key.name}: ${resolveType(key.type, [])};`);
+            builder.append(`${key.name}: ${resolveType(key.type)};`);
         }
         for (let field of entity.fields) {
             if (field.isNullable) {
-                builder.append(`${field.name}: ${resolveType(field.type, field.enumValues)} | null;`);
+                builder.append(`${field.name}: ${resolveType(field.type)} | null;`);
             } else {
-                builder.append(`${field.name}: ${resolveType(field.type, field.enumValues)};`);
+                builder.append(`${field.name}: ${resolveType(field.type)};`);
             }
         }
         builder.removeIndent();
@@ -54,9 +92,9 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         builder.addIndent();
         for (let field of entity.fields) {
             if (field.isNullable) {
-                builder.append(`${field.name}?: ${resolveType(field.type, field.enumValues)} | null | undefined;`);
+                builder.append(`${field.name}?: ${resolveType(field.type)} | null | undefined;`);
             } else {
-                builder.append(`${field.name}: ${resolveType(field.type, field.enumValues)};`);
+                builder.append(`${field.name}: ${resolveType(field.type)};`);
             }
         }
         builder.removeIndent();
@@ -67,11 +105,11 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         builder.append(`export class ${entityClass} extends Entity<${entityClass}Shape> {`);
         builder.addIndent();
         for (let key of entity.keys) {
-            let type: string = resolveType(key.type, []);
+            let type: string = resolveType(key.type);
             builder.append(`get ${key.name}(): ${type} { return this._rawValue.${key.name}; }`);
         }
         for (let key of entity.fields) {
-            let type: string = resolveType(key.type, key.enumValues);
+            let type: string = resolveType(key.type);
 
             // Getter
             if (key.isNullable) {
@@ -125,13 +163,13 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         // Primary Keys
         builder.append(`let primaryKeys: PrimaryKeyDescriptor[] = [];`);
         for (let key of entity.keys) {
-            if (key.type === 'string') {
+            if (key.type.type === 'string') {
                 builder.append(`primaryKeys.push({ name: '${key.name}', type: 'string' });`);
-            } else if (key.type === 'boolean') {
+            } else if (key.type.type === 'boolean') {
                 builder.append(`primaryKeys.push({ name: '${key.name}', type: 'boolean' });`);
-            } else if (key.type === 'integer') {
+            } else if (key.type.type === 'integer') {
                 builder.append(`primaryKeys.push({ name: '${key.name}', type: 'integer' });`);
-            } else if (key.type === 'float') {
+            } else if (key.type.type === 'float') {
                 builder.append(`primaryKeys.push({ name: '${key.name}', type: 'float' });`);
             } else {
                 throw Error('Unsupported primary key type: ' + key.type);
@@ -141,70 +179,30 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         // Fields
         builder.append(`let fields: FieldDescriptor[] = [];`);
         for (let key of entity.fields) {
-            if (key.type === 'string') {
-                builder.append(`fields.push({ name: '${key.name}', type: 'string', nullable: ${key.isNullable}, secure: ${key.isSecure} });`);
-            } else if (key.type === 'boolean') {
-                builder.append(`fields.push({ name: '${key.name}', type: 'boolean', nullable: ${key.isNullable}, secure: ${key.isSecure} });`);
-            } else if (key.type === 'integer') {
-                builder.append(`fields.push({ name: '${key.name}', type: 'integer', nullable: ${key.isNullable}, secure: ${key.isSecure} });`);
-            } else if (key.type === 'float') {
-                builder.append(`fields.push({ name: '${key.name}', type: 'float', nullable: ${key.isNullable}, secure: ${key.isSecure} });`);
-            } else if (key.type === 'enum') {
-                builder.append(`fields.push({ name: '${key.name}', type: 'enum', enumValues: [${key.enumValues.map((v) => `'${v}'`).join(', ')}], nullable: ${key.isNullable}, secure: ${key.isSecure} });`);
-            } else {
-                throw Error('Unsupported field type: ' + key.type);
-            }
+            builder.append(`fields.push({ name: '${key.name}', type: ${resolveDescriptorType(key.type)}, nullable: ${key.isNullable}, secure: ${key.isSecure} });`);
         }
 
         // Codec
         builder.append(`let codec = c.struct({`);
         builder.addIndent();
         for (let key of entity.keys) {
-            if (key.type === 'string') {
+            if (key.type.type === 'string') {
                 builder.append(`${key.name}: c.string,`);
-            } else if (key.type === 'boolean') {
+            } else if (key.type.type === 'boolean') {
                 builder.append(`${key.name}: c.boolean,`);
-            } else if (key.type === 'integer') {
+            } else if (key.type.type === 'integer') {
                 builder.append(`${key.name}: c.integer,`);
-            } else if (key.type === 'float') {
+            } else if (key.type.type === 'float') {
                 builder.append(`${key.name}: c.float,`);
             } else {
                 throw Error('Unsupported primary key type: ' + key.type);
             }
         }
         for (let key of entity.fields) {
-            if (key.type === 'string') {
-                if (key.isNullable) {
-                    builder.append(`${key.name}: c.optional(c.string),`);
-                } else {
-                    builder.append(`${key.name}: c.string,`);
-                }
-            } else if (key.type === 'boolean') {
-                if (key.isNullable) {
-                    builder.append(`${key.name}: c.optional(c.boolean),`);
-                } else {
-                    builder.append(`${key.name}: c.boolean,`);
-                }
-            } else if (key.type === 'integer') {
-                if (key.isNullable) {
-                    builder.append(`${key.name}: c.optional(c.integer),`);
-                } else {
-                    builder.append(`${key.name}: c.integer,`);
-                }
-            } else if (key.type === 'float') {
-                if (key.isNullable) {
-                    builder.append(`${key.name}: c.optional(c.float),`);
-                } else {
-                    builder.append(`${key.name}: c.float,`);
-                }
-            } else if (key.type === 'enum') {
-                if (key.isNullable) {
-                    builder.append(`${key.name}: c.optional(c.enum(${key.enumValues.map((v) => `'${v}'`).join(', ')})),`);
-                } else {
-                    builder.append(`${key.name}: c.enum(${key.enumValues.map((v) => `'${v}'`).join(', ')}),`);
-                }
+            if (key.isNullable) {
+                builder.append(`${key.name}: c.optional(${resolveCodec(key.type)}),`);
             } else {
-                throw Error('Unsupported field type: ' + key.type);
+                builder.append(`${key.name}: ${resolveCodec(key.type)},`);
             }
         }
         builder.removeIndent();
@@ -234,7 +232,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
 
         // create
         builder.append();
-        builder.append(`create(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type, [])).join(', ')}, src: ${entityClass}CreateShape): Promise<${entityClass}> {`);
+        builder.append(`create(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type)).join(', ')}, src: ${entityClass}CreateShape): Promise<${entityClass}> {`);
         builder.addIndent();
         builder.append(`return this._create(ctx, [${entity.keys.map((v) => v.name).join(', ')}], this.descriptor.codec.normalize({${entity.keys.map((v) => v.name).join(', ')}, ...src }));`);
         builder.removeIndent();
@@ -242,7 +240,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
 
         // findById
         builder.append();
-        builder.append(`findById(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type, [])).join(', ')}): Promise<${entityClass} | null> {`);
+        builder.append(`findById(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type)).join(', ')}): Promise<${entityClass} | null> {`);
         builder.addIndent();
         builder.append(`return this._findById(ctx, [${entity.keys.map((v) => v.name).join(', ')}]);`);
         builder.removeIndent();

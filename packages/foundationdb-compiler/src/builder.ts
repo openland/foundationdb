@@ -1,4 +1,4 @@
-import { SchemaModel, AtomicModel, PrimaryKeyType, EntityModel, FieldType, Field } from './model';
+import { SchemaModel, AtomicModel, PrimaryKeyType, EntityModel, FieldType, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType } from './model';
 
 const reservedFieldNames = [
     'do', 'if', 'in', 'for', 'let', 'new', 'try', 'var', 'case', 'else',
@@ -104,7 +104,7 @@ export function entity(name: string, schema: () => void) {
     currentEntity = null;
 }
 
-export function primaryKey(name: string, type: PrimaryKeyType) {
+export function primaryKey(name: string, type: SchemaType) {
     checkValidFieldName(name);
     if (!currentAtomic && !currentEntity) {
         throw Error('No entity specified');
@@ -132,12 +132,36 @@ class FieldBuilder {
     }
 }
 
-export function field(name: string, type: FieldType, enumValues?: string[]) {
+export function string() {
+    return new StringType();
+}
+
+export function integer() {
+    return new IntegerType();
+}
+
+export function float() {
+    return new FloatType();
+}
+
+export function boolean() {
+    return new BooleanType();
+}
+
+export function enumString(...args: string[]) {
+    return new EnumType(args);
+}
+
+export function array(src: SchemaType) {
+    return new ArrayType(src);
+}
+
+export function field(name: string, type: SchemaType) {
     checkValidFieldName(name);
     if (!currentEntity) {
         throw Error('No entity specified');
     }
-    let res = new Field(name, type, enumValues ? enumValues : []);
+    let res = new Field(name, type);
     currentEntity!.fields.push(res);
 
     return new FieldBuilder(res);
