@@ -298,6 +298,20 @@ class FloatCodec implements Codec<number> {
     }
 }
 
+class AnyCodec implements Codec<any> {
+    readonly [typeSymbol]!: any;
+
+    decode(src: any) {
+        return src;
+    }
+    encode(src: any) {
+        return src;
+    }
+    normalize(src: any) {
+        return src;
+    }
+}
+
 class OptionalCodec<T> implements Codec<T | null> {
     readonly [typeSymbol]!: T | null;
     private readonly parent: Codec<T>;
@@ -408,6 +422,7 @@ export const codecs = {
     number: new NumberCodec() as Codec<number>,
     integer: new IntegerCodec() as Codec<number>,
     float: new FloatCodec() as Codec<number>,
+    any: new AnyCodec() as Codec<any>,
     enum: <T extends string[]>(...values: T) => {
         return new EnumCodec<T[number]>(values) as Codec<T[number]>;
     },
