@@ -1,12 +1,13 @@
 import { TupleItem } from '@openland/foundationdb-tuple';
 import { Context } from '@openland/context';
-import { Subspace, encoders } from '@openland/foundationdb';
+import { Subspace } from '@openland/foundationdb';
 import { IndexMaintainer } from './IndexMaintainer';
+import { tupleKey } from './utils';
 
 export class PrimaryIndex implements IndexMaintainer {
 
     static lockKey(id: TupleItem[]) {
-        return 'primary-' + encoders.tuple.pack(id).toString('hex');
+        return 'primary-' + tupleKey(id);
     }
 
     private readonly subspace: Subspace<TupleItem[], any>;

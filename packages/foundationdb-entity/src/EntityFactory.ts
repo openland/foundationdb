@@ -1,3 +1,4 @@
+import { UniqueIndex } from './indexes/UniqueIndex';
 import { TupleItem, Float } from '@openland/foundationdb-tuple';
 import { uniqueSeed } from '@openland/foundationdb-utils';
 import { Context } from '@openland/context';
@@ -37,6 +38,13 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         this.descriptor = descriptor;
         this._codec = codecs.merge(descriptor.codec, metadataCodec);
         this._indexMaintainers.push(new PrimaryIndex(descriptor.subspace));
+        for (let ind of descriptor.secondaryIndexes) {
+            if (ind.type.type === 'unique') {
+                this._indexMaintainers.push(new UniqueIndex(ind));
+            } else {
+                throw Error('Unknown index type');
+            }
+        }
     }
 
     protected _watch(ctx: Context, _id: PrimaryKeyType[]): Watch {

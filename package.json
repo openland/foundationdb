@@ -12,7 +12,7 @@
     "build": "yarn tsc --build && yarn compile && yarn tsc --build",
     "test": "yarn jest",
     "clean": "yarn tsc --build --clean",
-    "compile": "yarn ts-node ./packages/foundationdb-compiler/src/main.ts ./packages/foundationdb-entity-specs/src/atomic.schema.ts ./packages/foundationdb-entity-specs/src/atomic.repo.ts && yarn ts-node ./packages/foundationdb-compiler/src/main.ts ./packages/foundationdb-entity-specs/src/entity.schema.ts ./packages/foundationdb-entity-specs/src/entity.repo.ts",
+    "compile": "./scripts/compile.sh",
     "coverage": "yarn jest --coverage",
     "release": "yarn clean && yarn build && yarn test && yarn lerna publish --force-publish",
     "prepare": "patch-package"

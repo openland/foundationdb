@@ -187,7 +187,36 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         for (let index of entity.indexes) {
             let type: string;
             if (index.type.type === 'unique') {
-                type = `{ type: 'unique', fields: [${index.type.fields.map((v) => `'${v}'`).join(', ')}] }`;
+                let fields: string[] = [];
+                for (let f of index.type.fields) {
+                    let tp: string;
+                    let ef = entity.fields.find((v) => v.name === f);
+                    let stp: SchemaType;
+                    if (!ef) {
+                        let kf = entity.keys.find((v) => v.name === f);
+                        if (kf) {
+                            stp = kf.type;
+                        } else {
+                            throw Error('Unable to find field ' + f);
+                        }
+                    } else {
+                        stp = ef.type;
+                    }
+                    if (stp.type === 'string') {
+                        tp = 'string';
+                    } else if (stp.type === 'integer') {
+                        tp = 'integer';
+                    } else if (stp.type === 'float') {
+                        tp = 'float';
+                    } else if (stp.type === 'boolean') {
+                        tp = 'boolean';
+                    } else {
+                        throw Error('Unsupported field type for index: ' + stp.type);
+                    }
+                    fields.push(`{ name: '${f}', type: '${tp}' }`);
+                }
+
+                type = `{ type: 'unique', fields: [${fields.join(', ')}] }`;
             } else {
                 throw Error('Unknown index type');
             }

@@ -59,3 +59,41 @@ export function unpack(src: Buffer): TupleItem[] {
     }
     return res;
 }
+
+/**
+ * Equality of two tuples
+ * @param a first tuple
+ * @param b second tuple
+ */
+export function equals(a: TupleItem[], b: TupleItem[]) {
+    if (a.length !== b.length) {
+        return false;
+    }
+    for (let i = 0; i < a.length; i++) {
+        if (typeof a[i] !== typeof b[i]) {
+            return false;
+        }
+        if (typeof a[i] === 'string' || typeof a[i] === 'number' || typeof a[i] === 'boolean' || a[i] === null || b[i] === null) {
+            if (a[i] !== b[i]) {
+                return false;
+            }
+        } else if (Buffer.isBuffer(a[i])) {
+            if (!Buffer.isBuffer(b[i])) {
+                return false;
+            }
+            if (!(a[i] as Buffer).equals(b[i] as Buffer)) {
+                return false;
+            }
+        } else if (a[i] instanceof Float) {
+            if (!(b[i] instanceof Float)) {
+                return false;
+            }
+            if ((a[i] as Float).value !== (b[i] as Float).value) {
+                return false;
+            }
+        } else {
+            throw Error('Unknown tuple item: ' + a[i]);
+        }
+    }
+    return true;
+}

@@ -2,6 +2,8 @@ import { Subspace, TupleItem } from '@openland/foundationdb';
 import { StructCodec } from './codecs';
 import { EntityStorage } from './EntityStorage';
 
+export type IndexFieldType = 'string' | 'boolean' | 'integer' | 'float';
+
 /**
  * Descriptor of Entity that represent crucial information 
  * for working with this type of entity.
@@ -62,7 +64,7 @@ export interface PrimaryKeyDescriptor {
     /**
      * Type of primary key
      */
-    type: 'string' | 'boolean' | 'integer' | 'float';
+    type: IndexFieldType;
 }
 
 /**
@@ -100,9 +102,11 @@ export type FieldType =
     { type: 'union', types: { [key: string]: { [key: string]: FieldType } } } |
     { type: 'optional', inner: FieldType };
 
+export type IndexField = { name: string, type: IndexFieldType };
+
 export type IndexType =
-    { type: 'unique', fields: string[] } |
-    { type: 'range', fields: string[] };
+    { type: 'unique', fields: IndexField[] } |
+    { type: 'range', fields: IndexField[] };
 
 /**
  * Secondary Index Implementation
