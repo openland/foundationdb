@@ -6,13 +6,13 @@ export function tupleKey(tuple: TupleItem[]) {
     return encoders.tuple.pack(tuple).toString('hex');
 }
 
-export function resolveIndexKey(src: any[], fields: IndexField[]) {
-    if (src.length !== fields.length) {
+export function resolveIndexKey(src: any[], fields: IndexField[], partial: boolean = false) {
+    if (!partial && src.length !== fields.length) {
         throw Error('Invalid key length');
     }
 
     let res: Tuple.TupleItem[] = [];
-    for (let i = 0; i < fields.length; i++) {
+    for (let i = 0; i < src.length; i++) {
         let key = fields[i];
         let v = src[i];
         if (key.type === 'boolean') {

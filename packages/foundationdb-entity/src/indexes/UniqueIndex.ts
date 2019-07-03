@@ -12,14 +12,12 @@ export class UniqueIndex implements IndexMaintainer {
     }
 
     readonly descriptor: SecondaryIndexDescriptor;
-    readonly fields: IndexField[] = [];
 
     constructor(descriptor: SecondaryIndexDescriptor) {
         this.descriptor = descriptor;
         if (descriptor.type.type !== 'unique') {
             throw Error();
         }
-        this.fields = descriptor.type.fields;
     }
 
     //
@@ -85,8 +83,8 @@ export class UniqueIndex implements IndexMaintainer {
 
     private _resolveIndexKey(value: any) {
         let res: any[] = [];
-        for (let i = 0; i < this.fields.length; i++) {
-            let key = this.fields[i];
+        for (let i = 0; i < this.descriptor.type.fields.length; i++) {
+            let key = this.descriptor.type.fields[i];
             let v = value[key.name];
             res.push(v);
         }

@@ -13,6 +13,7 @@ import { PrimaryIndex } from './indexes/PrimaryIndex';
 import { IndexMaintainer } from './indexes/IndexMaintainer';
 import { IndexMutexManager } from './indexes/IndexMutexManager';
 import { resolveIndexKey } from './indexes/utils';
+import { RangeIndex } from './indexes/RangeIndex';
 
 function getCacheKey(id: ReadonlyArray<TupleItem>) {
     return encoders.tuple.pack(id as any /* WTF, TS? */).toString('hex');
@@ -42,6 +43,8 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         for (let ind of descriptor.secondaryIndexes) {
             if (ind.type.type === 'unique') {
                 this._indexMaintainers.push(new UniqueIndex(ind));
+            } else if (ind.type.type === 'range') {
+                this._indexMaintainers.push(new RangeIndex(ind));
             } else {
                 throw Error('Unknown index type');
             }
@@ -52,6 +55,10 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         let id = this._resolvePrimaryKey(_id);
         return this.descriptor.subspace.watch(ctx, id);
     }
+
+    //
+    // Unique Index Operation
+    //
 
     protected async _findFromUniqueIndex(parent: Context, _id: PrimaryKeyType[], descriptor: SecondaryIndexDescriptor): Promise<T | null> {
         return inTxLeaky(parent, async (ctx) => {
@@ -70,6 +77,30 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
 
             // Query primary id
             return this._findById(ctx, pk);
+        });
+    }
+
+    //
+    // Range Index Operations
+    //
+
+    protected async _findAllFromIndex(
+        parent: Context,
+        descriptor: SecondaryIndexDescriptor,
+        _id: PrimaryKeyType[]
+    ): Promise<T[]> {
+        // Resolve index key
+        let id = resolveIndexKey(_id, descriptor.type.fields, true /* Partial key */);
+        return inTxLeaky(parent, async (ctx) => {
+            let res = await descriptor.subspace.range(ctx, id);
+            return await Promise.all(res.map(async (v) => {
+                let pk = this._resolvePrimaryKeyFromObject(v.value);
+                let e = await this._findById(ctx, pk);
+                if (!e) {
+                    throw Error('Broken index!');
+                }
+                return e;
+            }));
         });
     }
 
@@ -270,17 +301,17 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             let key = this.descriptor.primaryKeys[i];
             if (key.type === 'boolean') {
                 if (typeof id[i] !== 'boolean') {
-                    throw Error('Unexpected key');
+                    throw Error('Unexpected key: ' + id[i]);
                 }
                 res.push(id[i]);
             } else if (key.type === 'integer') {
                 if (typeof id[i] !== 'number') {
-                    throw Error('Unexpected key');
+                    throw Error('Unexpected key: ' + id[i]);
                 }
                 res.push(id[i]);
             } else if (key.type === 'float') {
                 if (typeof id[i] !== 'number') {
-                    throw Error('Unexpected key');
+                    throw Error('Unexpected key: ' + id[i]);
                 }
                 res.push(new Float(id[i] as number));
             } else if (key.type === 'string') {

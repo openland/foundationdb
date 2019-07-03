@@ -105,12 +105,15 @@ export class AtomicModel {
 type EntityIndexType = {
     type: 'unique'
     fields: string[]
+} | {
+    type: 'range'
+    fields: string[]
 };
 
 export class EntityIndexModel {
     readonly name: string;
     readonly type: EntityIndexType;
-    
+
     constructor(name: string, type: EntityIndexType) {
         this.name = name;
         this.type = type;

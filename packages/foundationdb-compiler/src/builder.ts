@@ -182,3 +182,11 @@ export function uniqueIndex(name: string, fields: string[]) {
     }
     currentEntity!.indexes.push(new EntityIndexModel(name, { type: 'unique', fields: fields }));
 }
+
+export function rangeIndex(name: string, fields: string[]) {
+    checkValidFieldName(name);
+    if (!currentEntity) {
+        throw Error('No entity specified');
+    }
+    currentEntity!.indexes.push(new EntityIndexModel(name, { type: 'range', fields: fields }));
+}
