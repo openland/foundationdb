@@ -1,5 +1,5 @@
 import { TupleItem, Float } from '@openland/foundationdb-tuple';
-import { uniqueSeed, Mutex } from '@openland/foundationdb-utils';
+import { uniqueSeed } from '@openland/foundationdb-utils';
 import { Context } from '@openland/context';
 import { TransactionCache, encoders, inTx, Watch } from '@openland/foundationdb';
 import { Entity } from './Entity';
@@ -8,6 +8,9 @@ import { EntityMetadata } from './EntityMetadata';
 import { codecs, Codec } from './codecs';
 import { ShapeWithMetadata } from './ShapeWithMetadata';
 import { PrimaryKeyType } from './PrimaryKeyType';
+import { PrimaryIndex } from './indexes/PrimaryIndex';
+import { IndexMaintainer } from './indexes/IndexMaintainer';
+import { IndexMutexManager } from './indexes/IndexMutexManager';
 
 function getCacheKey(id: ReadonlyArray<TupleItem>) {
     return encoders.tuple.pack(id as any /* WTF, TS? */).toString('hex');
@@ -24,14 +27,16 @@ const metadataCodec = codecs.struct({
 export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     readonly descriptor: EntityDescriptor<SHAPE>;
 
-    private primaryLockCache = new TransactionCache<Mutex>(uniqueSeed());
-    private entityCache = new TransactionCache<T>(uniqueSeed());
-    private codec: Codec<ShapeWithMetadata<SHAPE>>;
+    private readonly _mutexManager = new IndexMutexManager();
+    private readonly _entityCache = new TransactionCache<T>(uniqueSeed());
+    private readonly _codec: Codec<ShapeWithMetadata<SHAPE>>;
+    private readonly _indexMaintainers: IndexMaintainer[] = [];
 
     protected constructor(descriptor: EntityDescriptor<SHAPE>) {
         Object.freeze(descriptor);
         this.descriptor = descriptor;
-        this.codec = codecs.merge(descriptor.codec, metadataCodec);
+        this._codec = codecs.merge(descriptor.codec, metadataCodec);
+        this._indexMaintainers.push(new PrimaryIndex(descriptor.subspace));
     }
 
     protected _watch(ctx: Context, _id: PrimaryKeyType[]): Watch {
@@ -44,11 +49,11 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         // Validate input
         let id = this._resolvePrimaryKey(_id);
 
-        return await this._getPrimaryLock(ctx, id).runExclusive(async () => {
+        return await this._mutexManager.runExclusively(ctx, [PrimaryIndex.lockKey(id)], async () => {
 
             // Check Cache
             let k = getCacheKey(id);
-            let cached = this.entityCache.get(ctx, k);
+            let cached = this._entityCache.get(ctx, k);
             if (cached) {
                 return cached;
             }
@@ -57,7 +62,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             let ex = await this.descriptor.subspace.get(ctx, id);
 
             // Check cache
-            cached = this.entityCache.get(ctx, k);
+            cached = this._entityCache.get(ctx, k);
             if (cached) {
                 return cached;
             }
@@ -68,7 +73,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
 
                 // Create instance
                 let res = this._createEntityInstance(ctx, decoded);
-                this.entityCache.set(ctx, k, res);
+                this._entityCache.set(ctx, k, res);
                 return res;
             } else {
                 return null;
@@ -96,63 +101,121 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
 
         // Check cache
         let k = getCacheKey(id);
-        if (this.entityCache.get(ctx, k)) {
+        if (this._entityCache.get(ctx, k)) {
             throw Error('Entity already exists');
         }
 
-        // Check Primary Index and write result
-        await this._getPrimaryLock(ctx, id).runExclusive(async () => {
+        // Compute mutex keys
+        let mutexKeys: string[] = [];
+        for (let i of this._indexMaintainers) {
+            if (i.onCreateLockKey) {
+                mutexKeys.push(i.onCreateLockKey(id, encoded));
+            } else {
+                mutexKeys.push('global-lock');
+            }
+        }
+
+        await this._mutexManager.runExclusively(ctx, mutexKeys, async () => {
             await inTx(ctx, async (ctx2) => {
-                let ex = await this.descriptor.subspace.get(ctx2, id);
-                if (ex) {
-                    throw Error('Entity already exists');
+
+                //
+                // Call beforeCreate hooks
+                // beforeCreate is the only place that can throw exeptions
+                // about constrain violations
+                //
+
+                for (let i of this._indexMaintainers) {
+                    if (i.beforeCreate) {
+                        await i.beforeCreate(ctx2, id, encoded);
+                    }
                 }
-                this.descriptor.subspace.set(ctx2, id, encoded);
+
+                //
+                // Update indexes (all method are synchronous)
+                //
+
+                for (let i of this._indexMaintainers) {
+                    i.onCreate(ctx2, id, encoded);
+                }
+
+                //
+                // afterCreate hook. Currently is not used by built-in bindings.
+                //
+
+                for (let i of this._indexMaintainers) {
+                    if (i.afterCreate) {
+                        await i.afterCreate(ctx2, id, encoded);
+                    }
+                }
             });
         });
 
         // Check cache
-        if (this.entityCache.get(ctx, k)) {
+        if (this._entityCache.get(ctx, k)) {
             throw Error('Entity already exists');
         }
 
         // Create Instance
         let res = this._createEntityInstance(ctx, { ...value, _metadata: metadata });
-        this.entityCache.set(ctx, k, res);
+        this._entityCache.set(ctx, k, res);
         return res;
     }
 
     // Need to be arrow function since we are passing this function to entity instances
     protected _flush = async (ctx: Context, _id: ReadonlyArray<PrimaryKeyType>, oldValue: ShapeWithMetadata<SHAPE>, newValue: ShapeWithMetadata<SHAPE>) => {
         let id = this._resolvePrimaryKey(_id);
-        await this._getPrimaryLock(ctx, id).runExclusive(async () => {
+        // Encode value before any write
+        let encoded = { ...newValue, ...this._codec.encode(newValue) };
 
-            // Encode value before any write
-            let encoded = { ...newValue, ...this.codec.encode(newValue) };
+        let mutexKeys: string[] = [];
+        for (let i of this._indexMaintainers) {
+            if (i.onUpdateLockKey) {
+                mutexKeys.push(i.onUpdateLockKey(id, oldValue, encoded));
+            } else {
+                mutexKeys.push('global-lock');
+            }
+        }
 
-            // Write primary key index value
-            this.descriptor.subspace.set(ctx, id as any, encoded);
+        await this._mutexManager.runExclusively(ctx, mutexKeys, async () => {
+
+            //
+            // Call beforeUpdate hooks
+            // beforeUpdate is the only place that can throw exeptions
+            // about constrain violations
+            //
+
+            for (let i of this._indexMaintainers) {
+                if (i.beforeUpdate) {
+                    await i.beforeUpdate(ctx, id, oldValue, encoded);
+                }
+            }
+
+            //
+            // Update indexes (all method are synchronous)
+            //
+
+            for (let i of this._indexMaintainers) {
+                i.onUpdate(ctx, id, oldValue, encoded);
+            }
+
+            //
+            // afterUpdate hook. Currently is not used by built-in bindings.
+            //
+
+            for (let i of this._indexMaintainers) {
+                if (i.afterUpdate) {
+                    await i.afterUpdate(ctx, id, oldValue, encoded);
+                }
+            }
         });
     }
 
     private _encode(value: SHAPE, metadata: EntityMetadata) {
-        return { ...value, ...this.codec.encode({ ...value, _metadata: metadata }) };
+        return { ...value, ...this._codec.encode({ ...value, _metadata: metadata }) };
     }
 
     private _decode(value: any) {
-        return { ...value, ...this.codec.decode(value) };
-    }
-
-    private _getPrimaryLock(ctx: Context, id: ReadonlyArray<TupleItem>) {
-        let k = getCacheKey(id);
-        let ex = this.primaryLockCache.get(ctx, k);
-        if (!ex) {
-            ex = new Mutex();
-            this.primaryLockCache.set(ctx, k, ex);
-            return ex;
-        } else {
-            return ex;
-        }
+        return { ...value, ...this._codec.decode(value) };
     }
 
     protected abstract _createEntityInstance(ctx: Context, value: ShapeWithMetadata<SHAPE>): T;
