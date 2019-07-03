@@ -69,6 +69,12 @@ export class UniqueIndexFactory extends EntityFactory<UniqueIndexShape, UniqueIn
         super(descriptor);
     }
 
+    readonly testIndex = Object.freeze({
+        find: async (ctx: Context, unique1: string, unique2: string) => {
+            return this._findFromUniqueIndex(ctx, [unique1, unique2], this.descriptor.secondaryIndexes[0]);
+        }
+    });
+
     create(ctx: Context, id: number, src: UniqueIndexCreateShape): Promise<UniqueIndex> {
         return this._create(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }

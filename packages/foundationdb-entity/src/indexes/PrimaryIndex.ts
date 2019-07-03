@@ -19,14 +19,14 @@ export class PrimaryIndex implements IndexMaintainer {
     // Same mutex key
     //
 
-    onCreateLockKey(id: TupleItem[]) {
-        return PrimaryIndex.lockKey(id);
+    onCreateLockKeys(id: TupleItem[]) {
+        return [PrimaryIndex.lockKey(id)];
     }
-    onUpdateLockKey(id: TupleItem[]) {
-        return PrimaryIndex.lockKey(id);
+    onUpdateLockKeys(id: TupleItem[]) {
+        return [PrimaryIndex.lockKey(id)];
     }
-    onDeleteLockKey(id: TupleItem[]) {
-        return PrimaryIndex.lockKey(id);
+    onDeleteLockKeys(id: TupleItem[]) {
+        return [PrimaryIndex.lockKey(id)];
     }
 
     async beforeCreate(ctx: Context, id: TupleItem[], value: any) {

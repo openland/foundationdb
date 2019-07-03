@@ -286,6 +286,57 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         builder.append(`}`);
 
         //
+        // Indexes
+        //
+
+        let indexIndex = 0;
+        for (let index of entity.indexes) {
+            if (index.type.type === 'unique') {
+                builder.append();
+                builder.append(`readonly ${index.name}Index = Object.freeze({`);
+                builder.addIndent();
+                let fields: string[] = [];
+                let fieldNames: string[] = [];
+                for (let f of index.type.fields) {
+                    let ef = entity.fields.find((v) => v.name === f);
+                    let stp: SchemaType;
+                    if (!ef) {
+                        let kf = entity.keys.find((v) => v.name === f);
+                        if (kf) {
+                            stp = kf.type;
+                        } else {
+                            throw Error('Unable to find field ' + f);
+                        }
+                    } else {
+                        stp = ef.type;
+                    }
+                    fieldNames.push(f);
+                    if (stp.type === 'string') {
+                        fields.push(`${f}: string`);
+                    } else if (stp.type === 'integer') {
+                        fields.push(`${f}: number`);
+                    } else if (stp.type === 'float') {
+                        fields.push(`${f}: number`);
+                    } else if (stp.type === 'boolean') {
+                        fields.push(`${f}: boolean`);
+                    } else {
+                        throw Error('Unsupported index key type: ' + stp.type);
+                    }
+                }
+                builder.append(`find: async (ctx: Context, ${fields.join(', ')}) => {`);
+                builder.addIndent();
+                builder.append(`return this._findFromUniqueIndex(ctx, [${fieldNames.join(', ')}], this.descriptor.secondaryIndexes[${indexIndex}]);`);
+                builder.removeIndent();
+                builder.append(`}`);
+                builder.removeIndent();
+                builder.append(`});`);
+            } else {
+                throw Error('Unknown index type');
+            }
+            indexIndex++;
+        }
+
+        //
         // Operations
         //
 

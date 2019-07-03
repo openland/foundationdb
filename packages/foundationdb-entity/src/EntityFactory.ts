@@ -2,9 +2,9 @@ import { UniqueIndex } from './indexes/UniqueIndex';
 import { TupleItem, Float } from '@openland/foundationdb-tuple';
 import { uniqueSeed } from '@openland/foundationdb-utils';
 import { Context } from '@openland/context';
-import { TransactionCache, encoders, inTx, Watch } from '@openland/foundationdb';
+import { TransactionCache, encoders, inTx, Watch, transactional, inTxLeaky } from '@openland/foundationdb';
 import { Entity } from './Entity';
-import { EntityDescriptor } from './EntityDescriptor';
+import { EntityDescriptor, SecondaryIndexDescriptor } from './EntityDescriptor';
 import { EntityMetadata } from './EntityMetadata';
 import { codecs, Codec } from './codecs';
 import { ShapeWithMetadata } from './ShapeWithMetadata';
@@ -12,6 +12,7 @@ import { PrimaryKeyType } from './PrimaryKeyType';
 import { PrimaryIndex } from './indexes/PrimaryIndex';
 import { IndexMaintainer } from './indexes/IndexMaintainer';
 import { IndexMutexManager } from './indexes/IndexMutexManager';
+import { resolveIndexKey } from './indexes/utils';
 
 function getCacheKey(id: ReadonlyArray<TupleItem>) {
     return encoders.tuple.pack(id as any /* WTF, TS? */).toString('hex');
@@ -50,6 +51,26 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     protected _watch(ctx: Context, _id: PrimaryKeyType[]): Watch {
         let id = this._resolvePrimaryKey(_id);
         return this.descriptor.subspace.watch(ctx, id);
+    }
+
+    protected async _findFromUniqueIndex(parent: Context, _id: PrimaryKeyType[], descriptor: SecondaryIndexDescriptor): Promise<T | null> {
+        return inTxLeaky(parent, async (ctx) => {
+            // Resolve index key
+            let id = resolveIndexKey(_id, descriptor.type.fields);
+
+            // Resolve value
+            let ex = await this._mutexManager.runExclusively(ctx, [UniqueIndex.lockKey(descriptor, id)],
+                async () => await descriptor.subspace.get(ctx, id));
+            if (!ex) {
+                return null;
+            }
+
+            // Resolve primary key
+            let pk = this._resolvePrimaryKeyFromObject(ex);
+
+            // Query primary id
+            return this._findById(ctx, pk);
+        });
     }
 
     protected async _findById(ctx: Context, _id: PrimaryKeyType[]): Promise<T | null> {
@@ -116,8 +137,10 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         // Compute mutex keys
         let mutexKeys: string[] = [];
         for (let i of this._indexMaintainers) {
-            if (i.onCreateLockKey) {
-                mutexKeys.push(i.onCreateLockKey(id, encoded));
+            if (i.onCreateLockKeys) {
+                for (let k2 of i.onCreateLockKeys(id, encoded)) {
+                    mutexKeys.push(k2);
+                }
             } else {
                 mutexKeys.push('global-lock');
             }
@@ -177,8 +200,10 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
 
         let mutexKeys: string[] = [];
         for (let i of this._indexMaintainers) {
-            if (i.onUpdateLockKey) {
-                mutexKeys.push(i.onUpdateLockKey(id, oldValue, encoded));
+            if (i.onUpdateLockKeys) {
+                for (let k of i.onUpdateLockKeys(id, oldValue, encoded)) {
+                    mutexKeys.push(k);
+                }
             } else {
                 mutexKeys.push('global-lock');
             }
@@ -228,7 +253,15 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
 
     protected abstract _createEntityInstance(ctx: Context, value: ShapeWithMetadata<SHAPE>): T;
 
-    private _resolvePrimaryKey(id: ReadonlyArray<PrimaryKeyType>) {
+    private _resolvePrimaryKeyFromObject(src: any) {
+        let res: any[] = [];
+        for (let pk of this.descriptor.primaryKeys) {
+            res.push(src[pk.name]);
+        }
+        return res;
+    }
+
+    private _resolvePrimaryKey(id: ReadonlyArray<any>) {
         if (this.descriptor.primaryKeys.length !== id.length) {
             throw Error('Invalid primary key');
         }
