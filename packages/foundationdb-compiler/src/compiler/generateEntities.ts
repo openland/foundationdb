@@ -19,6 +19,8 @@ function resolveType(type: SchemaType): string {
         return 'number';
     } else if (type.type === 'float') {
         return 'number';
+    } else if (type.type === 'json') {
+        return 'any';
     } else if (type.type === 'enum') {
         return (type as EnumType).values.map((v) => `'${v}'`).join(' | ');
     } else if (type.type === 'array') {
@@ -52,6 +54,8 @@ function resolveDescriptorType(type: SchemaType): string {
         return `{ type: 'integer' }`;
     } else if (type.type === 'float') {
         return `{ type: 'float' }`;
+    } else if (type.type === 'json') {
+        return `{ type: 'json' }`;
     } else if (type.type === 'enum') {
         return `{ type: 'enum', values: [${(type as EnumType).values.map((v) => `'${v}'`).join(', ')}] }`;
     } else if (type.type === 'array') {
@@ -85,6 +89,8 @@ function resolveCodec(type: SchemaType): string {
         return 'c.integer';
     } else if (type.type === 'float') {
         return 'c.float';
+    } else if (type.type === 'json') {
+        return 'c.any';
     } else if (type.type === 'enum') {
         return `c.enum(${(type as EnumType).values.map((v) => `'${v}'`).join(', ')})`;
     } else if (type.type === 'array') {

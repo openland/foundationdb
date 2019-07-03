@@ -175,6 +175,7 @@ export interface AllFieldsShape {
     value6: (string)[];
     value7: { name: string, type: number };
     value8: { type: 'something', name: string } | { type: 'something_2', name: string } | null;
+    value9: any;
 }
 
 export interface AllFieldsCreateShape {
@@ -186,6 +187,7 @@ export interface AllFieldsCreateShape {
     value6: (string)[];
     value7: { name: string, type: number };
     value8: { type: 'something', name: string } | { type: 'something_2', name: string } | null;
+    value9: any;
 }
 
 export class AllFields extends Entity<AllFieldsShape> {
@@ -265,6 +267,15 @@ export class AllFields extends Entity<AllFieldsShape> {
             this.invalidate();
         }
     }
+    get value9(): any { return this._rawValue.value9; }
+    set value9(value: any) {
+        let normalized = this.descriptor.codec.fields.value9.normalize(value);
+        if (this._rawValue.value9 !== normalized) {
+            this._rawValue.value9 = normalized;
+            this._updatedValues.value9 = normalized;
+            this.invalidate();
+        }
+    }
 }
 
 export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
@@ -287,6 +298,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
         fields.push({ name: 'value6', type: { type: 'array', inner: { type: 'string' } }, secure: false });
         fields.push({ name: 'value7', type: { type: 'struct', fields: { name: { type: 'string' }, type: { type: 'integer' } } }, secure: false });
         fields.push({ name: 'value8', type: { type: 'optional', inner: { type: 'union', types: { something: { name: { type: 'string' } }, something_2: { name: { type: 'string' } } } } }, secure: false });
+        fields.push({ name: 'value9', type: { type: 'json' }, secure: false });
         let codec = c.struct({
             key1: c.boolean,
             key2: c.integer,
@@ -300,6 +312,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
             value6: c.array(c.string),
             value7: c.struct({ name: c.string, type: c.integer }),
             value8: c.optional(c.union({ something: c.struct({ name: c.string }), something_2: c.struct({ name: c.string }) })),
+            value9: c.any,
         });
         let descriptor: EntityDescriptor<AllFieldsShape> = {
             name: 'AllFields',

@@ -96,6 +96,7 @@ export type FieldType =
     { type: 'float' } |
     { type: 'boolean' } |
     { type: 'string' } |
+    { type: 'json' } |
     { type: 'enum', values: string[] } |
     { type: 'array', inner: FieldType } |
     { type: 'struct', fields: { [key: string]: FieldType } } |

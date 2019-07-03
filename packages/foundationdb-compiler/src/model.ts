@@ -1,7 +1,7 @@
 export type PrimaryKeyType = 'string' | 'integer' | 'float' | 'boolean';
 
 export abstract class SchemaType {
-    abstract readonly type: 'string' | 'integer' | 'float' | 'boolean' | 'enum' | 'array' | 'struct' | 'union' | 'optional';
+    abstract readonly type: 'string' | 'integer' | 'float' | 'boolean' | 'enum' | 'json' | 'array' | 'struct' | 'union' | 'optional';
 }
 export class StringType extends SchemaType {
     readonly type = 'string';
@@ -14,6 +14,9 @@ export class FloatType extends SchemaType {
 }
 export class BooleanType extends SchemaType {
     readonly type = 'boolean';
+}
+export class JsonType extends SchemaType {
+    readonly type = 'json';
 }
 export class EnumType extends SchemaType {
     readonly type = 'enum';

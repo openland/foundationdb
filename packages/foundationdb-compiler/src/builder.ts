@@ -1,4 +1,4 @@
-import { SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType, StructType, UnionType, OptionalType, EntityIndexModel } from './model';
+import { SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType, StructType, UnionType, OptionalType, EntityIndexModel, JsonType } from './model';
 
 const reservedFieldNames = [
     'do', 'if', 'in', 'for', 'let', 'new', 'try', 'var', 'case', 'else',
@@ -142,6 +142,10 @@ export function float() {
 
 export function boolean() {
     return new BooleanType();
+}
+
+export function json() {
+    return new JsonType();
 }
 
 export function enumString(...args: string[]) {
