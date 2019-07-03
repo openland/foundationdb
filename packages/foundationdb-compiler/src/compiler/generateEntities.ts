@@ -378,13 +378,13 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                 builder.addIndent();
                 builder.append(`findAll: (ctx: Context, ${tFields.join(', ')}) => {`);
                 builder.addIndent();
-                builder.append(`return this._findRangeFromIndex(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}]);`);
+                builder.append(`return this._findRangeFromIndex(this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}]).asArray(ctx);`);
                 builder.removeIndent();
                 builder.append(`},`);
 
-                builder.append(`findRange: (ctx: Context, ${tFields.join(', ')}, opts?: RangeOptions<${fieldTypes[fieldTypes.length - 1]}>) => {`);
+                builder.append(`query: (${tFields.join(', ')}, opts?: RangeOptions<${fieldTypes[fieldTypes.length - 1]}>) => {`);
                 builder.addIndent();
-                builder.append(`return this._findRangeFromIndex(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});`);
+                builder.append(`return this._findRangeFromIndex(this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});`);
                 builder.removeIndent();
                 builder.append(`}`);
 

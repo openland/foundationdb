@@ -14,9 +14,14 @@ import { IndexMaintainer } from './indexes/IndexMaintainer';
 import { IndexMutexManager } from './indexes/IndexMutexManager';
 import { resolveIndexKey } from './indexes/utils';
 import { RangeIndex } from './indexes/RangeIndex';
+import { RangeQuery } from './RangeQuery';
 
 function getCacheKey(id: ReadonlyArray<TupleItem>) {
     return encoders.tuple.pack(id as any /* WTF, TS? */).toString('hex');
+}
+
+function encodeKey(key: TupleItem[]): string {
+    return encoders.tuple.pack(key).toString('hex');
 }
 
 const metadataCodec = codecs.struct({
@@ -84,33 +89,43 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     // Range Index Operations
     //
 
-    protected async _findRangeFromIndex(
-        parent: Context,
+    protected _findRangeFromIndex(
         descriptor: SecondaryIndexDescriptor,
         _id: PrimaryKeyType[],
         opts?: { limit?: number, reverse?: boolean, after?: PrimaryKeyType[] }
-    ): Promise<T[]> {
+    ): RangeQuery<T> {
         // Resolve index key
         let id = resolveIndexKey(_id, descriptor.type.fields, true /* Partial key */);
         let after: TupleItem[] | undefined = undefined;
         if (opts && opts.after) {
             after = resolveIndexKey(opts.after, descriptor.type.fields, true, _id.length);
         }
-        return inTxLeaky(parent, async (ctx) => {
-            let res = await descriptor.subspace.range(ctx, id, {
-                limit: opts && opts.limit,
-                reverse: opts && opts.reverse,
-                after
-            });
-            return await Promise.all(res.map(async (v) => {
-                let pk = this._resolvePrimaryKeyFromObject(v.value);
-                let e = await this._findById(ctx, pk);
-                if (!e) {
-                    throw Error('Broken index!');
-                }
-                return e;
-            }));
-        });
+
+        return {
+            asArray: (parent: Context) => {
+                return inTxLeaky(parent, async (ctx) => {
+                    let res = await descriptor.subspace.range(ctx, id, {
+                        limit: opts && opts.limit,
+                        reverse: opts && opts.reverse,
+                        after
+                    });
+                    return await Promise.all(res.map(async (v) => {
+                        let pk = this._resolvePrimaryKeyFromObject(v.value);
+                        let e = await this._findById(ctx, pk);
+                        if (!e) {
+                            throw Error('Broken index!');
+                        }
+                        return { cursor: encodeKey(v.key), value: e };
+                    }));
+                });
+            },
+            asStream: () => {
+                throw Error();
+            },
+            asLiveStream: () => {
+                throw Error();
+            }
+        };
     }
 
     protected async _findById(ctx: Context, _id: PrimaryKeyType[]): Promise<T | null> {

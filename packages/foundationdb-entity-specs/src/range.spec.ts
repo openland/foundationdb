@@ -19,18 +19,18 @@ describe('Range Index', () => {
 
         let res = await factory.testIndex.findAll(testCtx, 1);
         expect(res.length).toBe(4);
-        expect(res[0].id).toBe(1);
-        expect(res[1].id).toBe(2);
-        expect(res[2].id).toBe(3);
-        expect(res[3].id).toBe(4);
+        expect(res[0].value.id).toBe(1);
+        expect(res[1].value.id).toBe(2);
+        expect(res[2].value.id).toBe(3);
+        expect(res[3].value.id).toBe(4);
 
-        res = await factory.testIndex.findRange(testCtx, 1, { limit: 1 });
+        res = await factory.testIndex.query(1, { limit: 1 }).asArray(testCtx);
         expect(res.length).toBe(1);
-        expect(res[0].id).toBe(1);
+        expect(res[0].value.id).toBe(1);
 
-        res = await factory.testIndex.findRange(testCtx, 1, { limit: 1, reverse: true });
+        res = await factory.testIndex.query(1, { limit: 1, reverse: true }).asArray(testCtx);
         expect(res.length).toBe(1);
-        expect(res[0].id).toBe(4);
+        expect(res[0].value.id).toBe(4);
     });
 
     //

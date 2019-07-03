@@ -71,10 +71,10 @@ export class RangeIndexFactory extends EntityFactory<RangeIndexShape, RangeIndex
 
     readonly testIndex = Object.freeze({
         findAll: (ctx: Context, range1: number) => {
-            return this._findRangeFromIndex(ctx, this.descriptor.secondaryIndexes[0], [range1]);
+            return this._findRangeFromIndex(this.descriptor.secondaryIndexes[0], [range1]).asArray(ctx);
         },
-        findRange: (ctx: Context, range1: number, opts?: RangeOptions<number>) => {
-            return this._findRangeFromIndex(ctx, this.descriptor.secondaryIndexes[0], [range1], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});
+        query: (range1: number, opts?: RangeOptions<number>) => {
+            return this._findRangeFromIndex(this.descriptor.secondaryIndexes[0], [range1], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});
         }
     });
 
