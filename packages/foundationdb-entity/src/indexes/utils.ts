@@ -6,14 +6,14 @@ export function tupleKey(tuple: TupleItem[]) {
     return encoders.tuple.pack(tuple).toString('hex');
 }
 
-export function resolveIndexKey(src: any[], fields: IndexField[], partial: boolean = false) {
+export function resolveIndexKey(src: any[], fields: IndexField[], partial: boolean = false, offset: number = 0) {
     if (!partial && src.length !== fields.length) {
         throw Error('Invalid key length');
     }
 
     let res: Tuple.TupleItem[] = [];
     for (let i = 0; i < src.length; i++) {
-        let key = fields[i];
+        let key = fields[i + offset];
         let v = src[i];
         if (key.type === 'boolean') {
             if (typeof v !== 'boolean') {

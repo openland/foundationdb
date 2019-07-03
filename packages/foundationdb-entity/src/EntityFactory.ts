@@ -84,15 +84,24 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     // Range Index Operations
     //
 
-    protected async _findAllFromIndex(
+    protected async _findRangeFromIndex(
         parent: Context,
         descriptor: SecondaryIndexDescriptor,
-        _id: PrimaryKeyType[]
+        _id: PrimaryKeyType[],
+        opts?: { limit?: number, reverse?: boolean, after?: PrimaryKeyType[] }
     ): Promise<T[]> {
         // Resolve index key
         let id = resolveIndexKey(_id, descriptor.type.fields, true /* Partial key */);
+        let after: TupleItem[] | undefined = undefined;
+        if (opts && opts.after) {
+            after = resolveIndexKey(opts.after, descriptor.type.fields, true, _id.length);
+        }
         return inTxLeaky(parent, async (ctx) => {
-            let res = await descriptor.subspace.range(ctx, id);
+            let res = await descriptor.subspace.range(ctx, id, {
+                limit: opts && opts.limit,
+                reverse: opts && opts.reverse,
+                after
+            });
             return await Promise.all(res.map(async (v) => {
                 let pk = this._resolvePrimaryKeyFromObject(v.value);
                 let e = await this._findById(ctx, pk);

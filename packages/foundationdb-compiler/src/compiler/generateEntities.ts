@@ -336,6 +336,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
             } else if (index.type.type === 'range') {
                 let fields: string[] = [];
                 let fieldNames: string[] = [];
+                let fieldTypes: string[] = [];
                 for (let f of index.type.fields) {
                     let ef = entity.fields.find((v) => v.name === f);
                     let stp: SchemaType;
@@ -352,12 +353,16 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                     fieldNames.push(f);
                     if (stp.type === 'string') {
                         fields.push(`${f}: string`);
+                        fieldTypes.push('string');
                     } else if (stp.type === 'integer') {
                         fields.push(`${f}: number`);
+                        fieldTypes.push('number');
                     } else if (stp.type === 'float') {
                         fields.push(`${f}: number`);
+                        fieldTypes.push('number');
                     } else if (stp.type === 'boolean') {
                         fields.push(`${f}: boolean`);
+                        fieldTypes.push('boolean');
                     } else {
                         throw Error('Unsupported index key type: ' + stp.type);
                     }
@@ -373,9 +378,16 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                 builder.addIndent();
                 builder.append(`findAll: (ctx: Context, ${tFields.join(', ')}) => {`);
                 builder.addIndent();
-                builder.append(`return this._findAllFromIndex(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}]);`);
+                builder.append(`return this._findRangeFromIndex(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}]);`);
+                builder.removeIndent();
+                builder.append(`},`);
+
+                builder.append(`findRange: (ctx: Context, ${tFields.join(', ')}, opts?: RangeOptions<${fieldTypes[fieldTypes.length - 1]}>) => {`);
+                builder.addIndent();
+                builder.append(`return this._findRangeFromIndex(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});`);
                 builder.removeIndent();
                 builder.append(`}`);
+
                 builder.removeIndent();
                 builder.append(`});`);
             } else {
