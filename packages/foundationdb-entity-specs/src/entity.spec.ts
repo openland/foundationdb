@@ -1,3 +1,4 @@
+import { delay } from '@openland/foundationdb-utils';
 import { SimpleEntityFactory, SimpleEntity2Factory } from './entity.repo';
 import { EntityStorage } from '@openland/foundationdb-entity';
 import { Database, withReadOnlyTransaction, inTx } from '@openland/foundationdb';
@@ -232,5 +233,35 @@ describe('Entity', () => {
         await expect(inTx(testCtx, async (ctx) => {
             return await factory.create(ctx, 0.1, { value: 'hello world1' });
         })).rejects.toThrowError();
+    });
+
+    it('should resolve watch promise', async () => {
+        let testCtx = createNamedContext('test');
+        let db = await Database.openTest();
+        let store = new EntityStorage(db);
+        let factory = await SimpleEntity2Factory.open(store);
+
+        let func = jest.fn();
+        await inTx(testCtx, async (ctx) => {
+            return await factory.create(ctx, 1, { value: 'hello world1' });
+        });
+        
+        // tslint:disable:no-floating-promises
+        (async () => {
+            while (true) {
+                let w = await inTx(testCtx, async (ctx) => factory.watch(ctx, 1));
+                await w.promise;
+                func();
+            }
+        })();
+
+        await inTx(testCtx, async (ctx) => {
+            let v = await factory.findById(ctx, 1);
+            v!.value = 'test2';
+        });
+
+        await delay(1000);
+
+        expect(func.mock.calls.length).toBe(1);
     });
 });
