@@ -1,12 +1,13 @@
 import { UniqueIndexFactory } from './unique.repo';
 import { EntityStorage } from '@openland/foundationdb-entity';
-import { Database, inTx } from '@openland/foundationdb';
+import { inTx } from '@openland/foundationdb';
 import { createNamedContext } from '@openland/context';
-describe('Unique index', () => {
+import { openTestDatabase } from './utils/openTestDatabase';
 
+describe('Unique index', () => {
     it('should check consistency', async () => {
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await UniqueIndexFactory.open(store);
 
@@ -45,7 +46,7 @@ describe('Unique index', () => {
 
     it('should work concurrently', async () => {
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await UniqueIndexFactory.open(store);
 
@@ -75,7 +76,7 @@ describe('Unique index', () => {
         //
 
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await UniqueIndexFactory.open(store);
 

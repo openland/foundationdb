@@ -91,6 +91,29 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     // Range Index Operations
     //
 
+    protected _createStream(
+        descriptor: SecondaryIndexDescriptor,
+        _id: PrimaryKeyType[],
+        opts?: { batchSize?: number, reverse?: boolean, after?: string }
+    ) {
+        // Resolve index key
+        let batchSize = opts && opts.batchSize ? opts.batchSize : 5000;
+        let reverse = opts && opts.reverse ? opts.reverse : false;
+        let id = resolveIndexKey(_id, descriptor.type.fields, true /* Partial key */);
+        return new IndexStream(descriptor, id, batchSize, reverse, (ctx, src) => {
+            let pk = this._resolvePrimaryKeyFromObject(src);
+            let k = getCacheKey(pk);
+            let cached = this._entityCache.get(ctx, k);
+            if (cached) {
+                return cached;
+            } else {
+                let res = this._createEntityInstance(ctx, src);
+                this._entityCache.set(ctx, k, res);
+                return res;
+            }
+        });
+    }
+
     protected _findRangeFromIndex(
         descriptor: SecondaryIndexDescriptor,
         _id: PrimaryKeyType[],
@@ -122,7 +145,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
                 });
             },
             asStream: () => {
-                return new IndexStream(descriptor, opts && opts.limit ? opts.limit : 5000, opts && opts.reverse ? opts.reverse : false, (ctx, src) => {
+                return new IndexStream(descriptor, id, opts && opts.limit ? opts.limit : 5000, opts && opts.reverse ? opts.reverse : false, (ctx, src) => {
                     let pk = this._resolvePrimaryKeyFromObject(src);
                     let k = getCacheKey(pk);
                     let cached = this._entityCache.get(ctx, k);
@@ -250,7 +273,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
                 //
                 // Notify about created entity
                 //
-                
+
                 this.descriptor.storage.eventBus.publish(ctx, 'fdb-entity-created-' + this.descriptor.storageKey, { entity: this.descriptor.storageKey });
             });
         });

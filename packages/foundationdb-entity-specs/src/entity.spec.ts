@@ -1,13 +1,14 @@
 import { delay } from '@openland/foundationdb-utils';
 import { SimpleEntityFactory, SimpleEntity2Factory } from './entity.repo';
 import { EntityStorage } from '@openland/foundationdb-entity';
-import { Database, withReadOnlyTransaction, inTx } from '@openland/foundationdb';
+import { withReadOnlyTransaction, inTx } from '@openland/foundationdb';
 import { createNamedContext } from '@openland/context';
+import { openTestDatabase } from './utils/openTestDatabase';
 
 describe('Entity', () => {
     it('should return null if not exists', async () => {
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
         expect(await factory.findById(testCtx, '1')).toBe(null);
@@ -15,7 +16,7 @@ describe('Entity', () => {
 
     it('should be able to create entity', async () => {
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
         expect(await factory.findById(testCtx, '1')).toBe(null);
@@ -51,7 +52,7 @@ describe('Entity', () => {
 
     it('should be able to create entity in parallel', async () => {
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
         await inTx(testCtx, async (ctx) => {
@@ -71,7 +72,7 @@ describe('Entity', () => {
 
     it('should return same instance within same transaction', async () => {
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
         await factory.create(testCtx, '1', { value: 'value', value2: 2, value3: false });
@@ -83,7 +84,7 @@ describe('Entity', () => {
 
     it('should read your writes', async () => {
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
         await inTx(testCtx, async (ctx) => {
@@ -97,7 +98,7 @@ describe('Entity', () => {
 
     it('should update entity', async () => {
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
 
@@ -134,7 +135,7 @@ describe('Entity', () => {
 
     it('should throw error when trying to change read-only instance', async () => {
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
         await inTx(testCtx, async (ctx) => {
@@ -146,7 +147,7 @@ describe('Entity', () => {
 
     it('double flush should work', async () => {
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
         await inTx(testCtx, async (ctx) => {
@@ -166,7 +167,7 @@ describe('Entity', () => {
 
     it('should throw if entity already exists', async () => {
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
         await inTx(testCtx, async (ctx) => {
@@ -181,7 +182,7 @@ describe('Entity', () => {
 
     it('should throw on second creation', async () => {
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
         await inTx(testCtx, async (ctx) => {
@@ -195,7 +196,7 @@ describe('Entity', () => {
 
     it('should crash when trying to change value after transaction completed', async () => {
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
         let res = await inTx(testCtx, async (ctx) => {
@@ -206,7 +207,7 @@ describe('Entity', () => {
 
     it('should preserve unknown fields', async () => {
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
         await inTx(testCtx, async (ctx) => {
@@ -226,7 +227,7 @@ describe('Entity', () => {
 
     it('should throw on invalid key numbers', async () => {
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntity2Factory.open(store);
         await expect(factory.findById(testCtx, 0.1)).rejects.toThrowError();
@@ -237,7 +238,7 @@ describe('Entity', () => {
 
     it('should resolve watch promise', async () => {
         let testCtx = createNamedContext('test');
-        let db = await Database.openTest();
+        let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntity2Factory.open(store);
 

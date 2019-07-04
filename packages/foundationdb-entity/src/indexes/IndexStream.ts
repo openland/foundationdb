@@ -10,10 +10,12 @@ export class IndexStream<T> implements Stream<T> {
     private readonly _builder: (ctx: Context, src: any) => T;
     private readonly _limit: number;
     private readonly _reverse: boolean;
+    private readonly _prefix: TupleItem[];
     private _cursor: TupleItem[] | undefined = undefined;
 
     constructor(
         descriptor: SecondaryIndexDescriptor,
+        prefix: TupleItem[],
         limit: number,
         reverse: boolean,
         builder: (ctx: Context, src: any) => T
@@ -22,11 +24,20 @@ export class IndexStream<T> implements Stream<T> {
         this._builder = builder;
         this._limit = limit;
         this._reverse = reverse;
+        this._prefix = prefix;
+    }
+
+    get cursor(): string | null {
+        if (this._cursor) {
+            return tupleToCursor(this._cursor);
+        } else {
+            return null;
+        }
     }
 
     @transactional
     async tail(ctx: Context): Promise<string | null> {
-        let res = await this._descriptor.subspace.range(ctx, [], { limit: 1, reverse: !this._reverse });
+        let res = await this._descriptor.subspace.subspace(this._prefix).range(ctx, [], { limit: 1, reverse: !this._reverse });
         if (res.length >= 1) {
             return tupleToCursor(res[0].key);
         } else {
@@ -36,7 +47,7 @@ export class IndexStream<T> implements Stream<T> {
 
     @transactional
     async head(ctx: Context): Promise<string | null> {
-        let res = await this._descriptor.subspace.range(ctx, [], { limit: 1, reverse: this._reverse });
+        let res = await this._descriptor.subspace.subspace(this._prefix).range(ctx, [], { limit: 1, reverse: this._reverse });
         if (res.length >= 1) {
             return tupleToCursor(res[0].key);
         } else {
@@ -54,7 +65,7 @@ export class IndexStream<T> implements Stream<T> {
 
     @transactional
     async next(ctx: Context): Promise<T[]> {
-        let res = await this._descriptor.subspace.range(ctx, [], { limit: this._limit, after: this._cursor, reverse: this._reverse });
+        let res = await this._descriptor.subspace.subspace(this._prefix).range(ctx, [], { limit: this._limit, after: this._cursor, reverse: this._reverse });
         if (res.length > 0) {
             let r = res.map((v) => this._builder(ctx, v.value));
             this._cursor = res[res.length - 1].key; // NOTE: Update cursor only after successful decoding

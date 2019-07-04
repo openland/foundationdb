@@ -1,6 +1,14 @@
 import { Context } from '@openland/context';
 
+/**
+ * Stream represents bounded and ordered collection of items.
+ */
 export interface Stream<T> {
+
+    /**
+     * Current stream cursor
+     */
+    readonly cursor: string | null;
 
     /**
      * Tail of the cursor

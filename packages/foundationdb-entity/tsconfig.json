@@ -13,6 +13,9 @@
     },
     {
       "path": "../foundationdb-utils"
+    },
+    {
+      "path": "../foundationdb-bus"
     }
   ]
 }
