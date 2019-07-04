@@ -7,4 +7,11 @@ export default declareSchema(() => {
         field('unique2', string());
         uniqueIndex('test', ['unique1', 'unique2']);
     });
+
+    entity('UniqueConditionalIndex', () => {
+        primaryKey('id', integer());
+        field('unique1', string());
+        field('unique2', string());
+        uniqueIndex('test', ['unique1', 'unique2']).withCondition((src) => src.unique1 === '!');
+    });
 });

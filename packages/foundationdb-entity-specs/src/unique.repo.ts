@@ -92,14 +92,101 @@ export class UniqueIndexFactory extends EntityFactory<UniqueIndexShape, UniqueIn
     }
 }
 
+export interface UniqueConditionalIndexShape {
+    id: number;
+    unique1: string;
+    unique2: string;
+}
+
+export interface UniqueConditionalIndexCreateShape {
+    unique1: string;
+    unique2: string;
+}
+
+export class UniqueConditionalIndex extends Entity<UniqueConditionalIndexShape> {
+    get id(): number { return this._rawValue.id; }
+    get unique1(): string { return this._rawValue.unique1; }
+    set unique1(value: string) {
+        let normalized = this.descriptor.codec.fields.unique1.normalize(value);
+        if (this._rawValue.unique1 !== normalized) {
+            this._rawValue.unique1 = normalized;
+            this._updatedValues.unique1 = normalized;
+            this.invalidate();
+        }
+    }
+    get unique2(): string { return this._rawValue.unique2; }
+    set unique2(value: string) {
+        let normalized = this.descriptor.codec.fields.unique2.normalize(value);
+        if (this._rawValue.unique2 !== normalized) {
+            this._rawValue.unique2 = normalized;
+            this._updatedValues.unique2 = normalized;
+            this.invalidate();
+        }
+    }
+}
+
+export class UniqueConditionalIndexFactory extends EntityFactory<UniqueConditionalIndexShape, UniqueConditionalIndex> {
+
+    static async open(storage: EntityStorage) {
+        let subspace = await storage.resolveEntityDirectory('uniqueConditionalIndex');
+        let secondaryIndexes: SecondaryIndexDescriptor[] = [];
+        secondaryIndexes.push({ name: 'test', storageKey: 'test', type: { type: 'unique', fields: [{ name: 'unique1', type: 'string' }, { name: 'unique2', type: 'string' }] }, subspace: await storage.resolveEntityIndexDirectory('uniqueConditionalIndex', 'test'), condition: (src) => src.unique1 === '!' });
+        let primaryKeys: PrimaryKeyDescriptor[] = [];
+        primaryKeys.push({ name: 'id', type: 'integer' });
+        let fields: FieldDescriptor[] = [];
+        fields.push({ name: 'unique1', type: { type: 'string' }, secure: false });
+        fields.push({ name: 'unique2', type: { type: 'string' }, secure: false });
+        let codec = c.struct({
+            id: c.integer,
+            unique1: c.string,
+            unique2: c.string,
+        });
+        let descriptor: EntityDescriptor<UniqueConditionalIndexShape> = {
+            name: 'UniqueConditionalIndex',
+            storageKey: 'uniqueConditionalIndex',
+            subspace, codec, secondaryIndexes, storage, primaryKeys, fields
+        };
+        return new UniqueConditionalIndexFactory(descriptor);
+    }
+
+    private constructor(descriptor: EntityDescriptor<UniqueConditionalIndexShape>) {
+        super(descriptor);
+    }
+
+    readonly test = Object.freeze({
+        find: async (ctx: Context, unique1: string, unique2: string) => {
+            return this._findFromUniqueIndex(ctx, [unique1, unique2], this.descriptor.secondaryIndexes[0]);
+        }
+    });
+
+    create(ctx: Context, id: number, src: UniqueConditionalIndexCreateShape): Promise<UniqueConditionalIndex> {
+        return this._create(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
+    }
+
+    findById(ctx: Context, id: number): Promise<UniqueConditionalIndex | null> {
+        return this._findById(ctx, [id]);
+    }
+
+    watch(ctx: Context, id: number): Watch {
+        return this._watch(ctx, [id]);
+    }
+
+    protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<UniqueConditionalIndexShape>): UniqueConditionalIndex {
+        return new UniqueConditionalIndex([value.id], value, this.descriptor, this._flush, ctx);
+    }
+}
+
 export interface Store extends BaseStore {
     readonly UniqueIndex: UniqueIndexFactory;
+    readonly UniqueConditionalIndex: UniqueConditionalIndexFactory;
 }
 
 export async function openStore(storage: EntityStorage): Promise<Store> {
     let UniqueIndexPromise = UniqueIndexFactory.open(storage);
+    let UniqueConditionalIndexPromise = UniqueConditionalIndexFactory.open(storage);
     return {
         storage,
         UniqueIndex: await UniqueIndexPromise,
+        UniqueConditionalIndex: await UniqueConditionalIndexPromise,
     };
 }

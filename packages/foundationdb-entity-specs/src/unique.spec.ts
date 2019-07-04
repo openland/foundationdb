@@ -1,4 +1,4 @@
-import { UniqueIndexFactory } from './unique.repo';
+import { UniqueIndexFactory, UniqueConditionalIndexFactory } from './unique.repo';
 import { EntityStorage } from '@openland/foundationdb-entity';
 import { inTx } from '@openland/foundationdb';
 import { createNamedContext } from '@openland/context';
@@ -88,5 +88,47 @@ describe('Unique index', () => {
             await expect(p2).resolves.not.toBeNull();
             await expect(p2).resolves.not.toBeUndefined();
         });
+    });
+
+    it('should support conditional indexes', async () => {
+        let testCtx = createNamedContext('test');
+        let db = await openTestDatabase();
+        let store = new EntityStorage(db);
+        let factory = await UniqueConditionalIndexFactory.open(store);
+
+        let ex = await factory.test.find(testCtx, '!', '2');
+        expect(ex).toBeNull();
+
+        await inTx(testCtx, async (ctx) => {
+            await factory.create(ctx, 1, { unique1: '!', unique2: '2' });
+            await factory.create(ctx, 2, { unique1: '?', unique2: '2' });
+        });
+
+        // Added to index
+        ex = await factory.test.find(testCtx, '!', '2');
+        expect(ex).not.toBeNull();
+        expect(ex).not.toBeUndefined();
+
+        // Not added to index
+        ex = await factory.test.find(testCtx, '?', '2');
+        expect(ex).toBeNull();
+
+        // Removed from index
+        await inTx(testCtx, async (ctx) => {
+            let entity = await factory.findById(ctx, 1);
+            entity.unique1 = '@';
+        });
+        ex = await factory.test.find(testCtx, '!', '2');
+        expect(ex).toBeNull();
+
+        // Added to index after edit
+        await inTx(testCtx, async (ctx) => {
+            let entity = await factory.findById(ctx, 1);
+            entity.unique1 = '!';
+            entity.unique2 = '3';
+        });
+        ex = await factory.test.find(testCtx, '!', '3');
+        expect(ex).not.toBeNull();
+        expect(ex).not.toBeUndefined();
     });
 });

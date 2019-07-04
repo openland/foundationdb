@@ -1,4 +1,4 @@
-import { RangeIndexFactory } from './range.repo';
+import { RangeIndexFactory, RangeIndexConditionalFactory } from './range.repo';
 import { EntityStorage } from '@openland/foundationdb-entity';
 import { inTx } from '@openland/foundationdb';
 import { createNamedContext } from '@openland/context';
@@ -117,6 +117,48 @@ describe('Range Index', () => {
         next = await stream.next(testCtx);
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(0);
+    });
+
+    it('should support conditional indexes', async () => {
+        let testCtx = createNamedContext('test');
+        let db = await openTestDatabase();
+        let store = new EntityStorage(db);
+        let factory = await RangeIndexConditionalFactory.open(store);
+
+        let ex = await factory.ranges.findAll(testCtx, 0);
+        expect(ex.length).toBe(0);
+
+        await inTx(testCtx, async (ctx) => {
+            await factory.create(ctx, 1, { range1: 0, range2: 2 });
+            await factory.create(ctx, 2, { range1: 1, range2: 2 });
+        });
+
+        // Added to index
+        ex = await factory.ranges.findAll(testCtx, 0);
+        expect(ex.length).toBe(1);
+        expect(ex[0].id).toBe(1);
+
+        // Not added to index
+        ex = await factory.ranges.findAll(testCtx, 1);
+        expect(ex.length).toBe(0);
+
+        // Removed from index
+        await inTx(testCtx, async (ctx) => {
+            let entity = await factory.findById(ctx, 1);
+            entity.range1 = 3;
+        });
+        ex = await factory.ranges.findAll(testCtx, 0);
+        expect(ex.length).toBe(0);
+
+        // Added to index after edit
+        await inTx(testCtx, async (ctx) => {
+            let entity = await factory.findById(ctx, 1);
+            entity.range1 = 0;
+            entity.range2 = 4;
+        });
+        ex = await factory.ranges.findAll(testCtx, 0);
+        expect(ex.length).toBe(1);
+        expect(ex[0].id).toBe(1);
     });
 
     //

@@ -7,4 +7,11 @@ export default declareSchema(() => {
         field('range2', integer());
         rangeIndex('ranges', ['range1', 'range2']);
     });
+
+    entity('RangeIndexConditional', () => {
+        primaryKey('id', integer());
+        field('range1', integer());
+        field('range2', integer());
+        rangeIndex('ranges', ['range1', 'range2']).withCondition((src) => src.range1 === 0);
+    });
 });
