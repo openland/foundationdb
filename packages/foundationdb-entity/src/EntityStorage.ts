@@ -1,13 +1,16 @@
+import { EventBus } from '@openland/foundationdb-bus';
 import { createNamedContext } from '@openland/context';
 import { Database, inTx, encoders } from '@openland/foundationdb';
 
 export class EntityStorage {
     readonly db: Database;
     readonly storeId: string;
+    readonly eventBus: EventBus<any>;
 
     constructor(db: Database, storeId: string = 'app') {
         this.db = db;
         this.storeId = storeId;
+        this.eventBus = new EventBus<any>(db);
         Object.freeze(this);
     }
 

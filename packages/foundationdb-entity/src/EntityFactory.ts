@@ -1,3 +1,4 @@
+import { BusLayer } from './../../foundationdb-bus/src/BusLayer';
 import { UniqueIndex } from './indexes/UniqueIndex';
 import { TupleItem, Float } from '@openland/foundationdb-tuple';
 import { uniqueSeed } from '@openland/foundationdb-utils';
@@ -245,6 +246,12 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
                         await i.afterCreate(ctx2, id, encoded);
                     }
                 }
+
+                //
+                // Notify about created entity
+                //
+                
+                this.descriptor.storage.eventBus.publish(ctx, 'fdb-entity-created-' + this.descriptor.storageKey, { entity: this.descriptor.storageKey });
             });
         });
 
