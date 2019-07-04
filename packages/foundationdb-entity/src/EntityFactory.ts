@@ -1,4 +1,4 @@
-import { BusLayer } from './../../foundationdb-bus/src/BusLayer';
+import { LiveStream } from './LiveStream';
 import { UniqueIndex } from './indexes/UniqueIndex';
 import { TupleItem, Float } from '@openland/foundationdb-tuple';
 import { uniqueSeed } from '@openland/foundationdb-utils';
@@ -13,10 +13,16 @@ import { PrimaryKeyType } from './PrimaryKeyType';
 import { PrimaryIndex } from './indexes/PrimaryIndex';
 import { IndexMaintainer } from './indexes/IndexMaintainer';
 import { IndexMutexManager } from './indexes/IndexMutexManager';
-import { resolveIndexKey } from './indexes/utils';
+import { resolveIndexKey, tupleToCursor } from './indexes/utils';
 import { RangeIndex } from './indexes/RangeIndex';
 import { RangeQuery } from './RangeQuery';
 import { IndexStream } from './indexes/IndexStream';
+
+export interface StreamProps {
+    batchSize?: number;
+    reverse?: boolean;
+    after?: string;
+}
 
 function getCacheKey(id: ReadonlyArray<TupleItem>) {
     return encoders.tuple.pack(id as any /* WTF, TS? */).toString('hex');
@@ -94,12 +100,11 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     protected _createStream(
         descriptor: SecondaryIndexDescriptor,
         _id: PrimaryKeyType[],
-        opts?: { batchSize?: number, reverse?: boolean, after?: string }
+        opts?: StreamProps
     ) {
-        // Resolve index key
+        let id = resolveIndexKey(_id, descriptor.type.fields, true /* Partial key */);
         let batchSize = opts && opts.batchSize ? opts.batchSize : 5000;
         let reverse = opts && opts.reverse ? opts.reverse : false;
-        let id = resolveIndexKey(_id, descriptor.type.fields, true /* Partial key */);
         return new IndexStream(descriptor, id, batchSize, reverse, (ctx, src) => {
             let pk = this._resolvePrimaryKeyFromObject(src);
             let k = getCacheKey(pk);
@@ -114,11 +119,21 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         });
     }
 
-    protected _findRangeFromIndex(
+    protected _createLiveStream(
+        ctx: Context,
+        descriptor: SecondaryIndexDescriptor,
+        _id: PrimaryKeyType[],
+        opts?: StreamProps
+    ) {
+        return new LiveStream(this._createStream(descriptor, _id, opts), this.descriptor).generator(ctx);
+    }
+
+    protected async _query(
+        parent: Context,
         descriptor: SecondaryIndexDescriptor,
         _id: PrimaryKeyType[],
         opts?: { limit?: number, reverse?: boolean, after?: PrimaryKeyType[] }
-    ): RangeQuery<T> {
+    ): Promise<{ items: T[], cursor?: string }> {
         // Resolve index key
         let id = resolveIndexKey(_id, descriptor.type.fields, true /* Partial key */);
         let after: TupleItem[] | undefined = undefined;
@@ -126,42 +141,27 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             after = resolveIndexKey(opts.after, descriptor.type.fields, true, _id.length);
         }
 
-        return {
-            asArray: (parent: Context) => {
-                return inTxLeaky(parent, async (ctx) => {
-                    let res = await descriptor.subspace.range(ctx, id, {
-                        limit: opts && opts.limit,
-                        reverse: opts && opts.reverse,
-                        after
-                    });
-                    return await Promise.all(res.map(async (v) => {
-                        let pk = this._resolvePrimaryKeyFromObject(v.value);
-                        let e = await this._findById(ctx, pk);
-                        if (!e) {
-                            throw Error('Broken index!');
-                        }
-                        return { cursor: encodeKey(v.key), value: e };
-                    }));
-                });
-            },
-            asStream: () => {
-                return new IndexStream(descriptor, id, opts && opts.limit ? opts.limit : 5000, opts && opts.reverse ? opts.reverse : false, (ctx, src) => {
-                    let pk = this._resolvePrimaryKeyFromObject(src);
-                    let k = getCacheKey(pk);
-                    let cached = this._entityCache.get(ctx, k);
-                    if (cached) {
-                        return cached;
-                    } else {
-                        let res = this._createEntityInstance(ctx, src);
-                        this._entityCache.set(ctx, k, res);
-                        return res;
-                    }
-                });
-            },
-            asLiveStream: () => {
-                throw Error();
+        return await inTxLeaky(parent, async (ctx) => {
+            let res = await descriptor.subspace.subspace(id).range(ctx, [], {
+                limit: opts && opts.limit,
+                reverse: opts && opts.reverse,
+                after
+            });
+            let items = await Promise.all(res.map(async (v) => {
+                let pk = this._resolvePrimaryKeyFromObject(v.value);
+                let e = await this._findById(ctx, pk);
+                if (!e) {
+                    throw Error('Broken index!');
+                }
+                return e;
+            }));
+
+            let cursor: string | undefined;
+            if (res.length > 0) {
+                cursor = tupleToCursor(res[res.length - 1].key);
             }
-        };
+            return { items, cursor };
+        });
     }
 
     protected async _findById(ctx: Context, _id: PrimaryKeyType[]): Promise<T | null> {

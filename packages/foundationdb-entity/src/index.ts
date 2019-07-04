@@ -5,7 +5,7 @@ export { AtomicIntegerFactory } from './AtomicIntegerFactory';
 export { EntityStorage } from './EntityStorage';
 export { BaseStore } from './BaseStore';
 export { Entity } from './Entity';
-export { EntityFactory } from './EntityFactory';
+export { EntityFactory, StreamProps } from './EntityFactory';
 export { EntityMetadata } from './EntityMetadata';
 export { EntityDescriptor, SecondaryIndexDescriptor, PrimaryKeyDescriptor, FieldDescriptor } from './EntityDescriptor';
 export { codecs, Codec, typeSymbol } from './codecs';

@@ -6,7 +6,7 @@ import { Subspace, Watch, RangeOptions } from '@openland/foundationdb';
 // @ts-ignore
 import { EntityStorage, BaseStore, codecs as c } from '@openland/foundationdb-entity';
 // @ts-ignore
-import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata, PrimaryKeyDescriptor, FieldDescriptor } from '@openland/foundationdb-entity';
+import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata, PrimaryKeyDescriptor, FieldDescriptor, StreamProps } from '@openland/foundationdb-entity';
 
 export interface SimpleEntityShape {
     id: string;

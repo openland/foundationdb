@@ -20,18 +20,18 @@ describe('Range Index', () => {
 
         let res = await factory.ranges.findAll(testCtx, 1);
         expect(res.length).toBe(4);
-        expect(res[0].value.id).toBe(1);
-        expect(res[1].value.id).toBe(2);
-        expect(res[2].value.id).toBe(3);
-        expect(res[3].value.id).toBe(4);
+        expect(res[0].id).toBe(1);
+        expect(res[1].id).toBe(2);
+        expect(res[2].id).toBe(3);
+        expect(res[3].id).toBe(4);
 
-        res = await factory.ranges.query(1, { limit: 1 }).asArray(testCtx);
-        expect(res.length).toBe(1);
-        expect(res[0].value.id).toBe(1);
+        let res2 = await factory.ranges.query(testCtx, 1, { limit: 1 });
+        expect(res2.items.length).toBe(1);
+        expect(res2.items[0].id).toBe(1);
 
-        res = await factory.ranges.query(1, { limit: 1, reverse: true }).asArray(testCtx);
-        expect(res.length).toBe(1);
-        expect(res[0].value.id).toBe(4);
+        res2 = await factory.ranges.query(testCtx, 1, { limit: 1, reverse: true });
+        expect(res2.items.length).toBe(1);
+        expect(res2.items[0].id).toBe(4);
     });
 
     it('should produce working streams', async () => {
@@ -56,7 +56,7 @@ describe('Range Index', () => {
             await factory.create(ctx, 9, { range1: 2, range2: 2 });
         });
 
-        let stream = factory.ranges.query(1, { limit: 1 }).asStream();
+        let stream = factory.ranges.stream(1, { batchSize: 1 });
         expect(stream.cursor).toMatchSnapshot();
         expect(await stream.tail(testCtx)).toMatchSnapshot();
         expect(await stream.head(testCtx)).toMatchSnapshot();
@@ -89,7 +89,7 @@ describe('Range Index', () => {
         // Reverse
         //
 
-        stream = factory.ranges.query(1, { limit: 1, reverse: true }).asStream();
+        stream = factory.ranges.stream(1, { batchSize: 1, reverse: true });
         expect(stream.cursor).toMatchSnapshot();
         expect(await stream.tail(testCtx)).toMatchSnapshot();
         expect(await stream.head(testCtx)).toMatchSnapshot();

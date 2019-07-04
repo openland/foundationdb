@@ -6,7 +6,7 @@ import { Subspace, Watch, RangeOptions } from '@openland/foundationdb';
 // @ts-ignore
 import { EntityStorage, BaseStore, codecs as c } from '@openland/foundationdb-entity';
 // @ts-ignore
-import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata, PrimaryKeyDescriptor, FieldDescriptor } from '@openland/foundationdb-entity';
+import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata, PrimaryKeyDescriptor, FieldDescriptor, StreamProps } from '@openland/foundationdb-entity';
 
 export interface RangeIndexShape {
     id: number;
@@ -70,11 +70,17 @@ export class RangeIndexFactory extends EntityFactory<RangeIndexShape, RangeIndex
     }
 
     readonly ranges = Object.freeze({
-        findAll: (ctx: Context, range1: number) => {
-            return this._findRangeFromIndex(this.descriptor.secondaryIndexes[0], [range1]).asArray(ctx);
+        findAll: async (ctx: Context, range1: number) => {
+            return (await this._query(ctx, this.descriptor.secondaryIndexes[0], [range1])).items;
         },
-        query: (range1: number, opts?: RangeOptions<number>) => {
-            return this._findRangeFromIndex(this.descriptor.secondaryIndexes[0], [range1], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});
+        query: (ctx: Context, range1: number, opts?: RangeOptions<number>) => {
+            return this._query(ctx, this.descriptor.secondaryIndexes[0], [range1], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});
+        },
+        stream: (range1: number, opts?: StreamProps) => {
+            return this._createStream(this.descriptor.secondaryIndexes[0], [range1], opts);
+        },
+        liveStream: (range1: number, opts?: StreamProps) => {
+            return this._createLiveStream(this.descriptor.secondaryIndexes[0], [range1], opts);
         }
     });
 
