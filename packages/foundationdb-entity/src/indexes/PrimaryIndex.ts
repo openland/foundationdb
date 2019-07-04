@@ -25,7 +25,7 @@ export class PrimaryIndex implements IndexMaintainer {
     onUpdateLockKeys(id: TupleItem[]) {
         return [PrimaryIndex.lockKey(id)];
     }
-    onDeleteLockKeys(id: TupleItem[]) {
+    onDestroyLockKeys(id: TupleItem[]) {
         return [PrimaryIndex.lockKey(id)];
     }
 

@@ -229,7 +229,11 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
             } else {
                 throw Error('Unknown index type');
             }
-            builder.append(`secondaryIndexes.push({ name: '${index.name}', storageKey: '${index.name}', type: ${type}, subspace: await storage.resolveEntityIndexDirectory('${entityKey}', '${index.name}') });`);
+            let condition = 'undefined';
+            if (index.condition) {
+                condition = index.condition.toString();
+            }
+            builder.append(`secondaryIndexes.push({ name: '${index.name}', storageKey: '${index.name}', type: ${type}, subspace: await storage.resolveEntityIndexDirectory('${entityKey}', '${index.name}'), condition: ${condition} });`);
         }
 
         // Primary Keys
@@ -400,9 +404,9 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                 builder.removeIndent();
                 builder.append(`},`);
 
-                builder.append(`liveStream: (${tFields.join(', ')}, opts?: StreamProps) => {`);
+                builder.append(`liveStream: (ctx: Context, ${tFields.join(', ')}, opts?: StreamProps) => {`);
                 builder.addIndent();
-                builder.append(`return this._createLiveStream(this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}], opts);`);
+                builder.append(`return this._createLiveStream(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}], opts);`);
                 builder.removeIndent();
                 builder.append(`}`);
 

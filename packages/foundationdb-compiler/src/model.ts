@@ -116,10 +116,16 @@ type EntityIndexType = {
 export class EntityIndexModel {
     readonly name: string;
     readonly type: EntityIndexType;
+    condition?: (src: any) => boolean;
 
     constructor(name: string, type: EntityIndexType) {
         this.name = name;
         this.type = type;
+    }
+
+    withCondition(handler: (src: any) => boolean) {
+        this.condition = handler;
+        return this;
     }
 }
 

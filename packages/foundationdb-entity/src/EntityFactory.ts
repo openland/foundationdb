@@ -1,3 +1,4 @@
+import { ConditionalMaintainer } from './indexes/ConditionalMaintainer';
 import { LiveStream } from './LiveStream';
 import { UniqueIndex } from './indexes/UniqueIndex';
 import { TupleItem, Float } from '@openland/foundationdb-tuple';
@@ -15,7 +16,6 @@ import { IndexMaintainer } from './indexes/IndexMaintainer';
 import { IndexMutexManager } from './indexes/IndexMutexManager';
 import { resolveIndexKey, tupleToCursor } from './indexes/utils';
 import { RangeIndex } from './indexes/RangeIndex';
-import { RangeQuery } from './RangeQuery';
 import { IndexStream } from './indexes/IndexStream';
 
 export interface StreamProps {
@@ -55,9 +55,17 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         this._indexMaintainers.push(new PrimaryIndex(descriptor.subspace));
         for (let ind of descriptor.secondaryIndexes) {
             if (ind.type.type === 'unique') {
-                this._indexMaintainers.push(new UniqueIndex(ind));
+                if (ind.condition) {
+                    this._indexMaintainers.push(new ConditionalMaintainer(ind.condition, new UniqueIndex(ind)));
+                } else {
+                    this._indexMaintainers.push(new UniqueIndex(ind));
+                }
             } else if (ind.type.type === 'range') {
-                this._indexMaintainers.push(new RangeIndex(ind));
+                if (ind.condition) {
+                    this._indexMaintainers.push(new ConditionalMaintainer(ind.condition, new RangeIndex(ind)));
+                } else {
+                    this._indexMaintainers.push(new RangeIndex(ind));
+                }
             } else {
                 throw Error('Unknown index type');
             }

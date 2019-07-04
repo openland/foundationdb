@@ -38,6 +38,6 @@ export default declareSchema(() => {
         })));
         field('value9', json());
 
-        uniqueIndex('uniqIndex', ['key1', 'key2', 'key3', 'key4', 'value1', 'value2', 'value3', 'value4']);
+        uniqueIndex('uniqIndex', ['key1', 'key2', 'key3', 'key4', 'value1', 'value2', 'value3', 'value4']).withCondition((src) => src.key1 !== 'hello!');
     });
 });

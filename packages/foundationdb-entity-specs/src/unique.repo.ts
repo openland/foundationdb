@@ -46,7 +46,7 @@ export class UniqueIndexFactory extends EntityFactory<UniqueIndexShape, UniqueIn
     static async open(storage: EntityStorage) {
         let subspace = await storage.resolveEntityDirectory('uniqueIndex');
         let secondaryIndexes: SecondaryIndexDescriptor[] = [];
-        secondaryIndexes.push({ name: 'test', storageKey: 'test', type: { type: 'unique', fields: [{ name: 'unique1', type: 'string' }, { name: 'unique2', type: 'string' }] }, subspace: await storage.resolveEntityIndexDirectory('uniqueIndex', 'test') });
+        secondaryIndexes.push({ name: 'test', storageKey: 'test', type: { type: 'unique', fields: [{ name: 'unique1', type: 'string' }, { name: 'unique2', type: 'string' }] }, subspace: await storage.resolveEntityIndexDirectory('uniqueIndex', 'test'), condition: undefined });
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'id', type: 'integer' });
         let fields: FieldDescriptor[] = [];

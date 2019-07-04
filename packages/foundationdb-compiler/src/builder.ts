@@ -184,7 +184,9 @@ export function uniqueIndex(name: string, fields: string[]) {
     if (!currentEntity) {
         throw Error('No entity specified');
     }
-    currentEntity!.indexes.push(new EntityIndexModel(name, { type: 'unique', fields: fields }));
+    let res = new EntityIndexModel(name, { type: 'unique', fields: fields });
+    currentEntity!.indexes.push(res);
+    return res;
 }
 
 export function rangeIndex(name: string, fields: string[]) {
@@ -192,5 +194,7 @@ export function rangeIndex(name: string, fields: string[]) {
     if (!currentEntity) {
         throw Error('No entity specified');
     }
-    currentEntity!.indexes.push(new EntityIndexModel(name, { type: 'range', fields: fields }));
+    let res = new EntityIndexModel(name, { type: 'range', fields: fields });
+    currentEntity!.indexes.push(res);
+    return res;
 }

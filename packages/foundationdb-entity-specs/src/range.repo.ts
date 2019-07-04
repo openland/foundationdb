@@ -46,7 +46,7 @@ export class RangeIndexFactory extends EntityFactory<RangeIndexShape, RangeIndex
     static async open(storage: EntityStorage) {
         let subspace = await storage.resolveEntityDirectory('rangeIndex');
         let secondaryIndexes: SecondaryIndexDescriptor[] = [];
-        secondaryIndexes.push({ name: 'ranges', storageKey: 'ranges', type: { type: 'range', fields: [{ name: 'range1', type: 'integer' }, { name: 'range2', type: 'integer' }] }, subspace: await storage.resolveEntityIndexDirectory('rangeIndex', 'ranges') });
+        secondaryIndexes.push({ name: 'ranges', storageKey: 'ranges', type: { type: 'range', fields: [{ name: 'range1', type: 'integer' }, { name: 'range2', type: 'integer' }] }, subspace: await storage.resolveEntityIndexDirectory('rangeIndex', 'ranges'), condition: undefined });
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'id', type: 'integer' });
         let fields: FieldDescriptor[] = [];
@@ -79,8 +79,8 @@ export class RangeIndexFactory extends EntityFactory<RangeIndexShape, RangeIndex
         stream: (range1: number, opts?: StreamProps) => {
             return this._createStream(this.descriptor.secondaryIndexes[0], [range1], opts);
         },
-        liveStream: (range1: number, opts?: StreamProps) => {
-            return this._createLiveStream(this.descriptor.secondaryIndexes[0], [range1], opts);
+        liveStream: (ctx: Context, range1: number, opts?: StreamProps) => {
+            return this._createLiveStream(ctx, this.descriptor.secondaryIndexes[0], [range1], opts);
         }
     });
 

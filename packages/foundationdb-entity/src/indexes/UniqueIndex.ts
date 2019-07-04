@@ -1,5 +1,4 @@
 import * as Tuple from '@openland/foundationdb-tuple';
-import { IndexField } from './../EntityDescriptor';
 import { Context } from '@openland/context';
 import { SecondaryIndexDescriptor } from '../EntityDescriptor';
 import { IndexMaintainer } from './IndexMaintainer';
@@ -77,8 +76,13 @@ export class UniqueIndex implements IndexMaintainer {
     // Destroy
     //
 
-    onDestroy(ctx: Context, id: Tuple.TupleItem[], value: any) {
-        // Not Supported yet
+    onDestroyLockKeys(_id: Tuple.TupleItem[], value: any) {
+        let id = this._resolveIndexKey(value);
+        return [UniqueIndex.lockKey(this.descriptor, id)];
+    }
+    onDestroy(ctx: Context, _id: Tuple.TupleItem[], value: any) {
+        let id = this._resolveIndexKey(value);
+        this.descriptor.subspace.clear(ctx, id);
     }
 
     private _resolveIndexKey(value: any) {

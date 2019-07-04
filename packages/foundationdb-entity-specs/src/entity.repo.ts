@@ -283,7 +283,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
     static async open(storage: EntityStorage) {
         let subspace = await storage.resolveEntityDirectory('allFields');
         let secondaryIndexes: SecondaryIndexDescriptor[] = [];
-        secondaryIndexes.push({ name: 'uniqIndex', storageKey: 'uniqIndex', type: { type: 'unique', fields: [{ name: 'key1', type: 'boolean' }, { name: 'key2', type: 'integer' }, { name: 'key3', type: 'float' }, { name: 'key4', type: 'string' }, { name: 'value1', type: 'boolean' }, { name: 'value2', type: 'integer' }, { name: 'value3', type: 'float' }, { name: 'value4', type: 'string' }] }, subspace: await storage.resolveEntityIndexDirectory('allFields', 'uniqIndex') });
+        secondaryIndexes.push({ name: 'uniqIndex', storageKey: 'uniqIndex', type: { type: 'unique', fields: [{ name: 'key1', type: 'boolean' }, { name: 'key2', type: 'integer' }, { name: 'key3', type: 'float' }, { name: 'key4', type: 'string' }, { name: 'value1', type: 'boolean' }, { name: 'value2', type: 'integer' }, { name: 'value3', type: 'float' }, { name: 'value4', type: 'string' }] }, subspace: await storage.resolveEntityIndexDirectory('allFields', 'uniqIndex'), condition: (src) => src.key1 !== 'hello!' });
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'key1', type: 'boolean' });
         primaryKeys.push({ name: 'key2', type: 'integer' });
