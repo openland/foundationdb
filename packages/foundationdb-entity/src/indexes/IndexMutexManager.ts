@@ -1,7 +1,6 @@
 import { Context } from '@openland/context';
 import { TransactionCache } from '@openland/foundationdb';
-import { MultiMutex } from '@openland/foundationdb-utils/src/MultiMutex';
-import { uniqueSeed } from '@openland/foundationdb-utils';
+import { MultiMutex, uniqueSeed } from '@openland/foundationdb-utils';
 
 export class IndexMutexManager {
     private readonly _mutexes = new TransactionCache<MultiMutex>(uniqueSeed());

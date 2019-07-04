@@ -2,3 +2,4 @@ export { delayBreakable, delay, exponentialBackoffDelay, backoff, forever, forev
 export { Mutex } from './Mutex';
 export { uniqueSeed } from './uniqueSeed';
 export { ReadWriteLock } from './ReadWriteLock';
+export { MultiMutex } from './MultiMutex';

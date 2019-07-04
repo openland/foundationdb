@@ -1,7 +1,6 @@
-import { primaryKey } from '@openland/foundationdb-compiler';
 import { Context } from '@openland/context';
-import { Stream } from '../Stream';
 import { transactional, TupleItem } from '@openland/foundationdb';
+import { Stream } from '../Stream';
 import { tupleToCursor, cursorToTuple } from './utils';
 import { SecondaryIndexDescriptor } from '../EntityDescriptor';
 
