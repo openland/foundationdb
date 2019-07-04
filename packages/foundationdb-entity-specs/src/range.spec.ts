@@ -119,6 +119,38 @@ describe('Range Index', () => {
         expect(next.length).toBe(0);
     });
 
+    it('should have consistent cursors', async () => {
+        let testCtx = createNamedContext('test');
+        let db = await openTestDatabase();
+        let store = new EntityStorage(db);
+        let factory = await RangeIndexFactory.open(store);
+
+        await inTx(testCtx, async (ctx) => {
+            await factory.create(ctx, -3, { range1: 0, range2: 2 });
+            await factory.create(ctx, -2, { range1: 0, range2: 2 });
+            await factory.create(ctx, -1, { range1: 0, range2: 2 });
+            await factory.create(ctx, 0, { range1: 0, range2: 2 });
+            await factory.create(ctx, 1, { range1: 1, range2: 2 });
+            await factory.create(ctx, 2, { range1: 1, range2: 2 });
+            await factory.create(ctx, 3, { range1: 1, range2: 2 });
+            await factory.create(ctx, 4, { range1: 1, range2: 2 });
+            await factory.create(ctx, 5, { range1: 2, range2: 2 });
+            await factory.create(ctx, 6, { range1: 2, range2: 2 });
+            await factory.create(ctx, 7, { range1: 2, range2: 2 });
+            await factory.create(ctx, 8, { range1: 2, range2: 2 });
+            await factory.create(ctx, 9, { range1: 2, range2: 2 });
+        });
+
+        let res = await factory.ranges.query(testCtx, 1, { limit: 1 });
+        expect(res.cursor).not.toBeNull();
+        expect(res.cursor).not.toBeUndefined();
+        let s = factory.ranges.stream(1, { batchSize: 1 });
+        s.seek(res.cursor!);
+        let res2 = await s.next(testCtx);
+        expect(res2.length).toBe(1);
+        expect(res2[0].id).toBe(2);
+    });
+
     it('should support conditional indexes', async () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
