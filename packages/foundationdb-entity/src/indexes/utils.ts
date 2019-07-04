@@ -1,6 +1,14 @@
-import { IndexField } from './../EntityDescriptor';
+import { IndexField } from '../EntityDescriptor';
 import * as Tuple from '@openland/foundationdb-tuple';
 import { encoders, TupleItem } from '@openland/foundationdb';
+
+export function tupleToCursor(tuple: TupleItem[]) {
+    return encoders.tuple.pack(tuple).toString('hex');
+}
+
+export function cursorToTuple(src: string) {
+    return encoders.tuple.unpack(Buffer.from(src, 'hex'));
+}
 
 export function tupleKey(tuple: TupleItem[]) {
     return encoders.tuple.pack(tuple).toString('hex');

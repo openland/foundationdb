@@ -69,7 +69,7 @@ export class UniqueIndexFactory extends EntityFactory<UniqueIndexShape, UniqueIn
         super(descriptor);
     }
 
-    readonly testIndex = Object.freeze({
+    readonly test = Object.freeze({
         find: async (ctx: Context, unique1: string, unique2: string) => {
             return this._findFromUniqueIndex(ctx, [unique1, unique2], this.descriptor.secondaryIndexes[0]);
         }

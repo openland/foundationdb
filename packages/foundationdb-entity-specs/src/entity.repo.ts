@@ -326,7 +326,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
         super(descriptor);
     }
 
-    readonly uniqIndexIndex = Object.freeze({
+    readonly uniqIndex = Object.freeze({
         find: async (ctx: Context, key1: boolean, key2: number, key3: number, key4: string, value1: boolean, value2: number, value3: number, value4: string) => {
             return this._findFromUniqueIndex(ctx, [key1, key2, key3, key4, value1, value2, value3, value4], this.descriptor.secondaryIndexes[0]);
         }

@@ -14,7 +14,7 @@ describe('Unique index', () => {
         await inTx(testCtx, async (ctx) => {
             await factory.create(ctx, 1, { unique1: '1', unique2: '2' });
         });
-        let ex = await factory.testIndex.find(testCtx, '1', '2');
+        let ex = await factory.test.find(testCtx, '1', '2');
         expect(ex.id).toBe(1);
 
         // Should throw on constraint violation
@@ -81,7 +81,7 @@ describe('Unique index', () => {
 
         await inTx(testCtx, async (ctx) => {
             let p1 = factory.create(ctx, 1, { unique1: '1', unique2: '2' });
-            let p2 = factory.testIndex.find(ctx, '1', '2');
+            let p2 = factory.test.find(ctx, '1', '2');
             await expect(p1).resolves.not.toBeNull();
             await expect(p1).resolves.not.toBeUndefined();
             await expect(p2).resolves.not.toBeNull();

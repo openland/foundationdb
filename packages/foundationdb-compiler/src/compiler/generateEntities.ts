@@ -302,7 +302,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         for (let index of entity.indexes) {
             if (index.type.type === 'unique') {
                 builder.append();
-                builder.append(`readonly ${index.name}Index = Object.freeze({`);
+                builder.append(`readonly ${index.name} = Object.freeze({`);
                 builder.addIndent();
                 let fields: string[] = [];
                 let fieldNames: string[] = [];
@@ -380,7 +380,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                 tFieldNames.splice(tFieldNames.length - 1, 1);
 
                 builder.append();
-                builder.append(`readonly ${index.name}Index = Object.freeze({`);
+                builder.append(`readonly ${index.name} = Object.freeze({`);
                 builder.addIndent();
                 builder.append(`findAll: (ctx: Context, ${tFields.join(', ')}) => {`);
                 builder.addIndent();

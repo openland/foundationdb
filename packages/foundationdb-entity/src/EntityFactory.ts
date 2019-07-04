@@ -2,7 +2,7 @@ import { UniqueIndex } from './indexes/UniqueIndex';
 import { TupleItem, Float } from '@openland/foundationdb-tuple';
 import { uniqueSeed } from '@openland/foundationdb-utils';
 import { Context } from '@openland/context';
-import { TransactionCache, encoders, inTx, Watch, transactional, inTxLeaky } from '@openland/foundationdb';
+import { TransactionCache, encoders, inTx, Watch, inTxLeaky } from '@openland/foundationdb';
 import { Entity } from './Entity';
 import { EntityDescriptor, SecondaryIndexDescriptor } from './EntityDescriptor';
 import { EntityMetadata } from './EntityMetadata';
@@ -15,6 +15,7 @@ import { IndexMutexManager } from './indexes/IndexMutexManager';
 import { resolveIndexKey } from './indexes/utils';
 import { RangeIndex } from './indexes/RangeIndex';
 import { RangeQuery } from './RangeQuery';
+import { IndexStream } from './indexes/IndexStream';
 
 function getCacheKey(id: ReadonlyArray<TupleItem>) {
     return encoders.tuple.pack(id as any /* WTF, TS? */).toString('hex');
@@ -120,7 +121,18 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
                 });
             },
             asStream: () => {
-                throw Error();
+                return new IndexStream(descriptor, opts && opts.limit ? opts.limit : 5000, opts && opts.reverse ? opts.reverse : false, (ctx, src) => {
+                    let pk = this._resolvePrimaryKeyFromObject(src);
+                    let k = getCacheKey(pk);
+                    let cached = this._entityCache.get(ctx, k);
+                    if (cached) {
+                        return cached;
+                    } else {
+                        let res = this._createEntityInstance(ctx, src);
+                        this._entityCache.set(ctx, k, res);
+                        return res;
+                    }
+                });
             },
             asLiveStream: () => {
                 throw Error();

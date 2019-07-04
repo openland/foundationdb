@@ -5,6 +5,6 @@ export default declareSchema(() => {
         primaryKey('id', integer());
         field('range1', integer());
         field('range2', integer());
-        rangeIndex('test', ['range1', 'range2']);
+        rangeIndex('ranges', ['range1', 'range2']);
     });
 });

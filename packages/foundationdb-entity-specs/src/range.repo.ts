@@ -46,7 +46,7 @@ export class RangeIndexFactory extends EntityFactory<RangeIndexShape, RangeIndex
     static async open(storage: EntityStorage) {
         let subspace = await storage.resolveEntityDirectory('rangeIndex');
         let secondaryIndexes: SecondaryIndexDescriptor[] = [];
-        secondaryIndexes.push({ name: 'test', storageKey: 'test', type: { type: 'range', fields: [{ name: 'range1', type: 'integer' }, { name: 'range2', type: 'integer' }] }, subspace: await storage.resolveEntityIndexDirectory('rangeIndex', 'test') });
+        secondaryIndexes.push({ name: 'ranges', storageKey: 'ranges', type: { type: 'range', fields: [{ name: 'range1', type: 'integer' }, { name: 'range2', type: 'integer' }] }, subspace: await storage.resolveEntityIndexDirectory('rangeIndex', 'ranges') });
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'id', type: 'integer' });
         let fields: FieldDescriptor[] = [];
@@ -69,7 +69,7 @@ export class RangeIndexFactory extends EntityFactory<RangeIndexShape, RangeIndex
         super(descriptor);
     }
 
-    readonly testIndex = Object.freeze({
+    readonly ranges = Object.freeze({
         findAll: (ctx: Context, range1: number) => {
             return this._findRangeFromIndex(this.descriptor.secondaryIndexes[0], [range1]).asArray(ctx);
         },
