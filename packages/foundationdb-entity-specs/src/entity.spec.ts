@@ -48,6 +48,10 @@ describe('Entity', () => {
         expect(loaded.metadata.updatedAt).toBeLessThanOrEqual(end);
         expect(loaded.metadata.updatedAt).toBe(loaded.metadata.createdAt);
         expect(loaded.metadata.updatedAt).toBe(created.metadata.createdAt);
+
+        let all = await factory.findAll(testCtx);
+        expect(all.length).toBe(1);
+        expect(all[0].id).toBe('1');
     });
 
     it('should be able to create entity in parallel', async () => {

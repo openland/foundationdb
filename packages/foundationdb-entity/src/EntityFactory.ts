@@ -172,6 +172,20 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         });
     }
 
+    async findAll(ctx: Context) {
+        let ex = await this.descriptor.subspace.range(ctx, []);
+        return ex.map((v) => {
+            let k = getCacheKey(v.key);
+            let cached = this._entityCache.get(ctx, k);
+            if (cached) {
+                return cached;
+            }
+            let res = this._createEntityInstance(ctx, v.value);
+            this._entityCache.set(ctx, k, res);
+            return res;
+        });
+    }
+
     protected async _findById(ctx: Context, _id: PrimaryKeyType[]): Promise<T | null> {
 
         // Validate input
