@@ -81,7 +81,7 @@ export class RangeIndexFactory extends EntityFactory<RangeIndexShape, RangeIndex
         },
         liveStream: (ctx: Context, range1: number, opts?: StreamProps) => {
             return this._createLiveStream(ctx, this.descriptor.secondaryIndexes[0], [range1], opts);
-        }
+        },
     });
 
     create(ctx: Context, id: number, src: RangeIndexCreateShape): Promise<RangeIndex> {
@@ -174,7 +174,7 @@ export class RangeIndexConditionalFactory extends EntityFactory<RangeIndexCondit
         },
         liveStream: (ctx: Context, range1: number, opts?: StreamProps) => {
             return this._createLiveStream(ctx, this.descriptor.secondaryIndexes[0], [range1], opts);
-        }
+        },
     });
 
     create(ctx: Context, id: number, src: RangeIndexConditionalCreateShape): Promise<RangeIndexConditional> {

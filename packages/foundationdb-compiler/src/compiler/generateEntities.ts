@@ -304,100 +304,69 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
 
         let indexIndex = 0;
         for (let index of entity.indexes) {
-            if (index.type.type === 'unique') {
-                builder.append();
-                builder.append(`readonly ${index.name} = Object.freeze({`);
-                builder.addIndent();
-                let fields: string[] = [];
-                let fieldNames: string[] = [];
-                for (let f of index.type.fields) {
-                    let ef = entity.fields.find((v) => v.name === f);
-                    let stp: SchemaType;
-                    if (!ef) {
-                        let kf = entity.keys.find((v) => v.name === f);
-                        if (kf) {
-                            stp = kf.type;
-                        } else {
-                            throw Error('Unable to find field ' + f);
-                        }
+            let fields: string[] = [];
+            let fieldNames: string[] = [];
+            let fieldTypes: string[] = [];
+            for (let f of index.type.fields) {
+                let ef = entity.fields.find((v) => v.name === f);
+                let stp: SchemaType;
+                if (!ef) {
+                    let kf = entity.keys.find((v) => v.name === f);
+                    if (kf) {
+                        stp = kf.type;
                     } else {
-                        stp = ef.type;
+                        throw Error('Unable to find field ' + f);
                     }
-                    fieldNames.push(f);
-                    if (stp.type === 'string') {
-                        fields.push(`${f}: string`);
-                    } else if (stp.type === 'integer') {
-                        fields.push(`${f}: number`);
-                    } else if (stp.type === 'float') {
-                        fields.push(`${f}: number`);
-                    } else if (stp.type === 'boolean') {
-                        fields.push(`${f}: boolean`);
-                    } else {
-                        throw Error('Unsupported index key type: ' + stp.type);
-                    }
+                } else {
+                    stp = ef.type;
                 }
+                fieldNames.push(f);
+                if (stp.type === 'string') {
+                    fields.push(`${f}: string`);
+                    fieldTypes.push('string');
+                } else if (stp.type === 'integer') {
+                    fields.push(`${f}: number`);
+                    fieldTypes.push('number');
+                } else if (stp.type === 'float') {
+                    fields.push(`${f}: number`);
+                    fieldTypes.push('number');
+                } else if (stp.type === 'boolean') {
+                    fields.push(`${f}: boolean`);
+                    fieldTypes.push('boolean');
+                } else {
+                    throw Error('Unsupported index key type: ' + stp.type);
+                }
+            }
+
+            let tFields = [...fields];
+            tFields.splice(tFields.length - 1, 1);
+            let tFieldNames = [...fieldNames];
+            tFieldNames.splice(tFieldNames.length - 1, 1);
+
+            builder.append();
+            builder.append(`readonly ${index.name} = Object.freeze({`);
+            builder.addIndent();
+            if (index.type.type === 'unique') {
                 builder.append(`find: async (ctx: Context, ${fields.join(', ')}) => {`);
                 builder.addIndent();
                 builder.append(`return this._findFromUniqueIndex(ctx, [${fieldNames.join(', ')}], this.descriptor.secondaryIndexes[${indexIndex}]);`);
                 builder.removeIndent();
-                builder.append(`}`);
-                builder.removeIndent();
-                builder.append(`});`);
-            } else if (index.type.type === 'range') {
-                let fields: string[] = [];
-                let fieldNames: string[] = [];
-                let fieldTypes: string[] = [];
-                for (let f of index.type.fields) {
-                    let ef = entity.fields.find((v) => v.name === f);
-                    let stp: SchemaType;
-                    if (!ef) {
-                        let kf = entity.keys.find((v) => v.name === f);
-                        if (kf) {
-                            stp = kf.type;
-                        } else {
-                            throw Error('Unable to find field ' + f);
-                        }
-                    } else {
-                        stp = ef.type;
-                    }
-                    fieldNames.push(f);
-                    if (stp.type === 'string') {
-                        fields.push(`${f}: string`);
-                        fieldTypes.push('string');
-                    } else if (stp.type === 'integer') {
-                        fields.push(`${f}: number`);
-                        fieldTypes.push('number');
-                    } else if (stp.type === 'float') {
-                        fields.push(`${f}: number`);
-                        fieldTypes.push('number');
-                    } else if (stp.type === 'boolean') {
-                        fields.push(`${f}: boolean`);
-                        fieldTypes.push('boolean');
-                    } else {
-                        throw Error('Unsupported index key type: ' + stp.type);
-                    }
-                }
-
-                let tFields = [...fields];
-                tFields.splice(tFields.length - 1, 1);
-                let tFieldNames = [...fieldNames];
-                tFieldNames.splice(tFieldNames.length - 1, 1);
-
-                builder.append();
-                builder.append(`readonly ${index.name} = Object.freeze({`);
-                builder.addIndent();
-                builder.append(`findAll: async (ctx: Context, ${tFields.join(', ')}) => {`);
-                builder.addIndent();
-                builder.append(`return (await this._query(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}])).items;`);
-                builder.removeIndent();
                 builder.append(`},`);
+            }
 
-                builder.append(`query: (ctx: Context, ${tFields.join(', ')}, opts?: RangeOptions<${fieldTypes[fieldTypes.length - 1]}>) => {`);
-                builder.addIndent();
-                builder.append(`return this._query(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});`);
-                builder.removeIndent();
-                builder.append(`},`);
+            builder.append(`findAll: async (ctx: Context, ${tFields.join(', ')}) => {`);
+            builder.addIndent();
+            builder.append(`return (await this._query(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}])).items;`);
+            builder.removeIndent();
+            builder.append(`},`);
 
+            builder.append(`query: (ctx: Context, ${tFields.join(', ')}, opts?: RangeOptions<${fieldTypes[fieldTypes.length - 1]}>) => {`);
+            builder.addIndent();
+            builder.append(`return this._query(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});`);
+            builder.removeIndent();
+            builder.append(`},`);
+
+            if (index.type.type === 'range') {
                 builder.append(`stream: (${tFields.join(', ')}, opts?: StreamProps) => {`);
                 builder.addIndent();
                 builder.append(`return this._createStream(this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}], opts);`);
@@ -408,13 +377,13 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                 builder.addIndent();
                 builder.append(`return this._createLiveStream(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}], opts);`);
                 builder.removeIndent();
-                builder.append(`}`);
-
-                builder.removeIndent();
-                builder.append(`});`);
-            } else {
+                builder.append(`},`);
+            }
+            if (index.type.type !== 'unique' && index.type.type !== 'range') {
                 throw Error('Unknown index type');
             }
+            builder.removeIndent();
+            builder.append(`});`);
             indexIndex++;
         }
 

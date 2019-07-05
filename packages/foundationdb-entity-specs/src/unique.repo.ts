@@ -72,7 +72,13 @@ export class UniqueIndexFactory extends EntityFactory<UniqueIndexShape, UniqueIn
     readonly test = Object.freeze({
         find: async (ctx: Context, unique1: string, unique2: string) => {
             return this._findFromUniqueIndex(ctx, [unique1, unique2], this.descriptor.secondaryIndexes[0]);
-        }
+        },
+        findAll: async (ctx: Context, unique1: string) => {
+            return (await this._query(ctx, this.descriptor.secondaryIndexes[0], [unique1])).items;
+        },
+        query: (ctx: Context, unique1: string, opts?: RangeOptions<string>) => {
+            return this._query(ctx, this.descriptor.secondaryIndexes[0], [unique1], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});
+        },
     });
 
     create(ctx: Context, id: number, src: UniqueIndexCreateShape): Promise<UniqueIndex> {
@@ -156,7 +162,13 @@ export class UniqueConditionalIndexFactory extends EntityFactory<UniqueCondition
     readonly test = Object.freeze({
         find: async (ctx: Context, unique1: string, unique2: string) => {
             return this._findFromUniqueIndex(ctx, [unique1, unique2], this.descriptor.secondaryIndexes[0]);
-        }
+        },
+        findAll: async (ctx: Context, unique1: string) => {
+            return (await this._query(ctx, this.descriptor.secondaryIndexes[0], [unique1])).items;
+        },
+        query: (ctx: Context, unique1: string, opts?: RangeOptions<string>) => {
+            return this._query(ctx, this.descriptor.secondaryIndexes[0], [unique1], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});
+        },
     });
 
     create(ctx: Context, id: number, src: UniqueConditionalIndexCreateShape): Promise<UniqueConditionalIndex> {
