@@ -56,29 +56,37 @@ export class RandomLayer extends BaseLayer {
         let rootCtx = createNamedContext('random-layer-refresh');
         (async () => {
             while (!this.isStopped) {
-                let updated = await inTx(rootCtx, async (ctx) => {
-                    let existing = await this.nodeIdKeyspace.get(ctx, [nodeId]);
-                    if (existing && (existing.seed === this.seed)) {
-                        this.nodeIdKeyspace.set(ctx, [nodeId], { timeout: Date.now() + 30000, seed: this.seed });
-                        return true;
+                try {
+                    let updated = await inTx(rootCtx, async (ctx) => {
+                        let existing = await this.nodeIdKeyspace.get(ctx, [nodeId]);
+                        if (existing && (existing.seed === this.seed)) {
+                            this.nodeIdKeyspace.set(ctx, [nodeId], { timeout: Date.now() + 30000, seed: this.seed });
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    });
+                    if (updated) {
+                        await delay(5000);
                     } else {
-                        return false;
+                        if (!this.isStopped) {
+                            this.onHalted();
+                        }
                     }
-                });
-                if (updated) {
-                    await delay(5000);
-                } else {
-                    if (!this.isStopped) {
-                        this.onHalted();
-                    }
+                } catch (e) {
+                    // Ignore
                 }
             }
-            await inTx(rootCtx, async (ctx) => {
-                let existing = await this.nodeIdKeyspace.get(ctx, [nodeId]);
-                if (existing && (existing.seed === this.seed)) {
-                    this.nodeIdKeyspace.set(ctx, [nodeId], { timeout: 0, seed: this.seed });
-                }
-            });
+            try {
+                await inTx(rootCtx, async (ctx) => {
+                    let existing = await this.nodeIdKeyspace.get(ctx, [nodeId]);
+                    if (existing && (existing.seed === this.seed)) {
+                        this.nodeIdKeyspace.set(ctx, [nodeId], { timeout: 0, seed: this.seed });
+                    }
+                });
+            } catch (e) {
+                // Ignore
+            }
         })();
     }
 
