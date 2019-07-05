@@ -1,2 +1,1 @@
-import { EntityMetadata } from './EntityMetadata';
-export type ShapeWithMetadata<T> = T & { _metadata: EntityMetadata };
+export type ShapeWithMetadata<T> = T & { createdAt: number, updatedAt: number, _version: number };

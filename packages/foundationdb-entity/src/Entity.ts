@@ -46,7 +46,7 @@ export abstract class Entity<T> {
         this._descriptor = descriptor;
         this._rawId = Object.freeze(id);
         this._rawValue = rawValue;
-        this._snapshotValue = Object.freeze({...this._rawValue});
+        this._snapshotValue = Object.freeze({ ...this._rawValue });
         this._tx = getTransaction(ctx);
         this._isReadOnly = this._tx.isReadOnly;
         this._flusher = flush;
@@ -56,7 +56,7 @@ export abstract class Entity<T> {
      * Metadata about entity value
      */
     get metadata(): EntityMetadata {
-        return this._rawValue._metadata;
+        return { versionCode: this._rawValue._version, createdAt: this._rawValue.createdAt, updatedAt: this._rawValue.updatedAt };
     }
 
     /**
@@ -101,11 +101,9 @@ export abstract class Entity<T> {
             let value: ShapeWithMetadata<T> = {
                 ...this._snapshotValue,
                 ...this._updatedValues,
-                _metadata: {
-                    versionCode: this._rawValue._metadata.versionCode + 1, // Increment version
-                    createdAt: this._rawValue._metadata.createdAt, // Keep created date
-                    updatedAt: Date.now() // Update updated date
-                }
+                _version: this._rawValue._version + 1, // Increment version
+                createdAt: this._rawValue.createdAt, // Keep created date
+                updatedAt: Date.now(), // Update updated date
             };
             this._updatedValues = {};
             Object.freeze(value); // Freezing object is a requirement for _snapshotValue

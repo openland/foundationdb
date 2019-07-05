@@ -33,11 +33,9 @@ function encodeKey(key: TupleItem[]): string {
 }
 
 const metadataCodec = codecs.struct({
-    _metadata: codecs.struct({
-        versionCode: codecs.number,
-        createdAt: codecs.number,
-        updatedAt: codecs.number,
-    })
+    _version: codecs.number,
+    createdAt: codecs.number,
+    updatedAt: codecs.number,
 });
 
 export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
@@ -306,7 +304,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         }
 
         // Create Instance
-        let res = this._createEntityInstance(ctx, { ...value, _metadata: metadata });
+        let res = this._createEntityInstance(ctx, { ...value, createdAt: metadata.createdAt, updatedAt: metadata.updatedAt, _version: metadata.versionCode });
         this._entityCache.set(ctx, k, res);
         return res;
     }
@@ -363,7 +361,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     }
 
     private _encode(value: SHAPE, metadata: EntityMetadata) {
-        return { ...value, ...this._codec.encode({ ...value, _metadata: metadata }) };
+        return { ...value, ...this._codec.encode({ ...value, createdAt: metadata.createdAt, updatedAt: metadata.updatedAt, _version: metadata.versionCode }) };
     }
 
     private _decode(value: any) {
