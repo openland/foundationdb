@@ -1,3 +1,4 @@
+import { createLogger } from '@openland/log';
 import { ConditionalMaintainer } from './indexes/ConditionalMaintainer';
 import { LiveStream } from './LiveStream';
 import { UniqueIndex } from './indexes/UniqueIndex';
@@ -33,6 +34,8 @@ const metadataCodec = codecs.struct({
     createdAt: codecs.default(codecs.number, () => Date.now()),
     updatedAt: codecs.default(codecs.number, () => Date.now()),
 });
+
+const logger = createLogger('fdb');
 
 export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     readonly descriptor: EntityDescriptor<SHAPE>;
@@ -114,7 +117,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             if (cached) {
                 return cached;
             } else {
-                let res = this._createEntityInstance(ctx, src);
+                let res = this._createEntityInstance(ctx, this._decode(ctx, src));
                 this._entityCache.set(ctx, k, res);
                 return res;
             }
@@ -174,7 +177,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             if (cached) {
                 return cached;
             }
-            let res = this._createEntityInstance(ctx, v.value);
+            let res = this._createEntityInstance(ctx, this._decode(ctx, v.value));
             this._entityCache.set(ctx, k, res);
             return res;
         });
@@ -205,7 +208,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
 
             if (ex) {
                 // Decode record
-                let decoded = this._decode(ex);
+                let decoded = this._decode(ctx, ex);
 
                 // Create instance
                 let res = this._createEntityInstance(ctx, decoded);
@@ -233,7 +236,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             createdAt: now,
             updatedAt: now
         };
-        let encoded = this._encode(value, metadata);
+        let encoded = this._encode(ctx, value, metadata);
 
         // Check cache
         let k = getCacheKey(id);
@@ -356,12 +359,22 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         });
     }
 
-    private _encode(value: SHAPE, metadata: EntityMetadata) {
-        return { ...value, ...this._codec.encode({ ...value, createdAt: metadata.createdAt, updatedAt: metadata.updatedAt, _version: metadata.versionCode }) };
+    private _encode(ctx: Context, value: SHAPE, metadata: EntityMetadata) {
+        try {
+            return { ...value, ...this._codec.encode({ ...value, createdAt: metadata.createdAt, updatedAt: metadata.updatedAt, _version: metadata.versionCode }) };
+        } catch (e) {
+            logger.error(ctx, 'Unable to encode entity: ', value);
+            throw e;
+        }
     }
 
-    private _decode(value: any) {
-        return { ...value, ...this._codec.decode(value) };
+    private _decode(ctx: Context, value: any) {
+        try {
+            return { ...value, ...this._codec.decode(value) };
+        } catch (e) {
+            logger.error(ctx, 'Unable to decode entity: ', value);
+            throw e;
+        }
     }
 
     protected abstract _createEntityInstance(ctx: Context, value: ShapeWithMetadata<SHAPE>): T;
