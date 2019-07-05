@@ -78,7 +78,11 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     // Unique Index Operation
     //
 
-    protected async _findFromUniqueIndex(parent: Context, _id: PrimaryKeyType[], descriptor: SecondaryIndexDescriptor): Promise<T | null> {
+    protected async _findFromUniqueIndex(
+        parent: Context,
+        _id: (PrimaryKeyType | null)[],
+        descriptor: SecondaryIndexDescriptor
+    ): Promise<T | null> {
         return inTxLeaky(parent, async (ctx) => {
             // Resolve index key
             let id = resolveIndexKey(_id, descriptor.type.fields);
@@ -104,7 +108,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
 
     protected _createStream(
         descriptor: SecondaryIndexDescriptor,
-        _id: PrimaryKeyType[],
+        _id: (PrimaryKeyType | null)[],
         opts?: StreamProps
     ) {
         let id = resolveIndexKey(_id, descriptor.type.fields, true /* Partial key */);
@@ -127,7 +131,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     protected _createLiveStream(
         ctx: Context,
         descriptor: SecondaryIndexDescriptor,
-        _id: PrimaryKeyType[],
+        _id: (PrimaryKeyType | null)[],
         opts?: StreamProps
     ) {
         return new LiveStream(this._createStream(descriptor, _id, opts), this.descriptor).generator(ctx);
@@ -136,8 +140,8 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     protected async _query(
         parent: Context,
         descriptor: SecondaryIndexDescriptor,
-        _id: PrimaryKeyType[],
-        opts?: { limit?: number, reverse?: boolean, after?: PrimaryKeyType[] }
+        _id: (PrimaryKeyType | null)[],
+        opts?: { limit?: number, reverse?: boolean, after?: (PrimaryKeyType | null)[] }
     ): Promise<{ items: T[], cursor?: string }> {
         // Resolve index key
         let id = resolveIndexKey(_id, descriptor.type.fields, true /* Partial key */);

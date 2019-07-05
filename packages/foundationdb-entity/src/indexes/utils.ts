@@ -23,22 +23,32 @@ export function resolveIndexKey(src: any[], fields: IndexField[], partial: boole
     for (let i = 0; i < src.length; i++) {
         let key = fields[i + offset];
         let v = src[i];
-        if (key.type === 'boolean') {
+        if (key.type === 'opt_boolean'
+            || key.type === 'opt_string'
+            || key.type === 'opt_float'
+            || key.type === 'opt_integer'
+        ) {
+            if (v === null) {
+                res.push(v);
+                continue;
+            }
+        }
+        if (key.type === 'boolean' || key.type === 'opt_boolean') {
             if (typeof v !== 'boolean') {
                 throw Error('Unexpected key');
             }
             res.push(v);
-        } else if (key.type === 'integer') {
+        } else if (key.type === 'integer' || key.type === 'opt_integer') {
             if (typeof v !== 'number') {
                 throw Error('Unexpected key');
             }
             res.push(v);
-        } else if (key.type === 'float') {
+        } else if (key.type === 'float' || key.type === 'opt_float') {
             if (typeof v !== 'number') {
                 throw Error('Unexpected key');
             }
             res.push(new Tuple.Float(v as number));
-        } else if (key.type === 'string') {
+        } else if (key.type === 'string' || key.type === 'opt_string') {
             if (typeof v !== 'string') {
                 throw Error('Unexpected key');
             }

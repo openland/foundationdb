@@ -208,16 +208,32 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                     } else {
                         stp = ef.type;
                     }
-                    if (stp.type === 'string') {
-                        tp = 'string';
-                    } else if (stp.type === 'integer') {
-                        tp = 'integer';
-                    } else if (stp.type === 'float') {
-                        tp = 'float';
-                    } else if (stp.type === 'boolean') {
-                        tp = 'boolean';
+                    if (stp.type === 'optional') {
+                        let inner = (stp as OptionalType).inner;
+
+                        if (inner.type === 'string') {
+                            tp = 'opt_string';
+                        } else if (inner.type === 'integer') {
+                            tp = 'opt_integer';
+                        } else if (inner.type === 'float') {
+                            tp = 'opt_float';
+                        } else if (inner.type === 'boolean') {
+                            tp = 'opt_boolean';
+                        } else {
+                            throw Error('Unsupported field type for index: ' + inner.type);
+                        }
                     } else {
-                        throw Error('Unsupported field type for index: ' + stp.type);
+                        if (stp.type === 'string') {
+                            tp = 'string';
+                        } else if (stp.type === 'integer') {
+                            tp = 'integer';
+                        } else if (stp.type === 'float') {
+                            tp = 'float';
+                        } else if (stp.type === 'boolean') {
+                            tp = 'boolean';
+                        } else {
+                            throw Error('Unsupported field type for index: ' + stp.type);
+                        }
                     }
                     fields.push(`{ name: '${f}', type: '${tp}' }`);
                 }
@@ -321,20 +337,40 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                     stp = ef.type;
                 }
                 fieldNames.push(f);
-                if (stp.type === 'string') {
-                    fields.push(`${f}: string`);
-                    fieldTypes.push('string');
-                } else if (stp.type === 'integer') {
-                    fields.push(`${f}: number`);
-                    fieldTypes.push('number');
-                } else if (stp.type === 'float') {
-                    fields.push(`${f}: number`);
-                    fieldTypes.push('number');
-                } else if (stp.type === 'boolean') {
-                    fields.push(`${f}: boolean`);
-                    fieldTypes.push('boolean');
+                if (stp.type === 'optional') {
+                    let inner = (stp as OptionalType).inner;
+
+                    if (inner.type === 'string') {
+                        fields.push(`${f}: string | null`);
+                        fieldTypes.push('string | null');
+                    } else if (inner.type === 'integer') {
+                        fields.push(`${f}: number | null`);
+                        fieldTypes.push('number | null');
+                    } else if (inner.type === 'float') {
+                        fields.push(`${f}: number | null`);
+                        fieldTypes.push('number | null');
+                    } else if (inner.type === 'boolean') {
+                        fields.push(`${f}: boolean | null`);
+                        fieldTypes.push('boolean | null');
+                    } else {
+                        throw Error('Unsupported field type for index: ' + inner.type);
+                    }
                 } else {
-                    throw Error('Unsupported index key type: ' + stp.type);
+                    if (stp.type === 'string') {
+                        fields.push(`${f}: string`);
+                        fieldTypes.push('string');
+                    } else if (stp.type === 'integer') {
+                        fields.push(`${f}: number`);
+                        fieldTypes.push('number');
+                    } else if (stp.type === 'float') {
+                        fields.push(`${f}: number`);
+                        fieldTypes.push('number');
+                    } else if (stp.type === 'boolean') {
+                        fields.push(`${f}: boolean`);
+                        fieldTypes.push('boolean');
+                    } else {
+                        throw Error('Unsupported index key type: ' + stp.type);
+                    }
                 }
             }
 

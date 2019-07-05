@@ -2,7 +2,7 @@ import { Subspace, TupleItem } from '@openland/foundationdb';
 import { StructCodec } from './codecs';
 import { EntityStorage } from './EntityStorage';
 
-export type IndexFieldType = 'string' | 'boolean' | 'integer' | 'float';
+export type IndexFieldType = 'string' | 'boolean' | 'integer' | 'float' | 'opt_string' | 'opt_boolean' | 'opt_integer' | 'opt_float';
 
 /**
  * Descriptor of Entity that represent crucial information 

@@ -176,6 +176,10 @@ export interface AllFieldsShape {
     value7: { name: string, type: number };
     value8: { type: 'something', name: string } | { type: 'something_2', name: string } | null;
     value9: any;
+    value10: boolean | null;
+    value11: number | null;
+    value12: number | null;
+    value13: string | null;
 }
 
 export interface AllFieldsCreateShape {
@@ -188,6 +192,10 @@ export interface AllFieldsCreateShape {
     value7: { name: string, type: number };
     value8: { type: 'something', name: string } | { type: 'something_2', name: string } | null;
     value9: any;
+    value10: boolean | null;
+    value11: number | null;
+    value12: number | null;
+    value13: string | null;
 }
 
 export class AllFields extends Entity<AllFieldsShape> {
@@ -276,6 +284,42 @@ export class AllFields extends Entity<AllFieldsShape> {
             this.invalidate();
         }
     }
+    get value10(): boolean | null { return this._rawValue.value10; }
+    set value10(value: boolean | null) {
+        let normalized = this.descriptor.codec.fields.value10.normalize(value);
+        if (this._rawValue.value10 !== normalized) {
+            this._rawValue.value10 = normalized;
+            this._updatedValues.value10 = normalized;
+            this.invalidate();
+        }
+    }
+    get value11(): number | null { return this._rawValue.value11; }
+    set value11(value: number | null) {
+        let normalized = this.descriptor.codec.fields.value11.normalize(value);
+        if (this._rawValue.value11 !== normalized) {
+            this._rawValue.value11 = normalized;
+            this._updatedValues.value11 = normalized;
+            this.invalidate();
+        }
+    }
+    get value12(): number | null { return this._rawValue.value12; }
+    set value12(value: number | null) {
+        let normalized = this.descriptor.codec.fields.value12.normalize(value);
+        if (this._rawValue.value12 !== normalized) {
+            this._rawValue.value12 = normalized;
+            this._updatedValues.value12 = normalized;
+            this.invalidate();
+        }
+    }
+    get value13(): string | null { return this._rawValue.value13; }
+    set value13(value: string | null) {
+        let normalized = this.descriptor.codec.fields.value13.normalize(value);
+        if (this._rawValue.value13 !== normalized) {
+            this._rawValue.value13 = normalized;
+            this._updatedValues.value13 = normalized;
+            this.invalidate();
+        }
+    }
 }
 
 export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
@@ -283,7 +327,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
     static async open(storage: EntityStorage) {
         let subspace = await storage.resolveEntityDirectory('allFields');
         let secondaryIndexes: SecondaryIndexDescriptor[] = [];
-        secondaryIndexes.push({ name: 'uniqIndex', storageKey: 'uniqIndex', type: { type: 'unique', fields: [{ name: 'key1', type: 'boolean' }, { name: 'key2', type: 'integer' }, { name: 'key3', type: 'float' }, { name: 'key4', type: 'string' }, { name: 'value1', type: 'boolean' }, { name: 'value2', type: 'integer' }, { name: 'value3', type: 'float' }, { name: 'value4', type: 'string' }] }, subspace: await storage.resolveEntityIndexDirectory('allFields', 'uniqIndex'), condition: (src) => src.key1 !== 'hello!' });
+        secondaryIndexes.push({ name: 'uniqIndex', storageKey: 'uniqIndex', type: { type: 'unique', fields: [{ name: 'key1', type: 'boolean' }, { name: 'key2', type: 'integer' }, { name: 'key3', type: 'float' }, { name: 'key4', type: 'string' }, { name: 'value1', type: 'boolean' }, { name: 'value2', type: 'integer' }, { name: 'value3', type: 'float' }, { name: 'value4', type: 'string' }, { name: 'value10', type: 'opt_boolean' }, { name: 'value11', type: 'opt_integer' }, { name: 'value12', type: 'opt_float' }, { name: 'value13', type: 'opt_string' }] }, subspace: await storage.resolveEntityIndexDirectory('allFields', 'uniqIndex'), condition: (src) => src.key1 !== 'hello!' });
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'key1', type: 'boolean' });
         primaryKeys.push({ name: 'key2', type: 'integer' });
@@ -299,6 +343,10 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
         fields.push({ name: 'value7', type: { type: 'struct', fields: { name: { type: 'string' }, type: { type: 'integer' } } }, secure: false });
         fields.push({ name: 'value8', type: { type: 'optional', inner: { type: 'union', types: { something: { name: { type: 'string' } }, something_2: { name: { type: 'string' } } } } }, secure: false });
         fields.push({ name: 'value9', type: { type: 'json' }, secure: false });
+        fields.push({ name: 'value10', type: { type: 'optional', inner: { type: 'boolean' } }, secure: false });
+        fields.push({ name: 'value11', type: { type: 'optional', inner: { type: 'integer' } }, secure: false });
+        fields.push({ name: 'value12', type: { type: 'optional', inner: { type: 'float' } }, secure: false });
+        fields.push({ name: 'value13', type: { type: 'optional', inner: { type: 'string' } }, secure: false });
         let codec = c.struct({
             key1: c.boolean,
             key2: c.integer,
@@ -313,6 +361,10 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
             value7: c.struct({ name: c.string, type: c.integer }),
             value8: c.optional(c.union({ something: c.struct({ name: c.string }), something_2: c.struct({ name: c.string }) })),
             value9: c.any,
+            value10: c.optional(c.boolean),
+            value11: c.optional(c.integer),
+            value12: c.optional(c.float),
+            value13: c.optional(c.string),
         });
         let descriptor: EntityDescriptor<AllFieldsShape> = {
             name: 'AllFields',
@@ -327,14 +379,14 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
     }
 
     readonly uniqIndex = Object.freeze({
-        find: async (ctx: Context, key1: boolean, key2: number, key3: number, key4: string, value1: boolean, value2: number, value3: number, value4: string) => {
-            return this._findFromUniqueIndex(ctx, [key1, key2, key3, key4, value1, value2, value3, value4], this.descriptor.secondaryIndexes[0]);
+        find: async (ctx: Context, key1: boolean, key2: number, key3: number, key4: string, value1: boolean, value2: number, value3: number, value4: string, value10: boolean | null, value11: number | null, value12: number | null, value13: string | null) => {
+            return this._findFromUniqueIndex(ctx, [key1, key2, key3, key4, value1, value2, value3, value4, value10, value11, value12, value13], this.descriptor.secondaryIndexes[0]);
         },
-        findAll: async (ctx: Context, key1: boolean, key2: number, key3: number, key4: string, value1: boolean, value2: number, value3: number) => {
-            return (await this._query(ctx, this.descriptor.secondaryIndexes[0], [key1, key2, key3, key4, value1, value2, value3])).items;
+        findAll: async (ctx: Context, key1: boolean, key2: number, key3: number, key4: string, value1: boolean, value2: number, value3: number, value4: string, value10: boolean | null, value11: number | null, value12: number | null) => {
+            return (await this._query(ctx, this.descriptor.secondaryIndexes[0], [key1, key2, key3, key4, value1, value2, value3, value4, value10, value11, value12])).items;
         },
-        query: (ctx: Context, key1: boolean, key2: number, key3: number, key4: string, value1: boolean, value2: number, value3: number, opts?: RangeOptions<string>) => {
-            return this._query(ctx, this.descriptor.secondaryIndexes[0], [key1, key2, key3, key4, value1, value2, value3], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});
+        query: (ctx: Context, key1: boolean, key2: number, key3: number, key4: string, value1: boolean, value2: number, value3: number, value4: string, value10: boolean | null, value11: number | null, value12: number | null, opts?: RangeOptions<string | null>) => {
+            return this._query(ctx, this.descriptor.secondaryIndexes[0], [key1, key2, key3, key4, value1, value2, value3, value4, value10, value11, value12], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});
         },
     });
 
