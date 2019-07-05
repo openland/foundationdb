@@ -28,14 +28,10 @@ function getCacheKey(id: ReadonlyArray<TupleItem>) {
     return encoders.tuple.pack(id as any /* WTF, TS? */).toString('hex');
 }
 
-function encodeKey(key: TupleItem[]): string {
-    return encoders.tuple.pack(key).toString('hex');
-}
-
 const metadataCodec = codecs.struct({
-    _version: codecs.number,
-    createdAt: codecs.number,
-    updatedAt: codecs.number,
+    _version: codecs.default(codecs.number, 0),
+    createdAt: codecs.default(codecs.number, () => Date.now()),
+    updatedAt: codecs.default(codecs.number, () => Date.now()),
 });
 
 export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
