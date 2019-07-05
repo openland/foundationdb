@@ -347,33 +347,33 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
             builder.append(`readonly ${index.name} = Object.freeze({`);
             builder.addIndent();
             if (index.type.type === 'unique') {
-                builder.append(`find: async (ctx: Context, ${fields.join(', ')}) => {`);
+                builder.append(`find: async (${['ctx: Context', ...fields].join(', ')}) => {`);
                 builder.addIndent();
                 builder.append(`return this._findFromUniqueIndex(ctx, [${fieldNames.join(', ')}], this.descriptor.secondaryIndexes[${indexIndex}]);`);
                 builder.removeIndent();
                 builder.append(`},`);
             }
 
-            builder.append(`findAll: async (ctx: Context, ${tFields.join(', ')}) => {`);
+            builder.append(`findAll: async (${['ctx: Context', ...tFields].join(', ')}) => {`);
             builder.addIndent();
             builder.append(`return (await this._query(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}])).items;`);
             builder.removeIndent();
             builder.append(`},`);
 
-            builder.append(`query: (ctx: Context, ${tFields.join(', ')}, opts?: RangeOptions<${fieldTypes[fieldTypes.length - 1]}>) => {`);
+            builder.append(`query: (${['ctx: Context', ...tFields, `opts?: RangeOptions<${fieldTypes[fieldTypes.length - 1]}>`].join(', ')}) => {`);
             builder.addIndent();
             builder.append(`return this._query(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});`);
             builder.removeIndent();
             builder.append(`},`);
 
             if (index.type.type === 'range') {
-                builder.append(`stream: (${tFields.join(', ')}, opts?: StreamProps) => {`);
+                builder.append(`stream: (${[...tFields, 'opts?: StreamProps'].join(', ')}) => {`);
                 builder.addIndent();
                 builder.append(`return this._createStream(this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}], opts);`);
                 builder.removeIndent();
                 builder.append(`},`);
 
-                builder.append(`liveStream: (ctx: Context, ${tFields.join(', ')}, opts?: StreamProps) => {`);
+                builder.append(`liveStream: (${['ctx: Context', ...tFields, 'opts?: StreamProps'].join(', ')}) => {`);
                 builder.addIndent();
                 builder.append(`return this._createLiveStream(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}], opts);`);
                 builder.removeIndent();
