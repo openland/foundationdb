@@ -180,6 +180,7 @@ export interface AllFieldsShape {
     value11: number | null;
     value12: number | null;
     value13: string | null;
+    vaueSome: number;
 }
 
 export interface AllFieldsCreateShape {
@@ -196,6 +197,7 @@ export interface AllFieldsCreateShape {
     value11: number | null;
     value12: number | null;
     value13: string | null;
+    vaueSome: number;
 }
 
 export class AllFields extends Entity<AllFieldsShape> {
@@ -320,6 +322,15 @@ export class AllFields extends Entity<AllFieldsShape> {
             this.invalidate();
         }
     }
+    get vaueSome(): number { return this._rawValue.vaueSome; }
+    set vaueSome(value: number) {
+        let normalized = this.descriptor.codec.fields.vaueSome.normalize(value);
+        if (this._rawValue.vaueSome !== normalized) {
+            this._rawValue.vaueSome = normalized;
+            this._updatedValues.vaueSome = normalized;
+            this.invalidate();
+        }
+    }
 }
 
 export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
@@ -347,6 +358,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
         fields.push({ name: 'value11', type: { type: 'optional', inner: { type: 'integer' } }, secure: false });
         fields.push({ name: 'value12', type: { type: 'optional', inner: { type: 'float' } }, secure: false });
         fields.push({ name: 'value13', type: { type: 'optional', inner: { type: 'string' } }, secure: false });
+        fields.push({ name: 'vaueSome', type: { type: 'integer' }, secure: false });
         let codec = c.struct({
             key1: c.boolean,
             key2: c.integer,
@@ -365,6 +377,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
             value11: c.optional(c.integer),
             value12: c.optional(c.float),
             value13: c.optional(c.string),
+            vaueSome: c.integer,
         });
         let descriptor: EntityDescriptor<AllFieldsShape> = {
             name: 'AllFields',

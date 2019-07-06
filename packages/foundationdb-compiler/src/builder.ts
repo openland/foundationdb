@@ -4,12 +4,12 @@ const reservedFieldNames = [
     'do', 'if', 'in', 'for', 'let', 'new', 'try', 'var', 'case', 'else',
     'enum', 'eval', 'null', 'this', 'true', 'void', 'with', 'break', 'catch',
     'class', 'const', 'false', 'super', 'throw', 'while', 'yield', 'delete',
-    'export', 'import', 'public', 'return', 'static', 'switch', 'typeof',
-    'default', 'extends', 'finally', 'package', 'private', 'continue',
+    'export', 'import', 'return', 'static', 'switch', 'typeof',
+    'default', 'extends', 'finally', 'continue',
     'debugger', 'function', 'arguments', 'interface', 'protected',
     'implements', 'instanceof', 'NaN', 'Infinity', 'undefined', 'async',
 
-    'createdAt', 'updatedAt', 'deletedAt'
+    'createdAt', 'updatedAt', 'deletedAt', 'flush', 'invalidate'
 ];
 
 const fieldRegex = RegExp('/^[a-z][a-zA-Z0-9]*$/').compile();
@@ -22,13 +22,13 @@ const reservedEntityNames = [
 
 function checkValidEntityName(name: string) {
     if (name.length === 0) {
-        throw Error('Field name can\'t be empty');
+        throw Error('Entity name can\'t be empty');
     }
     if (reservedEntityNames.indexOf(name) >= 0) {
-        throw Error('Field name is invalid');
+        throw Error('Entity name ' + name + ' is reserved');
     }
     if (!entityRegex.test(name)) {
-        throw Error('Field name is invalid');
+        throw Error('Entity name ' + name + ' is invalid');
     }
 }
 
@@ -37,13 +37,13 @@ function checkValidFieldName(name: string) {
         throw Error('Field name can\'t be empty');
     }
     if (name.startsWith('_')) {
-        throw Error('Field can\'t start with underscore');
+        throw Error('Field name ' + name + ' can\'t start with underscore');
     }
     if (reservedFieldNames.indexOf(name) >= 0) {
-        throw Error('Field name is invalid');
+        throw Error('Entity name ' + name + ' is reserved');
     }
     if (!fieldRegex.test(name)) {
-        throw Error('Field name is invalid');
+        throw Error('Entity name ' + name + ' is invalid');
     }
 }
 
