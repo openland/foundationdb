@@ -42,6 +42,6 @@ export default declareSchema(() => {
         field('value12', optional(float()));
         field('value13', optional(string()));
 
-        uniqueIndex('uniqIndex', ['key1', 'key2', 'key3', 'key4', 'value1', 'value2', 'value3', 'value4', 'value10', 'value11', 'value12', 'value13']).withCondition((src) => src.key1 !== 'hello!');
+        uniqueIndex('uniqIndex', ['key1', 'key2', 'key3', 'key4', 'value1', 'value2', 'value3', 'value4', 'value10', 'value11', 'value12', 'value13', 'createdAt', 'updatedAt']).withCondition((src) => src.key1 !== 'hello!');
     });
 });
