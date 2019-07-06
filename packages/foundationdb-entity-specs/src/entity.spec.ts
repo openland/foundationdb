@@ -52,6 +52,11 @@ describe('Entity', () => {
         let all = await factory.findAll(testCtx);
         expect(all.length).toBe(1);
         expect(all[0].id).toBe('1');
+
+        let all2 = await factory.findAllKeys(testCtx);
+        expect(all2.length).toBe(1);
+        expect(all2[0].length).toBe(1);
+        expect(all2[0][0]).toBe('1');
     });
 
     it('should be able to create entity in parallel', async () => {

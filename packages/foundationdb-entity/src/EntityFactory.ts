@@ -187,6 +187,11 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         });
     }
 
+    async findAllKeys(ctx: Context) {
+        let ex = await this.descriptor.subspace.range(ctx, []);
+        return ex.map((v) => this._decodePrimaryKey(v.key));
+    }
+
     protected async _findById(ctx: Context, _id: PrimaryKeyType[]): Promise<T | null> {
 
         // Validate input
@@ -415,6 +420,37 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
                 res.push(new Float(id[i] as number));
             } else if (key.type === 'string') {
                 res.push(id[i]);
+            } else {
+                throw Error('Unknown primary key');
+            }
+        }
+        return res;
+    }
+
+    private _decodePrimaryKey(id: TupleItem[]) {
+        if (this.descriptor.primaryKeys.length !== id.length) {
+            throw Error('Invalid primary key');
+        }
+        let res: PrimaryKeyType[] = [];
+        for (let i = 0; i < id.length; i++) {
+            let key = this.descriptor.primaryKeys[i];
+            if (key.type === 'boolean') {
+                if (typeof id[i] !== 'boolean') {
+                    throw Error('Unexpected key: ' + id[i]);
+                }
+                res.push(id[i] as boolean);
+            } else if (key.type === 'integer') {
+                if (typeof id[i] !== 'number') {
+                    throw Error('Unexpected key: ' + id[i]);
+                }
+                res.push(id[i] as number);
+            } else if (key.type === 'float') {
+                if (id[i] instanceof Float) {
+                    throw Error('Unexpected key: ' + id[i]);
+                }
+                res.push((id[i] as Float).value);
+            } else if (key.type === 'string') {
+                res.push(id[i] as string);
             } else {
                 throw Error('Unknown primary key');
             }

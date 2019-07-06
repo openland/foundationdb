@@ -396,11 +396,13 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
             builder.removeIndent();
             builder.append(`},`);
 
-            builder.append(`query: (${['ctx: Context', ...tFields, `opts?: RangeOptions<${fieldTypes[fieldTypes.length - 1]}>`].join(', ')}) => {`);
-            builder.addIndent();
-            builder.append(`return this._query(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});`);
-            builder.removeIndent();
-            builder.append(`},`);
+            if (fieldTypes.length > 0) {
+                builder.append(`query: (${['ctx: Context', ...tFields, `opts?: RangeOptions<${fieldTypes[fieldTypes.length - 1]}>`].join(', ')}) => {`);
+                builder.addIndent();
+                builder.append(`return this._query(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});`);
+                builder.removeIndent();
+                builder.append(`},`);
+            }
 
             if (index.type.type === 'range') {
                 builder.append(`stream: (${[...tFields, 'opts?: StreamProps'].join(', ')}) => {`);
