@@ -17,8 +17,6 @@
         "@openland/foundationdb-bus": "^3.3.1",
         "@openland/foundationdb-utils": "^3.3.1",
         "@openland/log": "*",
-        "@types/uuid": "^3.4.3",
-        "handy-redis": "^1.5.5",
-        "uuid": "^3.2.1"
+        "handy-redis": "^1.5.5"
     }
 }

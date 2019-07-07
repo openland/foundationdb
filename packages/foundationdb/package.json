@@ -15,8 +15,6 @@
         "@openland/context": "*",
         "@openland/log": "*",
         "@openland/foundationdb-tuple": "^3.3.1",
-        "@types/uuid": "^3.4.3",
-        "foundationdb": "0.10.3",
-        "uuid": "^3.2.1"
+        "foundationdb": "0.10.3"
     }
 }

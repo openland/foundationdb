@@ -13,9 +13,6 @@
     "files": [],
     "references": [
         {
-            "path": "./packages/foundationdb-core"
-        },
-        {
             "path": "./packages/foundationdb"
         },
         {
