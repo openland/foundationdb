@@ -10,7 +10,7 @@ export function generateEntitiesHeader(schema: SchemaModel, builder: StringBuild
     }
 }
 
-function resolveType(type: SchemaType): string {
+function resolveType(type: SchemaType, create: boolean): string {
     if (type.type === 'string') {
         return 'string';
     } else if (type.type === 'boolean') {
@@ -24,22 +24,22 @@ function resolveType(type: SchemaType): string {
     } else if (type.type === 'enum') {
         return (type as EnumType).values.map((v) => `'${v}'`).join(' | ');
     } else if (type.type === 'array') {
-        return '(' + resolveType((type as ArrayType).inner) + ')[]';
+        return '(' + resolveType((type as ArrayType).inner, create) + ')[]';
     } else if (type.type === 'struct') {
         let fields = (type as StructType).fields;
-        let keys = Object.keys(fields).map((v) => v + ': ' + resolveType(fields[v]));
+        let keys = Object.keys(fields).map((v) => v + ': ' + resolveType(fields[v], create));
         return `{ ${keys.join(', ')} }`;
     } else if (type.type === 'union') {
         let fields = (type as UnionType).fields;
         let kinds: string[] = [];
         for (let k of Object.keys(fields)) {
             let fields2 = (fields[k] as StructType).fields;
-            let keys = Object.keys(fields2).map((v) => v + ': ' + resolveType(fields2[v]));
+            let keys = Object.keys(fields2).map((v) => v + ': ' + resolveType(fields2[v], create));
             kinds.push(`{ type: '${k}', ${keys.join(', ')} }`);
         }
         return kinds.join(' | ');
     } else if (type.type === 'optional') {
-        return resolveType((type as OptionalType).inner) + ' | null';
+        return resolveType((type as OptionalType).inner, create) + ' | null' + (create ? ' | undefined' : '');
     } else {
         throw Error('Unsupported type: ' + JSON.stringify(type));
     }
@@ -123,10 +123,10 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
             if (key.type.type !== 'string' && key.type.type !== 'integer' && key.type.type !== 'boolean' && key.type.type !== 'float') {
                 throw Error('Unsupported primary key type: ' + key.type.type);
             }
-            builder.append(`${key.name}: ${resolveType(key.type)};`);
+            builder.append(`${key.name}: ${resolveType(key.type, false)};`);
         }
         for (let field of entity.fields) {
-            builder.append(`${field.name}: ${resolveType(field.type)};`);
+            builder.append(`${field.name}: ${resolveType(field.type, false)};`);
         }
         builder.removeIndent();
         builder.append(`}`);
@@ -136,7 +136,11 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         builder.append(`export interface ${entityClass}CreateShape {`);
         builder.addIndent();
         for (let field of entity.fields) {
-            builder.append(`${field.name}: ${resolveType(field.type)};`);
+            if (field.type.type === 'optional') {
+                builder.append(`${field.name}?: ${resolveType(field.type, true)};`);
+            } else {
+                builder.append(`${field.name}: ${resolveType(field.type, true)};`);
+            }
         }
         builder.removeIndent();
         builder.append(`}`);
@@ -146,11 +150,11 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         builder.append(`export class ${entityClass} extends Entity<${entityClass}Shape> {`);
         builder.addIndent();
         for (let key of entity.keys) {
-            let type: string = resolveType(key.type);
+            let type: string = resolveType(key.type, false);
             builder.append(`get ${key.name}(): ${type} { return this._rawValue.${key.name}; }`);
         }
         for (let key of entity.fields) {
-            let type: string = resolveType(key.type);
+            let type: string = resolveType(key.type, false);
 
             // Getter
             builder.append(`get ${key.name}(): ${type} { return this._rawValue.${key.name}; }`);
@@ -452,7 +456,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
 
         // create
         builder.append();
-        builder.append(`create(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type)).join(', ')}, src: ${entityClass}CreateShape): Promise<${entityClass}> {`);
+        builder.append(`create(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ')}, src: ${entityClass}CreateShape): Promise<${entityClass}> {`);
         builder.addIndent();
         builder.append(`return this._create(ctx, [${entity.keys.map((v) => v.name).join(', ')}], this.descriptor.codec.normalize({ ${entity.keys.map((v) => v.name).join(', ')}, ...src }));`);
         builder.removeIndent();
@@ -460,7 +464,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
 
         // create UNSAFE
         builder.append();
-        builder.append(`create_UNSAFE(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type)).join(', ')}, src: ${entityClass}CreateShape): ${entityClass} {`);
+        builder.append(`create_UNSAFE(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ')}, src: ${entityClass}CreateShape): ${entityClass} {`);
         builder.addIndent();
         builder.append(`return this._create_UNSAFE(ctx, [${entity.keys.map((v) => v.name).join(', ')}], this.descriptor.codec.normalize({ ${entity.keys.map((v) => v.name).join(', ')}, ...src }));`);
         builder.removeIndent();
@@ -468,7 +472,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
 
         // findById
         builder.append();
-        builder.append(`findById(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type)).join(', ')}): Promise<${entityClass} | null> {`);
+        builder.append(`findById(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ')}): Promise<${entityClass} | null> {`);
         builder.addIndent();
         builder.append(`return this._findById(ctx, [${entity.keys.map((v) => v.name).join(', ')}]);`);
         builder.removeIndent();
@@ -476,7 +480,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
 
         // watch
         builder.append();
-        builder.append(`watch(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type)).join(', ')}): Watch {`);
+        builder.append(`watch(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ')}): Watch {`);
         builder.addIndent();
         builder.append(`return this._watch(ctx, [${entity.keys.map((v) => v.name).join(', ')}]);`);
         builder.removeIndent();

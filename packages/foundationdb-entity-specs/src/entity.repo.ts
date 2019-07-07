@@ -18,7 +18,7 @@ export interface SimpleEntityShape {
 export interface SimpleEntityCreateShape {
     value: string;
     value2: number;
-    value3: boolean | null;
+    value3?: boolean | null | undefined;
 }
 
 export class SimpleEntity extends Entity<SimpleEntityShape> {
@@ -198,15 +198,15 @@ export interface AllFieldsCreateShape {
     value3: number;
     value4: string;
     value5: 'value1' | 'value2';
-    value55: 'value1' | 'value2' | null;
+    value55?: 'value1' | 'value2' | null | undefined;
     value6: (string)[];
     value7: { name: string, type: number };
-    value8: { type: 'something', name: string } | { type: 'something_2', name: string } | null;
+    value8?: { type: 'something', name: string } | { type: 'something_2', name: string } | null | undefined;
     value9: any;
-    value10: boolean | null;
-    value11: number | null;
-    value12: number | null;
-    value13: string | null;
+    value10?: boolean | null | undefined;
+    value11?: number | null | undefined;
+    value12?: number | null | undefined;
+    value13?: string | null | undefined;
     vaueSome: number;
 }
 
