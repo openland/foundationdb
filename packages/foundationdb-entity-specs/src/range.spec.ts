@@ -144,11 +144,22 @@ describe('Range Index', () => {
         let res = await factory.ranges.query(testCtx, 1, { limit: 1 });
         expect(res.cursor).not.toBeNull();
         expect(res.cursor).not.toBeUndefined();
+        expect(res.haveMore).toBe(true);
         let s = factory.ranges.stream(1, { batchSize: 1 });
         s.seek(res.cursor!);
         let res2 = await s.next(testCtx);
         expect(res2.length).toBe(1);
         expect(res2[0].id).toBe(2);
+
+        res = await factory.ranges.query(testCtx, 2, { limit: 4 });
+        expect(res.cursor).not.toBeNull();
+        expect(res.cursor).not.toBeUndefined();
+        expect(res.haveMore).toBe(true);
+
+        res = await factory.ranges.query(testCtx, 2, { limit: 5 });
+        expect(res.cursor).not.toBeNull();
+        expect(res.cursor).not.toBeUndefined();
+        expect(res.haveMore).toBe(false);
     });
 
     it('should support conditional indexes', async () => {

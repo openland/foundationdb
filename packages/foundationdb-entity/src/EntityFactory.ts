@@ -147,7 +147,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             after?: (PrimaryKeyType | null)[] | undefined | null,
             afterCursor?: string | undefined | null
         }
-    ): Promise<{ items: T[], cursor?: string }> {
+    ): Promise<{ items: T[], cursor?: string, haveMore: boolean }> {
         // Resolve index key
         let id = resolveIndexKey(_id, descriptor.type.fields, true /* Partial key */);
         let after: TupleItem[] | undefined = undefined;
@@ -159,7 +159,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
 
         return await inTxLeaky(parent, async (ctx) => {
             let res = await descriptor.subspace.subspace(id).range(ctx, [], {
-                limit: opts && opts.limit ? opts.limit : undefined,
+                limit: opts && opts.limit ? (opts.limit + 1) : undefined,
                 reverse: opts && opts.reverse ? opts.reverse : undefined,
                 after
             });
@@ -172,11 +172,25 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
                 return e;
             }));
 
-            let cursor: string | undefined;
-            if (res.length > 0) {
-                cursor = tupleToCursor(res[res.length - 1].key);
+            if (opts && opts.limit) {
+                let haveMore = items.length > opts.limit;
+                let cursor: string | undefined;
+                if (items.length > opts.limit) {
+                    items.splice(items.length - 1, 1);
+                    cursor = tupleToCursor(res[opts.limit - 1].key);
+                } else {
+                    if (res.length > 0) {
+                        cursor = tupleToCursor(res[res.length - 1].key);
+                    }
+                }
+                return { items: items, cursor, haveMore: haveMore };
             }
-            return { items, cursor };
+
+            let cursor2: string | undefined;
+            if (res.length > 0) {
+                cursor2 = tupleToCursor(res[res.length - 1].key);
+            }
+            return { items, cursor: cursor2, haveMore: false };
         });
     }
 
