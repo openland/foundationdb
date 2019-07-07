@@ -2,9 +2,9 @@
 // @ts-ignore
 import { Context } from '@openland/context';
 // @ts-ignore
-import { Subspace, Watch, RangeOptions } from '@openland/foundationdb';
+import { Subspace, Watch } from '@openland/foundationdb';
 // @ts-ignore
-import { EntityStorage, BaseStore, codecs as c } from '@openland/foundationdb-entity';
+import { EntityStorage, BaseStore, RangeQueryOptions, codecs as c } from '@openland/foundationdb-entity';
 // @ts-ignore
 import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata, PrimaryKeyDescriptor, FieldDescriptor, StreamProps } from '@openland/foundationdb-entity';
 
@@ -76,8 +76,8 @@ export class UniqueIndexFactory extends EntityFactory<UniqueIndexShape, UniqueIn
         findAll: async (ctx: Context, unique1: string) => {
             return (await this._query(ctx, this.descriptor.secondaryIndexes[0], [unique1])).items;
         },
-        query: (ctx: Context, unique1: string, opts?: RangeOptions<string>) => {
-            return this._query(ctx, this.descriptor.secondaryIndexes[0], [unique1], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});
+        query: (ctx: Context, unique1: string, opts?: RangeQueryOptions<string>) => {
+            return this._query(ctx, this.descriptor.secondaryIndexes[0], [unique1], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined, afterCursor: opts && opts.afterCursor ? opts.afterCursor : undefined });
         },
     });
 
@@ -170,8 +170,8 @@ export class UniqueConditionalIndexFactory extends EntityFactory<UniqueCondition
         findAll: async (ctx: Context, unique1: string) => {
             return (await this._query(ctx, this.descriptor.secondaryIndexes[0], [unique1])).items;
         },
-        query: (ctx: Context, unique1: string, opts?: RangeOptions<string>) => {
-            return this._query(ctx, this.descriptor.secondaryIndexes[0], [unique1], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});
+        query: (ctx: Context, unique1: string, opts?: RangeQueryOptions<string>) => {
+            return this._query(ctx, this.descriptor.secondaryIndexes[0], [unique1], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined, afterCursor: opts && opts.afterCursor ? opts.afterCursor : undefined });
         },
     });
 

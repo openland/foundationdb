@@ -8,9 +8,9 @@ export function generateHeader(schema: SchemaModel, builder: StringBuilder) {
     builder.append(`// @ts-ignore`);
     builder.append(`import { Context } from '@openland/context';`);
     builder.append(`// @ts-ignore`);
-    builder.append(`import { Subspace, Watch, RangeOptions } from '@openland/foundationdb';`);
+    builder.append(`import { Subspace, Watch } from '@openland/foundationdb';`);
     builder.append(`// @ts-ignore`);
-    builder.append(`import { EntityStorage, BaseStore, codecs as c } from '@openland/foundationdb-entity';`);
+    builder.append(`import { EntityStorage, BaseStore, RangeQueryOptions, codecs as c } from '@openland/foundationdb-entity';`);
     generateAtomicsHeader(schema, builder);
     generateEntitiesHeader(schema, builder);
 }

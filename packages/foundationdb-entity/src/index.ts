@@ -13,3 +13,4 @@ export { ShapeWithMetadata } from './ShapeWithMetadata';
 export { PrimaryKeyType } from './PrimaryKeyType';
 export { Stream } from './Stream';
 export { LiveStreamItem } from './LiveStream';
+export { RangeQueryOptions } from './RangeQueryOptions';

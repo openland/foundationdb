@@ -15,7 +15,7 @@ import { PrimaryKeyType } from './PrimaryKeyType';
 import { PrimaryIndex } from './indexes/PrimaryIndex';
 import { IndexMaintainer } from './indexes/IndexMaintainer';
 import { IndexMutexManager } from './indexes/IndexMutexManager';
-import { resolveIndexKey, tupleToCursor } from './indexes/utils';
+import { resolveIndexKey, tupleToCursor, cursorToTuple } from './indexes/utils';
 import { RangeIndex } from './indexes/RangeIndex';
 import { IndexStream } from './indexes/IndexStream';
 
@@ -141,19 +141,26 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         parent: Context,
         descriptor: SecondaryIndexDescriptor,
         _id: (PrimaryKeyType | null)[],
-        opts?: { limit?: number, reverse?: boolean, after?: (PrimaryKeyType | null)[] }
+        opts?: {
+            limit?: number | undefined | null,
+            reverse?: boolean | undefined | null,
+            after?: (PrimaryKeyType | null)[] | undefined | null,
+            afterCursor?: string | undefined | null
+        }
     ): Promise<{ items: T[], cursor?: string }> {
         // Resolve index key
         let id = resolveIndexKey(_id, descriptor.type.fields, true /* Partial key */);
         let after: TupleItem[] | undefined = undefined;
         if (opts && opts.after) {
             after = resolveIndexKey(opts.after, descriptor.type.fields, true, _id.length);
+        } else if (opts && opts.afterCursor) {
+            after = cursorToTuple(opts.afterCursor);
         }
 
         return await inTxLeaky(parent, async (ctx) => {
             let res = await descriptor.subspace.subspace(id).range(ctx, [], {
-                limit: opts && opts.limit,
-                reverse: opts && opts.reverse,
+                limit: opts && opts.limit ? opts.limit : undefined,
+                reverse: opts && opts.reverse ? opts.reverse : undefined,
                 after
             });
             let items = await Promise.all(res.map(async (v) => {

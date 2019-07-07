@@ -422,9 +422,9 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
             builder.append(`},`);
 
             if (fieldTypes.length > 0) {
-                builder.append(`query: (${['ctx: Context', ...tFields, `opts?: RangeOptions<${fieldTypes[fieldTypes.length - 1]}>`].join(', ')}) => {`);
+                builder.append(`query: (${['ctx: Context', ...tFields, `opts?: RangeQueryOptions<${fieldTypes[fieldTypes.length - 1]}>`].join(', ')}) => {`);
                 builder.addIndent();
-                builder.append(`return this._query(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined});`);
+                builder.append(`return this._query(ctx, this.descriptor.secondaryIndexes[${indexIndex}], [${tFieldNames.join(', ')}], { limit: opts && opts.limit, reverse: opts && opts.reverse, after: opts && opts.after ? [opts.after] : undefined, afterCursor: opts && opts.afterCursor ? opts.afterCursor : undefined });`);
                 builder.removeIndent();
                 builder.append(`},`);
             }
