@@ -23,6 +23,7 @@ export default declareSchema(() => {
         field('value3', float());
         field('value4', string());
         field('value5', enumString('value1', 'value2'));
+        field('value55', optional(enumString('value1', 'value2')));
         field('value6', array(string()));
         field('value7', struct({
             name: string(),
@@ -43,6 +44,6 @@ export default declareSchema(() => {
         field('value13', optional(string()));
         field('vaueSome', integer());
 
-        uniqueIndex('uniqIndex', ['key1', 'key2', 'key3', 'key4', 'value1', 'value2', 'value3', 'value4', 'value10', 'value11', 'value12', 'value13', 'createdAt', 'updatedAt']).withCondition((src) => src.key1 !== 'hello!');
+        uniqueIndex('uniqIndex', ['key1', 'key2', 'key3', 'key4', 'value1', 'value2', 'value3', 'value4', 'value10', 'value11', 'value12', 'value13', 'createdAt', 'updatedAt', 'value5', 'value55']).withCondition((src) => src.key1 !== 'hello!');
     });
 });

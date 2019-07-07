@@ -222,6 +222,8 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                                 tp = 'opt_float';
                             } else if (inner.type === 'boolean') {
                                 tp = 'opt_boolean';
+                            } else if (inner.type === 'enum') {
+                                tp = 'opt_string';
                             } else {
                                 throw Error('Unsupported field type for index: ' + inner.type);
                             }
@@ -234,6 +236,8 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                                 tp = 'float';
                             } else if (stp.type === 'boolean') {
                                 tp = 'boolean';
+                            } else if (stp.type === 'enum') {
+                                tp = 'string';
                             } else {
                                 throw Error('Unsupported field type for index: ' + stp.type);
                             }
@@ -360,6 +364,10 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                         } else if (inner.type === 'boolean') {
                             fields.push(`${f}: boolean | null`);
                             fieldTypes.push('boolean | null');
+                        } else if (inner.type === 'enum') {
+                            let v = (inner as EnumType).values.map((v2) => `'${v2}'`).join(' | ');
+                            fields.push(`${f}: ${v} | null`);
+                            fieldTypes.push(v + ' | null');
                         } else {
                             throw Error('Unsupported field type for index: ' + inner.type);
                         }
@@ -376,6 +384,10 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
                         } else if (stp.type === 'boolean') {
                             fields.push(`${f}: boolean`);
                             fieldTypes.push('boolean');
+                        } else if (stp.type === 'enum') {
+                            let v = (stp as EnumType).values.map((v2) => `'${v2}'`).join(' | ');
+                            fields.push(`${f}: ${v}`);
+                            fieldTypes.push(v);
                         } else {
                             throw Error('Unsupported index key type: ' + stp.type);
                         }
