@@ -5,6 +5,11 @@ import { BusSubcription } from '@openland/foundationdb-bus';
 import { Stream } from './Stream';
 import { EntityDescriptor } from './EntityDescriptor';
 
+export interface LiveStreamItem<T> {
+    items: T[];
+    cursor: string | null;
+}
+
 export class LiveStream<T> {
     private readonly baseStream: Stream<T>;
     private ended = false;
@@ -24,7 +29,7 @@ export class LiveStream<T> {
         });
     }
 
-    generator(parent: Context): AsyncIterable<{ items: T[], cursor: string | null }> {
+    generator(parent: Context): AsyncIterable<LiveStreamItem<T>> {
         let t = this;
         let ctx = withoutTransaction(parent); // Clear transaction information since live stream manage transactions by itself
         return {

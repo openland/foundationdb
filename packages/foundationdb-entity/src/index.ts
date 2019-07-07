@@ -11,3 +11,5 @@ export { EntityDescriptor, SecondaryIndexDescriptor, PrimaryKeyDescriptor, Field
 export { codecs, Codec, typeSymbol } from './codecs';
 export { ShapeWithMetadata } from './ShapeWithMetadata';
 export { PrimaryKeyType } from './PrimaryKeyType';
+export { Stream } from './Stream';
+export { LiveStreamItem } from './LiveStream';
