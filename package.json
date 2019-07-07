@@ -33,7 +33,7 @@
     "@types/change-case": "^2.3.1",
     "@types/node": "^12.0.7",
     "change-case": "^3.1.0",
-    "foundationdb": "0.10.2",
+    "foundationdb": "0.10.3",
     "io-ts": "^1.10.2",
     "patch-package": "^6.1.2",
     "ts-node": "^8.3.0",

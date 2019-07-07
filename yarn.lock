@@ -2772,10 +2772,10 @@ form-data@~2.3.2:
     combined-stream "^1.0.6"
     mime-types "^2.1.12"
 
-foundationdb@0.10.2:
-  version "0.10.2"
-  resolved "https://registry.yarnpkg.com/foundationdb/-/foundationdb-0.10.2.tgz#cdce283f02b2d91fb50de10a44614b1243c28344"
-  integrity sha512-4VUjUmjD2fEhGTBNhREriTtTbkBMx1Q8lyQb7aPoHlTn6tgp1U7lI93hVqjyOa7tQ00WjVbDN83RYRFEaa5OgA==
+foundationdb@0.10.3:
+  version "0.10.3"
+  resolved "https://registry.yarnpkg.com/foundationdb/-/foundationdb-0.10.3.tgz#719301fb7054b0b563f22d1325e004fce4c08e80"
+  integrity sha512-l7RzwxZKvG4EWzBEpUdC7hndeXrmmHGiJkOpU1xcCHaTue1VUaeiJOHtDnfHaJe3kJ/0S5Kiid0Cd3vbzd2RxA==
   dependencies:
     nan "^2.13.2"
     node-gyp-build "^4.1.0"
