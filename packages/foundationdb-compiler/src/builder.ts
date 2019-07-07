@@ -1,12 +1,11 @@
 import { SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType, StructType, UnionType, OptionalType, EntityIndexModel, JsonType } from './model';
 
 const reservedFieldNames = [
-    'do', 'if', 'in', 'for', 'let', 'new', 'try', 'var', 'case', 'else',
+    'do', 'if', 'in', 'for', 'let', 'new', 'try', 'var', 'else',
     'enum', 'eval', 'null', 'this', 'true', 'void', 'with', 'break', 'catch',
     'class', 'const', 'false', 'super', 'throw', 'while', 'yield', 'delete',
-    'export', 'import', 'return', 'static', 'switch', 'typeof',
-    'default', 'extends', 'finally', 'continue',
-    'debugger', 'function', 'arguments', 'interface', 'protected',
+    'export', 'import', 'return', 'static', 'switch', 'typeof', 'extends', 'finally',
+    'continue', 'debugger', 'function', 'interface', 'protected',
     'implements', 'instanceof', 'NaN', 'Infinity', 'undefined', 'async',
 
     'createdAt', 'updatedAt', 'deletedAt', 'flush', 'invalidate'
