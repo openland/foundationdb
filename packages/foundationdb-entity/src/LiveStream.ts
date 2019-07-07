@@ -29,38 +29,31 @@ export class LiveStream<T> {
         });
     }
 
-    generator(parent: Context): AsyncIterable<LiveStreamItem<T>> {
+    async * generator(parent: Context): AsyncIterable<LiveStreamItem<T>> {
         let t = this;
         let ctx = withoutTransaction(parent); // Clear transaction information since live stream manage transactions by itself
-        return {
-            [Symbol.asyncIterator]() {
-                return {
-                    ...(async function* func() {
-                        if (!t.baseStream.cursor) {
-                            let tail = await t.baseStream.tail(ctx);
-                            if (tail) {
-                                t.baseStream.seek(tail);
-                            }
-                        }
-                        while (!t.ended) {
-                            let res = await t.baseStream.next(ctx);
-                            if (res.length > 0) {
-                                yield { items: res, cursor: t.baseStream.cursor };
-                            } else {
-                                let w = delayBreakable(10000 + Math.random() * 15000);
-                                t.awaiter = w.resolver;
-                                await w.promise;
-                                t.awaiter = undefined;
-                            }
-                        }
-                    })(),
-                    return: async () => {
-                        t.handleEnded();
-                        return { done: true, value: { items: [], cursor: t.baseStream.cursor } };
-                    }
-                };
+
+        try {
+            if (!t.baseStream.cursor) {
+                let tail = await t.baseStream.tail(ctx);
+                if (tail) {
+                    t.baseStream.seek(tail);
+                }
             }
-        };
+            while (!t.ended) {
+                let res = await t.baseStream.next(ctx);
+                if (res.length > 0) {
+                    yield { items: res, cursor: t.baseStream.cursor };
+                } else {
+                    let w = delayBreakable(10000 + Math.random() * 15000);
+                    t.awaiter = w.resolver;
+                    await w.promise;
+                    t.awaiter = undefined;
+                }
+            }
+        } finally {
+            t.handleEnded();
+        }
     }
 
     private handleEnded() {
