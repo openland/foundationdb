@@ -85,6 +85,10 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
         return this._create(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
+    create_UNSAFE(ctx: Context, id: string, src: SimpleEntityCreateShape): Promise<SimpleEntity> {
+        return this._create_UNSAFE(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
+    }
+
     findById(ctx: Context, id: string): Promise<SimpleEntity | null> {
         return this._findById(ctx, [id]);
     }
@@ -147,6 +151,10 @@ export class SimpleEntity2Factory extends EntityFactory<SimpleEntity2Shape, Simp
 
     create(ctx: Context, id: number, src: SimpleEntity2CreateShape): Promise<SimpleEntity2> {
         return this._create(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
+    }
+
+    create_UNSAFE(ctx: Context, id: number, src: SimpleEntity2CreateShape): Promise<SimpleEntity2> {
+        return this._create_UNSAFE(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
     findById(ctx: Context, id: number): Promise<SimpleEntity2 | null> {
@@ -418,6 +426,10 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
 
     create(ctx: Context, key1: boolean, key2: number, key3: number, key4: string, src: AllFieldsCreateShape): Promise<AllFields> {
         return this._create(ctx, [key1, key2, key3, key4], this.descriptor.codec.normalize({ key1, key2, key3, key4, ...src }));
+    }
+
+    create_UNSAFE(ctx: Context, key1: boolean, key2: number, key3: number, key4: string, src: AllFieldsCreateShape): Promise<AllFields> {
+        return this._create_UNSAFE(ctx, [key1, key2, key3, key4], this.descriptor.codec.normalize({ key1, key2, key3, key4, ...src }));
     }
 
     findById(ctx: Context, key1: boolean, key2: number, key3: number, key4: string): Promise<AllFields | null> {

@@ -229,6 +229,38 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         });
     }
 
+    protected _create_UNSAFE(ctx: Context, _id: PrimaryKeyType[], value: SHAPE): T {
+        let id = this._resolvePrimaryKey(_id);
+        let now = Date.now();
+        let metadata: EntityMetadata = {
+            versionCode: 0,
+            createdAt: now,
+            updatedAt: now
+        };
+        let encoded = this._encode(ctx, value, metadata);
+
+        // Check cache
+        let k = getCacheKey(id);
+        if (this._entityCache.get(ctx, k)) {
+            throw Error('Entity already exists');
+        }
+
+        // Create indexes
+        for (let i of this._indexMaintainers) {
+            i.onCreate(ctx, id, encoded);
+        }
+
+        //
+        // Notify about created entity
+        //
+        this.descriptor.storage.eventBus.publish(ctx, 'fdb-entity-created-' + this.descriptor.storageKey, { entity: this.descriptor.storageKey });
+
+        // Create Instance
+        let res = this._createEntityInstance(ctx, { ...value, createdAt: metadata.createdAt, updatedAt: metadata.updatedAt, _version: metadata.versionCode });
+        this._entityCache.set(ctx, k, res);
+        return res;
+    }
+
     protected async _create(ctx: Context, _id: PrimaryKeyType[], value: SHAPE): Promise<T> {
 
         //

@@ -458,6 +458,14 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         builder.removeIndent();
         builder.append(`}`);
 
+        // create UNSAFE
+        builder.append();
+        builder.append(`create_UNSAFE(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type)).join(', ')}, src: ${entityClass}CreateShape): Promise<${entityClass}> {`);
+        builder.addIndent();
+        builder.append(`return this._create_UNSAFE(ctx, [${entity.keys.map((v) => v.name).join(', ')}], this.descriptor.codec.normalize({ ${entity.keys.map((v) => v.name).join(', ')}, ...src }));`);
+        builder.removeIndent();
+        builder.append(`}`);
+
         // findById
         builder.append();
         builder.append(`findById(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type)).join(', ')}): Promise<${entityClass} | null> {`);
