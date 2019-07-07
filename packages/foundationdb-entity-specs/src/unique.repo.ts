@@ -85,7 +85,7 @@ export class UniqueIndexFactory extends EntityFactory<UniqueIndexShape, UniqueIn
         return this._create(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
-    create_UNSAFE(ctx: Context, id: number, src: UniqueIndexCreateShape): Promise<UniqueIndex> {
+    create_UNSAFE(ctx: Context, id: number, src: UniqueIndexCreateShape): UniqueIndex {
         return this._create_UNSAFE(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
@@ -179,7 +179,7 @@ export class UniqueConditionalIndexFactory extends EntityFactory<UniqueCondition
         return this._create(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
-    create_UNSAFE(ctx: Context, id: number, src: UniqueConditionalIndexCreateShape): Promise<UniqueConditionalIndex> {
+    create_UNSAFE(ctx: Context, id: number, src: UniqueConditionalIndexCreateShape): UniqueConditionalIndex {
         return this._create_UNSAFE(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 

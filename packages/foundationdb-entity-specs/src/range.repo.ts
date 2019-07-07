@@ -88,7 +88,7 @@ export class RangeIndexFactory extends EntityFactory<RangeIndexShape, RangeIndex
         return this._create(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
-    create_UNSAFE(ctx: Context, id: number, src: RangeIndexCreateShape): Promise<RangeIndex> {
+    create_UNSAFE(ctx: Context, id: number, src: RangeIndexCreateShape): RangeIndex {
         return this._create_UNSAFE(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
@@ -185,7 +185,7 @@ export class RangeIndexConditionalFactory extends EntityFactory<RangeIndexCondit
         return this._create(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
-    create_UNSAFE(ctx: Context, id: number, src: RangeIndexConditionalCreateShape): Promise<RangeIndexConditional> {
+    create_UNSAFE(ctx: Context, id: number, src: RangeIndexConditionalCreateShape): RangeIndexConditional {
         return this._create_UNSAFE(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 

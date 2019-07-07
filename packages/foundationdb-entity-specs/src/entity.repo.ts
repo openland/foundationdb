@@ -85,7 +85,7 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
         return this._create(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
-    create_UNSAFE(ctx: Context, id: string, src: SimpleEntityCreateShape): Promise<SimpleEntity> {
+    create_UNSAFE(ctx: Context, id: string, src: SimpleEntityCreateShape): SimpleEntity {
         return this._create_UNSAFE(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
@@ -153,7 +153,7 @@ export class SimpleEntity2Factory extends EntityFactory<SimpleEntity2Shape, Simp
         return this._create(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
-    create_UNSAFE(ctx: Context, id: number, src: SimpleEntity2CreateShape): Promise<SimpleEntity2> {
+    create_UNSAFE(ctx: Context, id: number, src: SimpleEntity2CreateShape): SimpleEntity2 {
         return this._create_UNSAFE(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
@@ -428,7 +428,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
         return this._create(ctx, [key1, key2, key3, key4], this.descriptor.codec.normalize({ key1, key2, key3, key4, ...src }));
     }
 
-    create_UNSAFE(ctx: Context, key1: boolean, key2: number, key3: number, key4: string, src: AllFieldsCreateShape): Promise<AllFields> {
+    create_UNSAFE(ctx: Context, key1: boolean, key2: number, key3: number, key4: string, src: AllFieldsCreateShape): AllFields {
         return this._create_UNSAFE(ctx, [key1, key2, key3, key4], this.descriptor.codec.normalize({ key1, key2, key3, key4, ...src }));
     }
 
