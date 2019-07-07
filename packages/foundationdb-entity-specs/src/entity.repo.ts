@@ -449,16 +449,19 @@ export interface Store extends BaseStore {
     readonly SimpleEntity: SimpleEntityFactory;
     readonly SimpleEntity2: SimpleEntity2Factory;
     readonly AllFields: AllFieldsFactory;
+    readonly directoryDirectory: Subspace;
 }
 
 export async function openStore(storage: EntityStorage): Promise<Store> {
     let SimpleEntityPromise = SimpleEntityFactory.open(storage);
     let SimpleEntity2Promise = SimpleEntity2Factory.open(storage);
     let AllFieldsPromise = AllFieldsFactory.open(storage);
+    let directoryDirectoryPromise = storage.resolveCustomDirectory('directory');
     return {
         storage,
         SimpleEntity: await SimpleEntityPromise,
         SimpleEntity2: await SimpleEntity2Promise,
         AllFields: await AllFieldsPromise,
+        directoryDirectory: await directoryDirectoryPromise,
     };
 }

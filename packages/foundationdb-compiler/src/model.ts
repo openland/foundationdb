@@ -81,11 +81,20 @@ export class Field {
     }
 }
 
+export class DirectoryModel {
+    readonly name: string;
+
+    constructor(name: string) {
+        this.name = name;
+    }
+}
+
 export class SchemaModel {
     readonly _schema = true;
     readonly usedNames = new Set<string>();
     readonly atomics: AtomicModel[] = [];
     readonly entities: EntityModel[] = [];
+    readonly directories: DirectoryModel[] = [];
 }
 
 export class AtomicModel {

@@ -1,4 +1,4 @@
-import { SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType, StructType, UnionType, OptionalType, EntityIndexModel, JsonType } from './model';
+import { SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType, StructType, UnionType, OptionalType, EntityIndexModel, JsonType, DirectoryModel } from './model';
 
 const reservedFieldNames = [
     'do', 'if', 'in', 'for', 'let', 'new', 'try', 'var', 'else',
@@ -196,4 +196,16 @@ export function rangeIndex(name: string, fields: string[]) {
     let res = new EntityIndexModel(name, { type: 'range', fields: fields });
     currentEntity!.indexes.push(res);
     return res;
+}
+
+export function customDirectory(name: string) {
+    checkValidEntityName(name);
+    if (currentAtomic || currentEntity) {
+        throw Error('You can\'t nest declarations');
+    }
+    if (currentSchema!.usedNames.has(name)) {
+        throw Error('Duplicate entity with name ' + name);
+    }
+    currentSchema!.usedNames.add(name);
+    currentSchema!.directories.push(new DirectoryModel(name));
 }

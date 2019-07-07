@@ -14,6 +14,10 @@ export class EntityStorage {
         Object.freeze(this);
     }
 
+    async resolveCustomDirectory(name: string) {
+        return await inTx(createNamedContext('entity'), async (ctx) => await this.db.directories.createOrOpen(ctx, ['com.openland.layers', 'layers', this.storeId, 'custom', name]));
+    }
+
     async resolveAtomicDirectory(name: string) {
         return await inTx(createNamedContext('entity'), async (ctx) => await this.db.directories.createOrOpen(ctx, ['com.openland.layers', 'layers', this.storeId, 'atomic', name]));
     }
