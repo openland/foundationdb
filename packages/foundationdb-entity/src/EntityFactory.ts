@@ -97,8 +97,16 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             // Resolve primary key
             let pk = this._resolvePrimaryKeyFromObject(ex);
 
-            // Query primary id
-            return this._findById(ctx, pk);
+            // Fetch object value
+            let k = getCacheKey(pk);
+            let cached = this._entityCache.get(ctx, k);
+            if (cached) {
+                return cached;
+            } else {
+                let res = this._createEntityInstance(ctx, this._decode(ctx, ex));
+                this._entityCache.set(ctx, k, res);
+                return res;
+            }
         });
     }
 
