@@ -67,9 +67,29 @@ describe('Range Index', () => {
         expect(next[0].id).toBe(1);
 
         next = await stream.next(testCtx);
+        let after = stream.cursor;
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(1);
         expect(next[0].id).toBe(2);
+
+        next = await stream.next(testCtx);
+        expect(stream.cursor).toMatchSnapshot();
+        expect(next.length).toBe(1);
+        expect(next[0].id).toBe(3);
+
+        next = await stream.next(testCtx);
+        expect(stream.cursor).toMatchSnapshot();
+        expect(next.length).toBe(1);
+        expect(next[0].id).toBe(4);
+
+        next = await stream.next(testCtx);
+        expect(stream.cursor).toMatchSnapshot();
+        expect(next.length).toBe(0);
+
+        //
+        // After
+        //
+        stream = factory.ranges.stream(1, { batchSize: 1, after });
 
         next = await stream.next(testCtx);
         expect(stream.cursor).toMatchSnapshot();
@@ -100,9 +120,29 @@ describe('Range Index', () => {
         expect(next[0].id).toBe(4);
 
         next = await stream.next(testCtx);
+        after = stream.cursor;
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(1);
         expect(next[0].id).toBe(3);
+
+        next = await stream.next(testCtx);
+        expect(stream.cursor).toMatchSnapshot();
+        expect(next.length).toBe(1);
+        expect(next[0].id).toBe(2);
+
+        next = await stream.next(testCtx);
+        expect(stream.cursor).toMatchSnapshot();
+        expect(next.length).toBe(1);
+        expect(next[0].id).toBe(1);
+
+        next = await stream.next(testCtx);
+        expect(stream.cursor).toMatchSnapshot();
+        expect(next.length).toBe(0);
+
+        //
+        // Reverse after
+        //
+        stream = factory.ranges.stream(1, { batchSize: 1, reverse: true, after });
 
         next = await stream.next(testCtx);
         expect(stream.cursor).toMatchSnapshot();
