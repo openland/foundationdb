@@ -122,7 +122,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         let id = resolveIndexKey(_id, descriptor.type.fields, true /* Partial key */);
         let batchSize = opts && opts.batchSize ? opts.batchSize : 5000;
         let reverse = opts && opts.reverse ? opts.reverse : false;
-        return new IndexStream(descriptor, id, batchSize, reverse, (ctx, src) => {
+        let stream = new IndexStream(descriptor, id, batchSize, reverse, (ctx, src) => {
             let pk = this._resolvePrimaryKeyFromObject(src);
             let k = getCacheKey(pk);
             let cached = this._entityCache.get(ctx, k);
@@ -134,6 +134,10 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
                 return res;
             }
         });
+        if (opts && opts.after) {
+            stream.seek(opts.after);
+        }
+        return stream;
     }
 
     protected _createLiveStream(
