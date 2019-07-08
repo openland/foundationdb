@@ -138,7 +138,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     }
 
     protected async _query(
-        parent: Context,
+        ctx: Context,
         descriptor: SecondaryIndexDescriptor,
         _id: (PrimaryKeyType | null)[],
         opts?: {
@@ -157,41 +157,43 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             after = cursorToTuple(opts.afterCursor);
         }
 
-        return await inTxLeaky(parent, async (ctx) => {
-            let res = await descriptor.subspace.subspace(id).range(ctx, [], {
-                limit: opts && opts.limit ? (opts.limit + 1) : undefined,
-                reverse: opts && opts.reverse ? opts.reverse : undefined,
-                after
-            });
-            let items = await Promise.all(res.map(async (v) => {
-                let pk = this._resolvePrimaryKeyFromObject(v.value);
-                let e = await this._findById(ctx, pk);
-                if (!e) {
-                    throw Error('Broken index!');
-                }
-                return e;
-            }));
-
-            if (opts && opts.limit) {
-                let haveMore = items.length > opts.limit;
-                let cursor: string | undefined;
-                if (items.length > opts.limit) {
-                    items.splice(items.length - 1, 1);
-                    cursor = tupleToCursor(res[opts.limit - 1].key);
-                } else {
-                    if (res.length > 0) {
-                        cursor = tupleToCursor(res[res.length - 1].key);
-                    }
-                }
-                return { items: items, cursor, haveMore: haveMore };
-            }
-
-            let cursor2: string | undefined;
-            if (res.length > 0) {
-                cursor2 = tupleToCursor(res[res.length - 1].key);
-            }
-            return { items, cursor: cursor2, haveMore: false };
+        let res = await descriptor.subspace.subspace(id).range(ctx, [], {
+            limit: opts && opts.limit ? (opts.limit + 1) : undefined,
+            reverse: opts && opts.reverse ? opts.reverse : undefined,
+            after
         });
+        let items = await Promise.all(res.map(async (v) => {
+            let pk = this._resolvePrimaryKeyFromObject(v.value);
+            let k = getCacheKey(pk);
+            let cached = this._entityCache.get(ctx, k);
+            if (cached) {
+                return cached;
+            } else {
+                let res2 = this._createEntityInstance(ctx, this._decode(ctx, v.value));
+                this._entityCache.set(ctx, k, res2);
+                return res2;
+            }
+        }));
+
+        if (opts && opts.limit) {
+            let haveMore = items.length > opts.limit;
+            let cursor: string | undefined;
+            if (items.length > opts.limit) {
+                items.splice(items.length - 1, 1);
+                cursor = tupleToCursor(res[opts.limit - 1].key);
+            } else {
+                if (res.length > 0) {
+                    cursor = tupleToCursor(res[res.length - 1].key);
+                }
+            }
+            return { items: items, cursor, haveMore: haveMore };
+        }
+
+        let cursor2: string | undefined;
+        if (res.length > 0) {
+            cursor2 = tupleToCursor(res[res.length - 1].key);
+        }
+        return { items, cursor: cursor2, haveMore: false };
     }
 
     async findAll(ctx: Context) {
