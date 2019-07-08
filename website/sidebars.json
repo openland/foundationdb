@@ -5,6 +5,9 @@
       "install",
       "sample-hello"
     ],
+    "Entity Layer": [
+      "entity-overview"
+    ],
     "Layers": [
       "layer-singleton",
       "layer-migrations",
