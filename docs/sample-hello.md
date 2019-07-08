@@ -11,7 +11,7 @@ import { createNamedContext } from '@openland/context';
 import { Database, inTx } from '@openland/foundationdb';
 
 // Open Database
-let db = Database.open();
+let db = await Database.open();
 let context = createNamedContext('main');
 
 async function main() {

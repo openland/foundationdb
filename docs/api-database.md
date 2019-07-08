@@ -8,15 +8,15 @@ To start working with client you need to create a Database object. Static method
 
 ```typescript
 import { Database } from '@openland/foundationdb';
-let db = Database.open();
+let db = await Database.open();
 ```
 
 ### Closing Database
 
-Closing database can be possible by simply calling synchronous method `Database.close()`:
+Closing database can be possible by simply calling asynchronous method `Database.close()`:
 
 ```typescript
-db.close();
+await db.close();
 ```
 
 ### Database for tests
