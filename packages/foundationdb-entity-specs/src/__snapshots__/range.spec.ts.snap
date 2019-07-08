@@ -16,18 +16,30 @@ exports[`Range Index should produce working streams 7`] = `"15021504"`;
 
 exports[`Range Index should produce working streams 8`] = `"15021504"`;
 
-exports[`Range Index should produce working streams 9`] = `null`;
+exports[`Range Index should produce working streams 9`] = `"15021503"`;
 
-exports[`Range Index should produce working streams 10`] = `"15021501"`;
+exports[`Range Index should produce working streams 10`] = `"15021504"`;
 
 exports[`Range Index should produce working streams 11`] = `"15021504"`;
 
-exports[`Range Index should produce working streams 12`] = `"15021504"`;
+exports[`Range Index should produce working streams 12`] = `null`;
 
-exports[`Range Index should produce working streams 13`] = `"15021503"`;
+exports[`Range Index should produce working streams 13`] = `"15021501"`;
 
-exports[`Range Index should produce working streams 14`] = `"15021502"`;
+exports[`Range Index should produce working streams 14`] = `"15021504"`;
 
-exports[`Range Index should produce working streams 15`] = `"15021501"`;
+exports[`Range Index should produce working streams 15`] = `"15021504"`;
 
-exports[`Range Index should produce working streams 16`] = `"15021501"`;
+exports[`Range Index should produce working streams 16`] = `"15021503"`;
+
+exports[`Range Index should produce working streams 17`] = `"15021502"`;
+
+exports[`Range Index should produce working streams 18`] = `"15021501"`;
+
+exports[`Range Index should produce working streams 19`] = `"15021501"`;
+
+exports[`Range Index should produce working streams 20`] = `"15021502"`;
+
+exports[`Range Index should produce working streams 21`] = `"15021501"`;
+
+exports[`Range Index should produce working streams 22`] = `"15021501"`;
