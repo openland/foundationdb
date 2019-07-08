@@ -5,6 +5,13 @@
       "install",
       "sample-hello"
     ],
+    "Layers": [
+      "layer-singleton",
+      "layer-migrations",
+      "layer-bus",
+      "layer-random",
+      "layer-locks"
+    ],
     "Reference": [
       "api-database",
       "api-transactions",

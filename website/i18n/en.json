@@ -28,6 +28,26 @@
       "install": {
         "title": "Installation"
       },
+      "layer-bus": {
+        "title": "PubSub layer",
+        "sidebar_label": "PubSub"
+      },
+      "layer-locks": {
+        "title": "Distributed Lock layer",
+        "sidebar_label": "Distributed Lock"
+      },
+      "layer-migrations": {
+        "title": "Migrations layer",
+        "sidebar_label": "Migrations"
+      },
+      "layer-random": {
+        "title": "Random ID layer",
+        "sidebar_label": "Random ID"
+      },
+      "layer-singleton": {
+        "title": "Singleton Worker layer",
+        "sidebar_label": "Singleton Worker"
+      },
       "sample-hello": {
         "title": "Hello world",
         "sidebar_label": "Hello world"
@@ -39,6 +59,7 @@
     },
     "categories": {
       "Getting Started": "Getting Started",
+      "Layers": "Layers",
       "Reference": "Reference"
     }
   },
