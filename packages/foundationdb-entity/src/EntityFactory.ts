@@ -79,35 +79,33 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     //
 
     protected async _findFromUniqueIndex(
-        parent: Context,
+        ctx: Context,
         _id: (PrimaryKeyType | null)[],
         descriptor: SecondaryIndexDescriptor
     ): Promise<T | null> {
-        return inTxLeaky(parent, async (ctx) => {
-            // Resolve index key
-            let id = resolveIndexKey(_id, descriptor.type.fields);
+        // Resolve index key
+        let id = resolveIndexKey(_id, descriptor.type.fields);
 
-            // Resolve value
-            let ex = await this._mutexManager.runExclusively(ctx, [UniqueIndex.lockKey(descriptor, id)],
-                async () => await descriptor.subspace.get(ctx, id));
-            if (!ex) {
-                return null;
-            }
+        // Resolve value
+        let ex = await this._mutexManager.runExclusively(ctx, [UniqueIndex.lockKey(descriptor, id)],
+            async () => await descriptor.subspace.get(ctx, id));
+        if (!ex) {
+            return null;
+        }
 
-            // Resolve primary key
-            let pk = this._resolvePrimaryKeyFromObject(ex);
+        // Resolve primary key
+        let pk = this._resolvePrimaryKeyFromObject(ex);
 
-            // Fetch object value
-            let k = getCacheKey(pk);
-            let cached = this._entityCache.get(ctx, k);
-            if (cached) {
-                return cached;
-            } else {
-                let res = this._createEntityInstance(ctx, this._decode(ctx, ex));
-                this._entityCache.set(ctx, k, res);
-                return res;
-            }
-        });
+        // Fetch object value
+        let k = getCacheKey(pk);
+        let cached = this._entityCache.get(ctx, k);
+        if (cached) {
+            return cached;
+        } else {
+            let res = this._createEntityInstance(ctx, this._decode(ctx, ex));
+            this._entityCache.set(ctx, k, res);
+            return res;
+        }
     }
 
     //
