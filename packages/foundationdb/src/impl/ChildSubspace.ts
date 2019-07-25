@@ -7,6 +7,7 @@ import { getTransaction } from '../getTransaction';
 import { keyNext, keyIncrement } from '../utils';
 import { Watch } from '../Watch';
 import * as fdb from 'foundationdb';
+import { SubspaceTracer } from '../tracing';
 
 export class ChildSubspace implements Subspace {
 
@@ -31,8 +32,10 @@ export class ChildSubspace implements Subspace {
     }
 
     async get(ctx: Context, key: Buffer) {
-        let tx = getTransaction(ctx)!.rawTransaction(this.db);
-        return await tx.get(Buffer.concat([this.prefix, key]));
+        return await SubspaceTracer.get(ctx, key, async () => {
+            let tx = getTransaction(ctx)!.rawTransaction(this.db);
+            return await tx.get(Buffer.concat([this.prefix, key]));
+        });
     }
 
     async snapshotGet(ctx: Context, key: Buffer) {
@@ -41,8 +44,10 @@ export class ChildSubspace implements Subspace {
     }
 
     async range(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
-        let tx = getTransaction(ctx)!.rawTransaction(this.db);
-        return this.doRange(tx, key, opts);
+        return SubspaceTracer.range(ctx, key, opts, async () => {
+            let tx = getTransaction(ctx)!.rawTransaction(this.db);
+            return this.doRange(tx, key, opts);
+        });
     }
 
     async snapshotRange(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
@@ -70,8 +75,10 @@ export class ChildSubspace implements Subspace {
     }
 
     set(ctx: Context, key: Buffer, value: Buffer) {
-        let tx = getTransaction(ctx)!.rawTransaction(this.db);
-        tx.set(Buffer.concat([this.prefix, key]), value);
+        return SubspaceTracer.set(ctx, key, value, () => {
+            let tx = getTransaction(ctx)!.rawTransaction(this.db);
+            tx.set(Buffer.concat([this.prefix, key]), value);
+        });
     }
 
     setVersionstampedKey(ctx: Context, key: Buffer, value: Buffer, suffix?: Buffer) {
