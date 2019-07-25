@@ -27,7 +27,9 @@ async function doInTx<T>(leaky: boolean, ctx: Context, callback: (ctx: Context) 
             let ctxi = TransactionContext.set(ctx, tx);
             try {
                 const result = await callback(ctxi);
-                await tx._commit(ctxi);
+                await TransactionTracer.commit(ctx, async () => {
+                    await tx._commit(ctxi);
+                });
                 return result;
             } catch (err) {
                 if (err instanceof FDBError) {
