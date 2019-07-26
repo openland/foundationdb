@@ -2,6 +2,7 @@ import { Context } from '@openland/context';
 import { AtomicInteger } from './AtomicInteger';
 import { TupleItem, Subspace, encoders } from '@openland/foundationdb';
 import { EntityStorage } from './EntityStorage';
+import { AtomicIntegerFactoryTracer } from './tracing';
 
 export abstract class AtomicIntegerFactory {
 
@@ -17,12 +18,16 @@ export abstract class AtomicIntegerFactory {
         return new AtomicInteger(encoders.tuple.pack(key), this.directory);
     }
 
-    protected _get(ctx: Context, key: TupleItem[]) {
-        return this._findById(key).get(ctx);
+    protected async _get(ctx: Context, key: TupleItem[]) {
+        return await AtomicIntegerFactoryTracer.get(this.directory, ctx, key, async () => {
+            return this._findById(key).get(ctx);
+        });
     }
 
     protected _set(ctx: Context, key: TupleItem[], value: number) {
-        this._findById(key).set(ctx, value);
+        return AtomicIntegerFactoryTracer.set(this.directory, ctx, key, value, () => {
+            return this._findById(key).set(ctx, value);
+        });
     }
 
     protected _add(ctx: Context, key: TupleItem[], value: number) {

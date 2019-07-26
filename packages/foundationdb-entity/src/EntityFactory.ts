@@ -18,6 +18,7 @@ import { IndexMutexManager } from './indexes/IndexMutexManager';
 import { resolveIndexKey, tupleToCursor, cursorToTuple } from './indexes/utils';
 import { RangeIndex } from './indexes/RangeIndex';
 import { IndexStream } from './indexes/IndexStream';
+import { EntityFactoryTracer } from './tracing';
 
 export interface StreamProps {
     batchSize?: number;
@@ -83,29 +84,31 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         _id: (PrimaryKeyType | null)[],
         descriptor: SecondaryIndexDescriptor
     ): Promise<T | null> {
-        // Resolve index key
-        let id = resolveIndexKey(_id, descriptor.type.fields);
+        return await EntityFactoryTracer.findFromUniqueIndex(this.descriptor, ctx, _id, descriptor, async () => {
+            // Resolve index key
+            let id = resolveIndexKey(_id, descriptor.type.fields);
 
-        // Resolve value
-        let ex = await this._mutexManager.runExclusively(ctx, [UniqueIndex.lockKey(descriptor, id)],
-            async () => await descriptor.subspace.get(ctx, id));
-        if (!ex) {
-            return null;
-        }
+            // Resolve value
+            let ex = await this._mutexManager.runExclusively(ctx, [UniqueIndex.lockKey(descriptor, id)],
+                async () => await descriptor.subspace.get(ctx, id));
+            if (!ex) {
+                return null;
+            }
 
-        // Resolve primary key
-        let pk = this._resolvePrimaryKeyFromObject(ex);
+            // Resolve primary key
+            let pk = this._resolvePrimaryKeyFromObject(ex);
 
-        // Fetch object value
-        let k = getCacheKey(pk);
-        let cached = this._entityCache.get(ctx, k);
-        if (cached) {
-            return cached;
-        } else {
-            let res = this._createEntityInstance(ctx, this._decode(ctx, ex));
-            this._entityCache.set(ctx, k, res);
-            return res;
-        }
+            // Fetch object value
+            let k = getCacheKey(pk);
+            let cached = this._entityCache.get(ctx, k);
+            if (cached) {
+                return cached;
+            } else {
+                let res = this._createEntityInstance(ctx, this._decode(ctx, ex));
+                this._entityCache.set(ctx, k, res);
+                return res;
+            }
+        });
     }
 
     //
@@ -158,65 +161,69 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             afterCursor?: string | undefined | null
         }
     ): Promise<{ items: T[], cursor?: string, haveMore: boolean }> {
-        // Resolve index key
-        let id = resolveIndexKey(_id, descriptor.type.fields, true /* Partial key */);
-        let after: TupleItem[] | undefined = undefined;
-        if (opts && opts.after) {
-            after = resolveIndexKey(opts.after, descriptor.type.fields, true, _id.length);
-        } else if (opts && opts.afterCursor) {
-            after = cursorToTuple(opts.afterCursor);
-        }
-
-        let res = await descriptor.subspace.subspace(id).range(ctx, [], {
-            limit: opts && opts.limit ? (opts.limit + 1) : undefined,
-            reverse: opts && opts.reverse ? opts.reverse : undefined,
-            after
-        });
-        let items = await Promise.all(res.map(async (v) => {
-            let pk = this._resolvePrimaryKeyFromObject(v.value);
-            let k = getCacheKey(pk);
-            let cached = this._entityCache.get(ctx, k);
-            if (cached) {
-                return cached;
-            } else {
-                let res2 = this._createEntityInstance(ctx, this._decode(ctx, v.value));
-                this._entityCache.set(ctx, k, res2);
-                return res2;
+        return await EntityFactoryTracer.query(this.descriptor, ctx, descriptor, _id, opts, async () => {
+            // Resolve index key
+            let id = resolveIndexKey(_id, descriptor.type.fields, true /* Partial key */);
+            let after: TupleItem[] | undefined = undefined;
+            if (opts && opts.after) {
+                after = resolveIndexKey(opts.after, descriptor.type.fields, true, _id.length);
+            } else if (opts && opts.afterCursor) {
+                after = cursorToTuple(opts.afterCursor);
             }
-        }));
 
-        if (opts && opts.limit) {
-            let haveMore = items.length > opts.limit;
-            let cursor: string | undefined;
-            if (items.length > opts.limit) {
-                items.splice(items.length - 1, 1);
-                cursor = tupleToCursor(res[opts.limit - 1].key);
-            } else {
-                if (res.length > 0) {
-                    cursor = tupleToCursor(res[res.length - 1].key);
+            let res = await descriptor.subspace.subspace(id).range(ctx, [], {
+                limit: opts && opts.limit ? (opts.limit + 1) : undefined,
+                reverse: opts && opts.reverse ? opts.reverse : undefined,
+                after
+            });
+            let items = await Promise.all(res.map(async (v) => {
+                let pk = this._resolvePrimaryKeyFromObject(v.value);
+                let k = getCacheKey(pk);
+                let cached = this._entityCache.get(ctx, k);
+                if (cached) {
+                    return cached;
+                } else {
+                    let res2 = this._createEntityInstance(ctx, this._decode(ctx, v.value));
+                    this._entityCache.set(ctx, k, res2);
+                    return res2;
                 }
-            }
-            return { items: items, cursor, haveMore: haveMore };
-        }
+            }));
 
-        let cursor2: string | undefined;
-        if (res.length > 0) {
-            cursor2 = tupleToCursor(res[res.length - 1].key);
-        }
-        return { items, cursor: cursor2, haveMore: false };
+            if (opts && opts.limit) {
+                let haveMore = items.length > opts.limit;
+                let cursor: string | undefined;
+                if (items.length > opts.limit) {
+                    items.splice(items.length - 1, 1);
+                    cursor = tupleToCursor(res[opts.limit - 1].key);
+                } else {
+                    if (res.length > 0) {
+                        cursor = tupleToCursor(res[res.length - 1].key);
+                    }
+                }
+                return { items: items, cursor, haveMore: haveMore };
+            }
+
+            let cursor2: string | undefined;
+            if (res.length > 0) {
+                cursor2 = tupleToCursor(res[res.length - 1].key);
+            }
+            return { items, cursor: cursor2, haveMore: false };
+        });
     }
 
     async findAll(ctx: Context) {
-        let ex = await this.descriptor.subspace.range(ctx, []);
-        return ex.map((v) => {
-            let k = getCacheKey(v.key);
-            let cached = this._entityCache.get(ctx, k);
-            if (cached) {
-                return cached;
-            }
-            let res = this._createEntityInstance(ctx, this._decode(ctx, v.value));
-            this._entityCache.set(ctx, k, res);
-            return res;
+        return await EntityFactoryTracer.findAll(this.descriptor, ctx, async () => {
+            let ex = await this.descriptor.subspace.range(ctx, []);
+            return ex.map((v) => {
+                let k = getCacheKey(v.key);
+                let cached = this._entityCache.get(ctx, k);
+                if (cached) {
+                    return cached;
+                }
+                let res = this._createEntityInstance(ctx, this._decode(ctx, v.value));
+                this._entityCache.set(ctx, k, res);
+                return res;
+            });
         });
     }
 
@@ -226,39 +233,40 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     }
 
     protected async _findById(ctx: Context, _id: PrimaryKeyType[]): Promise<T | null> {
+        return await EntityFactoryTracer.findById(this.descriptor, ctx, _id, async () => {
+            // Validate input
+            let id = this._resolvePrimaryKey(_id);
 
-        // Validate input
-        let id = this._resolvePrimaryKey(_id);
+            return await this._mutexManager.runExclusively(ctx, [PrimaryIndex.lockKey(id)], async () => {
 
-        return await this._mutexManager.runExclusively(ctx, [PrimaryIndex.lockKey(id)], async () => {
+                // Check Cache
+                let k = getCacheKey(id);
+                let cached = this._entityCache.get(ctx, k);
+                if (cached) {
+                    return cached;
+                }
 
-            // Check Cache
-            let k = getCacheKey(id);
-            let cached = this._entityCache.get(ctx, k);
-            if (cached) {
-                return cached;
-            }
+                // Read entity
+                let ex = await this.descriptor.subspace.get(ctx, id);
 
-            // Read entity
-            let ex = await this.descriptor.subspace.get(ctx, id);
+                // Check cache
+                cached = this._entityCache.get(ctx, k);
+                if (cached) {
+                    return cached;
+                }
 
-            // Check cache
-            cached = this._entityCache.get(ctx, k);
-            if (cached) {
-                return cached;
-            }
+                if (ex) {
+                    // Decode record
+                    let decoded = this._decode(ctx, ex);
 
-            if (ex) {
-                // Decode record
-                let decoded = this._decode(ctx, ex);
-
-                // Create instance
-                let res = this._createEntityInstance(ctx, decoded);
-                this._entityCache.set(ctx, k, res);
-                return res;
-            } else {
-                return null;
-            }
+                    // Create instance
+                    let res = this._createEntityInstance(ctx, decoded);
+                    this._entityCache.set(ctx, k, res);
+                    return res;
+                } else {
+                    return null;
+                }
+            });
         });
     }
 
@@ -295,53 +303,123 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     }
 
     protected async _create(ctx: Context, _id: PrimaryKeyType[], value: SHAPE): Promise<T> {
+        return await EntityFactoryTracer.create(this.descriptor, ctx, _id, value, async () => {
+            //
+            // We assume here next things:
+            // * value is in normalized shape. Meaning all undefined are replaced with nulls and
+            //   there are no unknown fields.
+            //
 
-        //
-        // We assume here next things:
-        // * value is in normalized shape. Meaning all undefined are replaced with nulls and 
-        //   there are no unknown fields.
-        //
+            // Validate input
+            let id = this._resolvePrimaryKey(_id);
+            let now = Date.now();
+            let metadata: EntityMetadata = {
+                versionCode: 0,
+                createdAt: now,
+                updatedAt: now
+            };
+            let encoded = this._encode(ctx, value, metadata);
 
-        // Validate input
-        let id = this._resolvePrimaryKey(_id);
-        let now = Date.now();
-        let metadata: EntityMetadata = {
-            versionCode: 0,
-            createdAt: now,
-            updatedAt: now
-        };
-        let encoded = this._encode(ctx, value, metadata);
-
-        // Check cache
-        let k = getCacheKey(id);
-        if (this._entityCache.get(ctx, k)) {
-            throw Error('Entity already exists');
-        }
-
-        // Compute mutex keys
-        let mutexKeys: string[] = [];
-        for (let i of this._indexMaintainers) {
-            if (i.onCreateLockKeys) {
-                for (let k2 of i.onCreateLockKeys(id, encoded)) {
-                    mutexKeys.push(k2);
-                }
-            } else {
-                mutexKeys.push('global-lock');
+            // Check cache
+            let k = getCacheKey(id);
+            if (this._entityCache.get(ctx, k)) {
+                throw Error('Entity already exists');
             }
-        }
 
-        await this._mutexManager.runExclusively(ctx, mutexKeys, async () => {
-            await inTx(ctx, async (ctx2) => {
+            // Compute mutex keys
+            let mutexKeys: string[] = [];
+            for (let i of this._indexMaintainers) {
+                if (i.onCreateLockKeys) {
+                    for (let k2 of i.onCreateLockKeys(id, encoded)) {
+                        mutexKeys.push(k2);
+                    }
+                } else {
+                    mutexKeys.push('global-lock');
+                }
+            }
+
+            await this._mutexManager.runExclusively(ctx, mutexKeys, async () => {
+                await inTx(ctx, async (ctx2) => {
+
+                    //
+                    // Call beforeCreate hooks
+                    // beforeCreate is the only place that can throw exeptions
+                    // about constrain violations
+                    //
+
+                    for (let i of this._indexMaintainers) {
+                        if (i.beforeCreate) {
+                            await i.beforeCreate(ctx2, id, encoded);
+                        }
+                    }
+
+                    //
+                    // Update indexes (all method are synchronous)
+                    //
+
+                    for (let i of this._indexMaintainers) {
+                        i.onCreate(ctx2, id, encoded);
+                    }
+
+                    //
+                    // afterCreate hook. Currently is not used by built-in bindings.
+                    //
+
+                    for (let i of this._indexMaintainers) {
+                        if (i.afterCreate) {
+                            await i.afterCreate(ctx2, id, encoded);
+                        }
+                    }
+
+                    //
+                    // Notify about created entity
+                    //
+
+                    this.descriptor.storage.eventBus.publish(ctx, 'fdb-entity-created-' + this.descriptor.storageKey, { entity: this.descriptor.storageKey });
+                });
+            });
+
+            // Check cache
+            if (this._entityCache.get(ctx, k)) {
+                throw Error('Entity already exists');
+            }
+
+            // Create Instance
+            let res = this._createEntityInstance(ctx, { ...value, createdAt: metadata.createdAt, updatedAt: metadata.updatedAt, _version: metadata.versionCode });
+            this._entityCache.set(ctx, k, res);
+            return res;
+        });
+    }
+
+    // Need to be arrow function since we are passing this function to entity instances
+    protected _flush = async (ctx: Context, _id: ReadonlyArray<PrimaryKeyType>, oldValue: ShapeWithMetadata<SHAPE>, newValue: ShapeWithMetadata<SHAPE>) => {
+        return await EntityFactoryTracer.flush(this.descriptor, ctx, _id, oldValue, newValue, async () => {
+            let id = this._resolvePrimaryKey(_id);
+            // Encode value before any write
+            let encoded = { ...newValue, ...this._codec.encode(newValue) };
+
+            let mutexKeys: string[] = [];
+            for (let i of this._indexMaintainers) {
+                if (i.onUpdateLockKeys) {
+                    for (let k of i.onUpdateLockKeys(id, oldValue, encoded)) {
+                        mutexKeys.push(k);
+                    }
+                } else {
+                    mutexKeys.push('global-lock');
+                }
+            }
+
+            await this._mutexManager.runExclusively(ctx, mutexKeys, async () => {
 
                 //
-                // Call beforeCreate hooks
-                // beforeCreate is the only place that can throw exeptions
+                // Call beforeUpdate hooks
+                // beforeUpdate is the only place that can throw exeptions
                 // about constrain violations
                 //
 
                 for (let i of this._indexMaintainers) {
-                    if (i.beforeCreate) {
-                        await i.beforeCreate(ctx2, id, encoded);
+                    if (i.beforeUpdate) {
+                        await i.beforeUpdate(ctx, id, oldValue, encoded);
                     }
                 }
 
@@ -350,86 +428,19 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
                 //
 
                 for (let i of this._indexMaintainers) {
-                    i.onCreate(ctx2, id, encoded);
+                    i.onUpdate(ctx, id, oldValue, encoded);
                 }
 
                 //
-                // afterCreate hook. Currently is not used by built-in bindings.
+                // afterUpdate hook. Currently is not used by built-in bindings.
                 //
 
                 for (let i of this._indexMaintainers) {
-                    if (i.afterCreate) {
-                        await i.afterCreate(ctx2, id, encoded);
+                    if (i.afterUpdate) {
+                        await i.afterUpdate(ctx, id, oldValue, encoded);
                     }
                 }
-
-                //
-                // Notify about created entity
-                //
-
-                this.descriptor.storage.eventBus.publish(ctx, 'fdb-entity-created-' + this.descriptor.storageKey, { entity: this.descriptor.storageKey });
             });
-        });
-
-        // Check cache
-        if (this._entityCache.get(ctx, k)) {
-            throw Error('Entity already exists');
-        }
-
-        // Create Instance
-        let res = this._createEntityInstance(ctx, { ...value, createdAt: metadata.createdAt, updatedAt: metadata.updatedAt, _version: metadata.versionCode });
-        this._entityCache.set(ctx, k, res);
-        return res;
-    }
-
-    // Need to be arrow function since we are passing this function to entity instances
-    protected _flush = async (ctx: Context, _id: ReadonlyArray<PrimaryKeyType>, oldValue: ShapeWithMetadata<SHAPE>, newValue: ShapeWithMetadata<SHAPE>) => {
-        let id = this._resolvePrimaryKey(_id);
-        // Encode value before any write
-        let encoded = { ...newValue, ...this._codec.encode(newValue) };
-
-        let mutexKeys: string[] = [];
-        for (let i of this._indexMaintainers) {
-            if (i.onUpdateLockKeys) {
-                for (let k of i.onUpdateLockKeys(id, oldValue, encoded)) {
-                    mutexKeys.push(k);
-                }
-            } else {
-                mutexKeys.push('global-lock');
-            }
-        }
-
-        await this._mutexManager.runExclusively(ctx, mutexKeys, async () => {
-
-            //
-            // Call beforeUpdate hooks
-            // beforeUpdate is the only place that can throw exeptions
-            // about constrain violations
-            //
-
-            for (let i of this._indexMaintainers) {
-                if (i.beforeUpdate) {
-                    await i.beforeUpdate(ctx, id, oldValue, encoded);
-                }
-            }
-
-            //
-            // Update indexes (all method are synchronous)
-            //
-
-            for (let i of this._indexMaintainers) {
-                i.onUpdate(ctx, id, oldValue, encoded);
-            }
-
-            //
-            // afterUpdate hook. Currently is not used by built-in bindings.
-            //
-
-            for (let i of this._indexMaintainers) {
-                if (i.afterUpdate) {
-                    await i.afterUpdate(ctx, id, oldValue, encoded);
-                }
-            }
         });
     }
 
