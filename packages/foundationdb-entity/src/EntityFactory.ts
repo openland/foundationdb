@@ -297,7 +297,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         this.descriptor.storage.eventBus.publish(ctx, 'fdb-entity-created-' + this.descriptor.storageKey, { entity: this.descriptor.storageKey });
 
         // Create Instance
-        let res = this._createEntityInstance(ctx, { ...value, createdAt: metadata.createdAt, updatedAt: metadata.updatedAt, _version: metadata.versionCode });
+        let res = this._createEntityInstance(ctx, Object.assign({}, value, { createdAt: metadata.createdAt, updatedAt: metadata.updatedAt, _version: metadata.versionCode }));
         this._entityCache.set(ctx, k, res);
         return res;
     }
@@ -385,7 +385,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             }
 
             // Create Instance
-            let res = this._createEntityInstance(ctx, { ...value, createdAt: metadata.createdAt, updatedAt: metadata.updatedAt, _version: metadata.versionCode });
+            let res = this._createEntityInstance(ctx, Object.assign({}, value, { createdAt: metadata.createdAt, updatedAt: metadata.updatedAt, _version: metadata.versionCode }));
             this._entityCache.set(ctx, k, res);
             return res;
         });
@@ -396,7 +396,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         return await EntityFactoryTracer.flush(this.descriptor, ctx, _id, oldValue, newValue, async () => {
             let id = this._resolvePrimaryKey(_id);
             // Encode value before any write
-            let encoded = { ...newValue, ...this._codec.encode(newValue) };
+            let encoded = Object.assign({}, newValue, this._codec.encode(newValue));
 
             let mutexKeys: string[] = [];
             for (let i of this._indexMaintainers) {
@@ -446,7 +446,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
 
     private _encode(ctx: Context, value: SHAPE, metadata: EntityMetadata) {
         try {
-            return { ...value, ...this._codec.encode({ ...value, createdAt: metadata.createdAt, updatedAt: metadata.updatedAt, _version: metadata.versionCode }) };
+            return Object.assign({}, value, this._codec.encode(Object.assign({}, value, { createdAt: metadata.createdAt, updatedAt: metadata.updatedAt, _version: metadata.versionCode })));
         } catch (e) {
             logger.error(ctx, 'Unable to encode entity: ', value);
             throw e;
@@ -455,7 +455,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
 
     private _decode(ctx: Context, value: any) {
         try {
-            return { ...value, ...this._codec.decode(value) };
+            return Object.assign({}, value, this._codec.decode(value));
         } catch (e) {
             logger.error(ctx, 'Unable to decode entity: ', value);
             throw e;
