@@ -4,8 +4,8 @@ import { Context } from '@openland/context';
 import { ReadWriteTransaction } from './impl/ReadWriteTransaction';
 import { TransactionTracer } from './tracing';
 
-async function doInTx<T>(leaky: boolean, ctx: Context, callback: (ctx: Context) => Promise<T>): Promise<T> {
-    return await TransactionTracer.tx(ctx, async () => {
+async function doInTx<T>(leaky: boolean, _ctx: Context, callback: (ctx: Context) => Promise<T>): Promise<T> {
+    return await TransactionTracer.tx(_ctx, async (ctx) => {
         let ex = TransactionContext.get(ctx);
         if (ex) {
             if (!leaky) {

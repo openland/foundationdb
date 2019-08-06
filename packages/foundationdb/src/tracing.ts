@@ -25,7 +25,7 @@ export function setSubspaceTracer(tracer: SubspaceTracerConfig) {
 }
 
 interface TransactionTracerConfig {
-    tx<T>(ctx: Context, handler: () => Promise<T>): Promise<T>;
+    tx<T>(ctx: Context, handler: (ctx: Context) => Promise<T>): Promise<T>;
     commit<T>(ctx: Context, handler: () => Promise<T>): Promise<T>;
     onNewReadWriteTx(ctx: Context): void;
     onRetry(ctx: Context): void;
@@ -33,7 +33,7 @@ interface TransactionTracerConfig {
 }
 
 const NoopTransactionTracer: TransactionTracerConfig = {
-    tx: async (ctx, handler) => handler(),
+    tx: async (ctx, handler) => handler(ctx),
     commit: async (ctx, handler) => handler(),
     onNewReadWriteTx: () => {
         // Noop
