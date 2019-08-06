@@ -4,7 +4,7 @@ import { RangeOptions } from './Subspace';
 interface SubspaceTracerConfig {
     get<T>(ctx: Context, key: Buffer, handler: () => Promise<T>): Promise<T>;
     set<T>(ctx: Context, key: Buffer, value: Buffer, handler: () => T): T;
-    range<T>(ctx: Context, key: Buffer, opts: RangeOptions<Buffer>|undefined, handler: () => Promise<T>): Promise<T>;
+    range<K, V>(ctx: Context, key: Buffer, opts: RangeOptions<Buffer>|undefined, handler: () => Promise<{ key: K, value: V }[]>): Promise<{ key: K, value: V }[]>;
 }
 
 const NoopSubspaceTracer: SubspaceTracerConfig = {
@@ -25,19 +25,23 @@ export function setSubspaceTracer(tracer: SubspaceTracerConfig) {
 }
 
 interface TransactionTracerConfig {
-    tx<T>(ctx: Context, handler: () => Promise<T>): Promise<T>;
+    tx<T>(ctx: Context, handler: (ctx: Context) => Promise<T>): Promise<T>;
     commit<T>(ctx: Context, handler: () => Promise<T>): Promise<T>;
     onNewReadWriteTx(ctx: Context): void;
     onRetry(ctx: Context): void;
+    onNewEphemeralTx(ctx: Context): void;
 }
 
 const NoopTransactionTracer: TransactionTracerConfig = {
-    tx: async (ctx, handler) => handler(),
+    tx: async (ctx, handler) => handler(ctx),
     commit: async (ctx, handler) => handler(),
     onNewReadWriteTx: () => {
         // Noop
     },
     onRetry: () => {
+        // Noop
+    },
+    onNewEphemeralTx: () => {
         // Noop
     }
 };

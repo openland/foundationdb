@@ -2,6 +2,7 @@ import { ReadOnlyTransaction } from './impl/ReadOnlyTransaction';
 import { Context } from '@openland/context';
 import { TransactionContext, ReadOnlyTransactionContext } from './impl/TransactionContext';
 import { Transaction } from './Transaction';
+import { TransactionTracer } from './tracing';
 
 /**
  * Get Transaction from current context or create a temporary read-only one.
@@ -17,5 +18,6 @@ export function getTransaction(ctx: Context): Transaction {
         return cache;
     }
 
+    TransactionTracer.onNewEphemeralTx(ctx);
     return new ReadOnlyTransaction(true);
 }
