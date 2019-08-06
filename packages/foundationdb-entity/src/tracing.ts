@@ -18,10 +18,10 @@ interface EntityFactoryTracerConfig {
             after?: (PrimaryKeyType | null)[] | undefined | null,
             afterCursor?: string | undefined | null
         } | undefined,
-        handler: () => Promise<T>
-    ): Promise<T>;
+        handler: () => Promise<{ items: T[], cursor?: string, haveMore: boolean }>
+    ): Promise<{ items: T[], cursor?: string, haveMore: boolean }>;
 
-    findAll<T>(entityDescriptor: EntityDescriptor<any>, ctx: Context, handler: () => Promise<T>): Promise<T>;
+    findAll<T>(entityDescriptor: EntityDescriptor<any>, ctx: Context, handler: () => Promise<T[]>): Promise<T[]>;
 
     findById<T>(entityDescriptor: EntityDescriptor<any>, ctx: Context, id: PrimaryKeyType[], handler: () => Promise<T>): Promise<T>;
 
