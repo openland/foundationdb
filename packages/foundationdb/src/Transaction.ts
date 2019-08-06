@@ -69,4 +69,10 @@ export interface Transaction {
      * @param db current database connnection
      */
     rawTransaction(db: Database): fdb.Transaction;
+
+    /**
+     * Setting transaction options
+     * @param options should be done before starting any operation
+     */
+    setOptions(options: Partial<fdb.TransactionOptions>): void;
 }
