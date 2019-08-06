@@ -29,6 +29,7 @@ interface TransactionTracerConfig {
     commit<T>(ctx: Context, handler: () => Promise<T>): Promise<T>;
     onNewReadWriteTx(ctx: Context): void;
     onRetry(ctx: Context): void;
+    onNewEphemeralTx(ctx: Context): void;
 }
 
 const NoopTransactionTracer: TransactionTracerConfig = {
@@ -38,6 +39,9 @@ const NoopTransactionTracer: TransactionTracerConfig = {
         // Noop
     },
     onRetry: () => {
+        // Noop
+    },
+    onNewEphemeralTx: () => {
         // Noop
     }
 };
