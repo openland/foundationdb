@@ -4,7 +4,7 @@ import { RangeOptions } from './Subspace';
 interface SubspaceTracerConfig {
     get<T>(ctx: Context, key: Buffer, handler: () => Promise<T>): Promise<T>;
     set<T>(ctx: Context, key: Buffer, value: Buffer, handler: () => T): T;
-    range<T>(ctx: Context, key: Buffer, opts: RangeOptions<Buffer>|undefined, handler: () => Promise<T>): Promise<T>;
+    range<K, V>(ctx: Context, key: Buffer, opts: RangeOptions<Buffer>|undefined, handler: () => Promise<{ key: K, value: V }[]>): Promise<{ key: K, value: V }[]>;
 }
 
 const NoopSubspaceTracer: SubspaceTracerConfig = {
