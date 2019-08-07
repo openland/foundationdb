@@ -75,4 +75,16 @@ export interface Transaction {
      * @param options should be done before starting any operation
      */
     setOptions(options: Partial<fdb.TransactionOptions>): void;
+
+    /**
+     * Set Read Version of transaction. This version will NOT be applied for 
+     * restarted transactions.
+     * @param version read version value
+     */
+    setReadVersion(version: Buffer): void;
+
+    /**
+     * Get Read Version of transaction. Must be called after any read operation.
+     */
+    getReadVersion(): Promise<Buffer>;
 }

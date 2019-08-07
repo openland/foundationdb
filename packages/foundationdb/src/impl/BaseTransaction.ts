@@ -15,6 +15,7 @@ export abstract class BaseTransaction implements Transaction {
     readonly userData: Map<string, any> = new Map();
     protected rawTx?: fdb.Transaction;
     private options: Partial<fdb.TransactionOptions> = {};
+    private version?: Buffer;
 
     rawTransaction(db: Database): fdb.Transaction {
         if (this.db && this.db !== db) {
@@ -28,12 +29,23 @@ export abstract class BaseTransaction implements Transaction {
             } else {
                 this.rawTx = db.rawDB.rawCreateTransaction(this.options);
             }
+            if (this.version) {
+                this.rawTx.setReadVersion(this.version);
+            }
         }
         return this.rawTx!;
     }
 
     setOptions(options: Partial<fdb.TransactionOptions>) {
         this.options = { ...this.options, ...options };
+    }
+
+    setReadVersion(version: Buffer) {
+        this.version = version;
+    }
+
+    getReadVersion() {
+        return this.rawTx!.getReadVersion();
     }
 
     abstract beforeCommit(fn: ((ctx: Context) => Promise<void>) | ((ctx: Context) => void)): void;
