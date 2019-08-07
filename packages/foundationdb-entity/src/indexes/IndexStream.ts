@@ -1,3 +1,4 @@
+import { EntityStorage } from './../EntityStorage';
 import { Context } from '@openland/context';
 import { transactional, TupleItem } from '@openland/foundationdb';
 import { Stream } from '../Stream';
@@ -5,6 +6,8 @@ import { tupleToCursor, cursorToTuple } from './utils';
 import { SecondaryIndexDescriptor } from '../EntityDescriptor';
 
 export class IndexStream<T> implements Stream<T> {
+    readonly eventBusKey: string;
+    readonly entityStorage: EntityStorage;
     private readonly _descriptor: SecondaryIndexDescriptor;
     private readonly _builder: (ctx: Context, src: any) => T;
     private readonly _limit: number;
@@ -17,13 +20,16 @@ export class IndexStream<T> implements Stream<T> {
         prefix: TupleItem[],
         limit: number,
         reverse: boolean,
-        builder: (ctx: Context, src: any) => T
+        builder: (ctx: Context, src: any) => T,
+        storage: EntityStorage
     ) {
         this._descriptor = descriptor;
         this._builder = builder;
         this._limit = limit;
         this._reverse = reverse;
         this._prefix = prefix;
+        this.eventBusKey = 'fdb-entity-created-' + descriptor.storageKey;
+        this.entityStorage = storage;
     }
 
     get cursor(): string | null {

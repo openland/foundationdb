@@ -3,7 +3,6 @@ import { Context } from '@openland/context';
 import { withoutTransaction } from '@openland/foundationdb';
 import { BusSubcription } from '@openland/foundationdb-bus';
 import { Stream } from './Stream';
-import { EntityDescriptor } from './EntityDescriptor';
 
 export interface LiveStreamItem<T> {
     items: T[];
@@ -16,15 +15,13 @@ export class LiveStream<T> {
     private awaiter?: () => void;
     private subscription?: BusSubcription;
 
-    constructor(stream: Stream<T>, descriptor: EntityDescriptor<unknown>) {
+    constructor(stream: Stream<T>) {
         this.baseStream = stream;
 
-        this.subscription = descriptor.storage.eventBus.subscibe('fdb-entity-created-' + descriptor.storageKey, (data: any) => {
-            if (data.entity === descriptor.storageKey) {
-                if (this.awaiter) {
-                    this.awaiter();
-                    this.awaiter = undefined;
-                }
+        this.subscription = stream.entityStorage.eventBus.subscibe(stream.eventBusKey, () => {
+            if (this.awaiter) {
+                this.awaiter();
+                this.awaiter = undefined;
             }
         });
     }

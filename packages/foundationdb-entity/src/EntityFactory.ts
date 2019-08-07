@@ -134,7 +134,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
                 this._entityCache.set(ctx, k, res);
                 return res;
             }
-        });
+        }, this.descriptor.storage);
         if (opts && opts.after) {
             stream.seek(opts.after);
         }
@@ -147,7 +147,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         _id: (PrimaryKeyType | null)[],
         opts?: StreamProps
     ) {
-        return new LiveStream(this._createStream(descriptor, _id, opts), this.descriptor).generator(ctx);
+        return new LiveStream(this._createStream(descriptor, _id, opts)).generator(ctx);
     }
 
     protected async _query(

@@ -47,4 +47,47 @@ describe('Events', () => {
         let ex3 = await store.UserEvents.findAll(root, 'user3');
         expect(ex3.length).toBe(0);
     });
+
+    it('should stream events', async () => {
+        let root = createNamedContext('test');
+        let db = await openTestDatabase();
+        let store = await openStore(new EntityStorage(db));
+        await inTx(root, async (ctx) => {
+            store.UserEvents.post(ctx, 'user1', SampleEvent.create({ id: '1' }));
+            store.UserEvents.post(ctx, 'user1', SampleEvent.create({ id: '2' }));
+            store.UserEvents.post(ctx, 'user1', SampleEvent.create({ id: '3' }));
+            store.UserEvents.post(ctx, 'user1', SampleEvent.create({ id: '4' }));
+        });
+
+        let stream = store.UserEvents.createStream('user1', { batchSize: 2 });
+        let ex = await stream.next(root);
+        expect(ex.length).toBe(2);
+        expect(ex[0] instanceof SampleEvent).toBeTruthy();
+        expect((ex[0] as SampleEvent).id).toBe('1');
+        expect(ex[1] instanceof SampleEvent).toBeTruthy();
+        expect((ex[1] as SampleEvent).id).toBe('2');
+        const cursor = stream.cursor;
+        expect(cursor).not.toBeFalsy();
+
+        ex = await stream.next(root);
+        expect(ex.length).toBe(2);
+        expect(ex[0] instanceof SampleEvent).toBeTruthy();
+        expect((ex[0] as SampleEvent).id).toBe('3');
+        expect(ex[1] instanceof SampleEvent).toBeTruthy();
+        expect((ex[1] as SampleEvent).id).toBe('4');
+        expect(stream.cursor).not.toBeFalsy();
+
+        ex = await stream.next(root);
+        expect(ex.length).toBe(0);
+        expect(stream.cursor).not.toBeFalsy();
+
+        stream.seek(cursor);
+        ex = await stream.next(root);
+        expect(ex.length).toBe(2);
+        expect(ex[0] instanceof SampleEvent).toBeTruthy();
+        expect((ex[0] as SampleEvent).id).toBe('3');
+        expect(ex[1] instanceof SampleEvent).toBeTruthy();
+        expect((ex[1] as SampleEvent).id).toBe('4');
+        expect(stream.cursor).not.toBeFalsy();
+    });
 });

@@ -63,6 +63,14 @@ export class UserEvents extends EventStore {
     async findAll(ctx: Context, userId: string) {
         return this._findAll(ctx, [userId]);
     }
+
+    createStream(userId: string, opts?: { batchSize?: number, after?: string }) {
+        return this._createStream([userId], opts);
+    }
+
+    createLiveStream(ctx: Context, userId: string, opts?: { batchSize?: number, after?: string }) {
+        return this._createLiveStream(ctx, [userId], opts);
+    }
 }
 
 export interface Store extends BaseStore {

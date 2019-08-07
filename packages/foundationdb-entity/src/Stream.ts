@@ -1,9 +1,15 @@
+import { EntityStorage } from './EntityStorage';
 import { Context } from '@openland/context';
 
 /**
  * Stream represents bounded and ordered collection of items.
  */
 export interface Stream<T> {
+
+    /**
+     * Key that is used in event bus to broadcast events about updates
+     */
+    readonly eventBusKey: string;
 
     /**
      * Current stream cursor
@@ -38,4 +44,9 @@ export interface Stream<T> {
      * @param ctx context
      */
     next(ctx: Context): Promise<T[]>;
+
+    /**
+     * Storage reference
+     */
+    readonly entityStorage: EntityStorage;
 }
