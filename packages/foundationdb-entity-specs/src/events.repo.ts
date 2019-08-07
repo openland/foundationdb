@@ -79,7 +79,7 @@ export interface Store extends BaseStore {
 
 export async function openStore(storage: EntityStorage): Promise<Store> {
     const eventFactory = new EventFactory();
-    eventFactory.registerEventType('sampleEvent', SampleEvent.encode, SampleEvent.decode);
+    eventFactory.registerEventType('sampleEvent', SampleEvent.encode as any, SampleEvent.decode);
     let UserEventsPromise = UserEvents.open(storage, eventFactory);
     return {
         storage,
