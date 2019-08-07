@@ -136,7 +136,7 @@ export function eventStore(name: string, schema: () => void) {
     schema();
     currentSchema!.usedNames.add(name);
     currentSchema!.eventStores.push(currentEventStore!);
-    currentEvent = null;
+    currentEventStore = null;
 }
 
 export function primaryKey(name: string, type: SchemaType) {
