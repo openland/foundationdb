@@ -22,6 +22,11 @@ export class EntityStorage {
         return await inTx(createNamedContext('entity'), async (ctx) => await this.db.directories.createOrOpen(ctx, ['com.openland.layers', 'layers', this.storeId, 'atomic', name]));
     }
 
+    async resolveEventStoreDirectory(name: string) {
+        return (await inTx(createNamedContext('entity'), async (ctx) => await this.db.directories.createOrOpen(ctx, ['com.openland.layers', 'layers', this.storeId, 'events', name])))
+            .withValueEncoding(encoders.json);
+    }
+
     async resolveEntityDirectory(name: string) {
         return (await inTx(createNamedContext('entity'), async (ctx) => await this.db.directories.createOrOpen(ctx, ['com.openland.layers', 'layers', this.storeId, 'entity', name])))
             .withKeyEncoding(encoders.tuple)

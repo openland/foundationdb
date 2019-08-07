@@ -5,7 +5,7 @@ import { UniqueIndex } from './indexes/UniqueIndex';
 import { TupleItem, Float } from '@openland/foundationdb-tuple';
 import { uniqueSeed } from '@openland/foundationdb-utils';
 import { Context } from '@openland/context';
-import { TransactionCache, encoders, inTx, Watch, inTxLeaky } from '@openland/foundationdb';
+import { TransactionCache, encoders, inTx, Watch } from '@openland/foundationdb';
 import { Entity } from './Entity';
 import { EntityDescriptor, SecondaryIndexDescriptor } from './EntityDescriptor';
 import { EntityMetadata } from './EntityMetadata';

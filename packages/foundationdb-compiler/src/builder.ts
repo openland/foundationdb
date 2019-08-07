@@ -1,4 +1,8 @@
-import { SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType, StructType, UnionType, OptionalType, EntityIndexModel, JsonType, DirectoryModel, EventModel } from './model';
+import {
+    SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType,
+    EnumType, ArrayType, StructType, UnionType, OptionalType, EntityIndexModel, JsonType, DirectoryModel,
+    EventModel, EventStoreModel
+} from './model';
 
 const reservedFieldNames = [
     'do', 'if', 'in', 'for', 'let', 'new', 'try', 'var', 'else',
@@ -50,6 +54,7 @@ let currentSchema: SchemaModel | null = null;
 let currentAtomic: AtomicModel | null = null;
 let currentEntity: EntityModel | null = null;
 let currentEvent: EventModel | null = null;
+let currentEventStore: EventStoreModel | null = null;
 
 export function declareSchema(schema: () => void) {
     currentSchema = new SchemaModel();
@@ -61,7 +66,7 @@ export function declareSchema(schema: () => void) {
 
 export function atomicInt(name: string, schema: () => void) {
     checkValidEntityName(name);
-    if (currentAtomic || currentEntity) {
+    if (currentAtomic || currentEntity || currentEventStore || currentEvent) {
         throw Error('You can\'t nest declarations');
     }
     if (currentSchema!.usedNames.has(name)) {
@@ -76,7 +81,7 @@ export function atomicInt(name: string, schema: () => void) {
 
 export function atomicBool(name: string, schema: () => void) {
     checkValidEntityName(name);
-    if (currentAtomic || currentEntity) {
+    if (currentAtomic || currentEntity || currentEventStore || currentEvent) {
         throw Error('You can\'t nest declarations');
     }
     if (currentSchema!.usedNames.has(name)) {
@@ -91,7 +96,7 @@ export function atomicBool(name: string, schema: () => void) {
 
 export function entity(name: string, schema: () => void) {
     checkValidEntityName(name);
-    if (currentAtomic || currentEntity || currentEvent) {
+    if (currentAtomic || currentEntity || currentEventStore || currentEvent) {
         throw Error('You can\'t nest declarations');
     }
     if (currentSchema!.usedNames.has(name)) {
@@ -106,7 +111,7 @@ export function entity(name: string, schema: () => void) {
 
 export function event(name: string, schema: () => void) {
     checkValidEntityName(name);
-    if (currentAtomic || currentEntity || currentEvent) {
+    if (currentAtomic || currentEntity || currentEventStore || currentEvent) {
         throw Error('You can\'t nest declarations');
     }
     if (currentSchema!.usedNames.has(name)) {
@@ -119,10 +124,28 @@ export function event(name: string, schema: () => void) {
     currentEvent = null;
 }
 
+export function eventStore(name: string, schema: () => void) {
+    checkValidEntityName(name);
+    if (currentAtomic || currentEntity || currentEventStore || currentEvent) {
+        throw Error('You can\'t nest declarations');
+    }
+    if (currentSchema!.usedNames.has(name)) {
+        throw Error('Duplicate entity with name ' + name);
+    }
+    currentEventStore = new EventStoreModel(name);
+    schema();
+    currentSchema!.usedNames.add(name);
+    currentSchema!.eventStores.push(currentEventStore!);
+    currentEvent = null;
+}
+
 export function primaryKey(name: string, type: SchemaType) {
     checkValidFieldName(name);
-    if (!currentAtomic && !currentEntity) {
-        throw Error('No entity specified');
+    if (!currentAtomic && !currentEntity && !currentEventStore) {
+        throw Error('No entity, atomic or event store is specified');
+    }
+    if (currentEventStore) {
+        currentEventStore!.addKey(name, type);
     }
     if (currentAtomic) {
         currentAtomic!.addKey(name, type);

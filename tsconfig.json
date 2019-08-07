@@ -37,9 +37,6 @@
             "path": "./packages/foundationdb-bus-redis"
         },
         {
-            "path": "./packages/foundationdb-events"
-        },
-        {
             "path": "./packages/foundationdb-compiler"
         },
         {

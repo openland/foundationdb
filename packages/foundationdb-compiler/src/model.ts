@@ -96,6 +96,7 @@ export class SchemaModel {
     readonly entities: EntityModel[] = [];
     readonly directories: DirectoryModel[] = [];
     readonly events: EventModel[] = [];
+    readonly eventStores: EventStoreModel[] = [];
 }
 
 export class AtomicModel {
@@ -161,5 +162,19 @@ export class EventModel {
     readonly fields: Field[] = [];
     constructor(name: string) {
         this.name = name;
+    }
+}
+
+export class EventStoreModel {
+    readonly name: string;
+    readonly keys: PrimaryKey[] = [];
+    constructor(name: string) {
+        this.name = name;
+    }
+
+    addKey(name: string, type: SchemaType) {
+        let res = new PrimaryKey(name, type);
+        this.keys.push(res);
+        return res;
     }
 }

@@ -1,6 +1,6 @@
+import * as Case from 'change-case';
 import { SchemaModel } from '../model';
 import { StringBuilder } from './StringBuilder';
-import * as Case from 'change-case';
 import { resolveCodec, resolveType } from './generateEntities';
 
 export function generateEvents(schema: SchemaModel, builder: StringBuilder) {
@@ -60,12 +60,62 @@ export function generateEvents(schema: SchemaModel, builder: StringBuilder) {
         builder.append(`super('${eventKey}', data);`);
         builder.removeIndent();
         builder.append(`}`);
-
         builder.append();
         for (let field of event.fields) {
             let type: string = resolveType(field.type, false);
             builder.append(`get ${field.name}(): ${type} { return this.raw.${field.name}; }`);
         }
+        builder.removeIndent();
+        builder.append(`}`);
+    }
+    for (let eventStore of schema.eventStores) {
+        let eventKey = Case.camelCase(eventStore.name);
+        let eventClass = Case.pascalCase(eventStore.name);
+        builder.append();
+        builder.append(`export class ${eventClass} extends EventStore {`);
+        builder.addIndent();
+
+        // Open
+        builder.append();
+        builder.append(`static async open(storage: EntityStorage, factory: EventFactory) {`);
+        builder.addIndent();
+        builder.append(`let subspace = await storage.resolveEventStoreDirectory('${eventKey}');`);
+        builder.append(`const descriptor = {`);
+        builder.addIndent();
+        builder.append(`name: '${eventStore.name}',`);
+        builder.append(`storageKey: '${eventKey}',`);
+        builder.append('subspace,');
+        builder.append('storage,');
+        builder.append('factory');
+        builder.removeIndent();
+        builder.append(`};`);
+        builder.append(`return new ${eventClass}(descriptor);`);
+        builder.removeIndent();
+        builder.append(`}`);
+
+        // Constructor
+        builder.append();
+        builder.append(`private constructor(descriptor: EventStoreDescriptor) {`);
+        builder.addIndent();
+        builder.append(`super(descriptor);`);
+        builder.removeIndent();
+        builder.append(`}`);
+
+        // Post
+        builder.append();
+        builder.append(`post(ctx: Context, ${eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ')}, event: BaseEvent) {`);
+        builder.addIndent();
+        builder.append(`this._post(ctx, [${eventStore.keys.map((v) => v.name).join(', ')}], event);`);
+        builder.removeIndent();
+        builder.append(`}`);
+
+        // Find All
+        builder.append();
+        builder.append(`async findAll(ctx: Context, ${eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ')}) {`);
+        builder.addIndent();
+        builder.append(`return this._findAll(ctx, [${eventStore.keys.map((v) => v.name).join(', ')}]);`);
+        builder.removeIndent();
+        builder.append(`}`);
 
         builder.removeIndent();
         builder.append(`}`);

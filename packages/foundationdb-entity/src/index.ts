@@ -3,6 +3,8 @@ export { AtomicBooleanFactory } from './AtomicBooleanFactory';
 export { AtomicInteger } from './AtomicInteger';
 export { AtomicIntegerFactory } from './AtomicIntegerFactory';
 export { EntityStorage } from './EntityStorage';
+export { EventStore } from './EventStore';
+export { EventStoreDescriptor } from './EventStoreDescriptor';
 export { BaseStore } from './BaseStore';
 export { BaseEvent } from './BaseEvent';
 export { EventFactory } from './EventFactory';
