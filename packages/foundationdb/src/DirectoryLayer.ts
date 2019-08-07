@@ -175,12 +175,12 @@ export class DirectoryLayer {
             // Check content keys
             let newss = this.contentSS.subspace([allocated]);
             if ((await newss.range(ctx, [], { limit: 1 })).length !== 0) {
-                throw Error('the database has keys stored at the prefix chosen by the automatic prefix allocator');
+                throw Error('the database has keys stored at the prefix chosen by the automatic prefix allocator (' + newss.prefix.toString('hex') + ') for ' + JSON.stringify(path));
             }
 
             // Check node prefix keys
             if (!await this.isPrefixFree(ctx, newss.prefix)) {
-                throw Error('the directory layer has manually allocated prefixes that conflict with the automatic prefix allocator');
+                throw Error('the directory layer has manually allocated prefixes that conflict with the automatic prefix allocator (' + newss.prefix.toString('hex') + ') for ' + JSON.stringify(path));
             }
 
             resPrefix = newss.prefix;
