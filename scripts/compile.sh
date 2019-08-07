@@ -2,3 +2,4 @@
 ./node_modules/.bin/ts-node ./packages/foundationdb-compiler/src/main.ts ./packages/foundationdb-entity-specs/src/entity.schema.ts ./packages/foundationdb-entity-specs/src/entity.repo.ts
 ./node_modules/.bin/ts-node ./packages/foundationdb-compiler/src/main.ts ./packages/foundationdb-entity-specs/src/unique.schema.ts ./packages/foundationdb-entity-specs/src/unique.repo.ts
 ./node_modules/.bin/ts-node ./packages/foundationdb-compiler/src/main.ts ./packages/foundationdb-entity-specs/src/range.schema.ts ./packages/foundationdb-entity-specs/src/range.repo.ts
+./node_modules/.bin/ts-node ./packages/foundationdb-compiler/src/main.ts ./packages/foundationdb-entity-specs/src/events.schema.ts ./packages/foundationdb-entity-specs/src/events.repo.ts

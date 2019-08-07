@@ -10,7 +10,7 @@ export function generateEntitiesHeader(schema: SchemaModel, builder: StringBuild
     }
 }
 
-function resolveType(type: SchemaType, create: boolean): string {
+export function resolveType(type: SchemaType, create: boolean): string {
     if (type.type === 'string') {
         return 'string';
     } else if (type.type === 'boolean') {
@@ -80,7 +80,7 @@ function resolveDescriptorType(type: SchemaType): string {
     }
 }
 
-function resolveCodec(type: SchemaType): string {
+export function resolveCodec(type: SchemaType): string {
     if (type.type === 'string') {
         return 'c.string';
     } else if (type.type === 'boolean') {

@@ -4,7 +4,7 @@ import { Context } from '@openland/context';
 // @ts-ignore
 import { Subspace, Watch } from '@openland/foundationdb';
 // @ts-ignore
-import { EntityStorage, BaseStore, RangeQueryOptions, codecs as c } from '@openland/foundationdb-entity';
+import { EntityStorage, EventFactory, BaseStore, RangeQueryOptions, BaseEvent, codecs as c } from '@openland/foundationdb-entity';
 // @ts-ignore
 import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata, PrimaryKeyDescriptor, FieldDescriptor, StreamProps } from '@openland/foundationdb-entity';
 
@@ -204,8 +204,10 @@ export interface Store extends BaseStore {
 export async function openStore(storage: EntityStorage): Promise<Store> {
     let UniqueIndexPromise = UniqueIndexFactory.open(storage);
     let UniqueConditionalIndexPromise = UniqueConditionalIndexFactory.open(storage);
+    const eventFactory = new EventFactory();
     return {
         storage,
+        eventFactory,
         UniqueIndex: await UniqueIndexPromise,
         UniqueConditionalIndex: await UniqueConditionalIndexPromise,
     };

@@ -4,7 +4,7 @@ import { Context } from '@openland/context';
 // @ts-ignore
 import { Subspace, Watch } from '@openland/foundationdb';
 // @ts-ignore
-import { EntityStorage, BaseStore, RangeQueryOptions, codecs as c } from '@openland/foundationdb-entity';
+import { EntityStorage, EventFactory, BaseStore, RangeQueryOptions, BaseEvent, codecs as c } from '@openland/foundationdb-entity';
 // @ts-ignore
 import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata, PrimaryKeyDescriptor, FieldDescriptor, StreamProps } from '@openland/foundationdb-entity';
 
@@ -457,8 +457,10 @@ export async function openStore(storage: EntityStorage): Promise<Store> {
     let SimpleEntity2Promise = SimpleEntity2Factory.open(storage);
     let AllFieldsPromise = AllFieldsFactory.open(storage);
     let directoryDirectoryPromise = storage.resolveCustomDirectory('directory');
+    const eventFactory = new EventFactory();
     return {
         storage,
+        eventFactory,
         SimpleEntity: await SimpleEntityPromise,
         SimpleEntity2: await SimpleEntity2Promise,
         AllFields: await AllFieldsPromise,

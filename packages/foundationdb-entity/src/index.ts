@@ -4,6 +4,8 @@ export { AtomicInteger } from './AtomicInteger';
 export { AtomicIntegerFactory } from './AtomicIntegerFactory';
 export { EntityStorage } from './EntityStorage';
 export { BaseStore } from './BaseStore';
+export { BaseEvent } from './BaseEvent';
+export { EventFactory } from './EventFactory';
 export { Entity } from './Entity';
 export { EntityFactory, StreamProps } from './EntityFactory';
 export { EntityMetadata } from './EntityMetadata';

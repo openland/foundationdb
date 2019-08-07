@@ -1,4 +1,4 @@
-import { SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType, StructType, UnionType, OptionalType, EntityIndexModel, JsonType, DirectoryModel } from './model';
+import { SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType, EnumType, ArrayType, StructType, UnionType, OptionalType, EntityIndexModel, JsonType, DirectoryModel, EventModel } from './model';
 
 const reservedFieldNames = [
     'do', 'if', 'in', 'for', 'let', 'new', 'try', 'var', 'else',
@@ -49,6 +49,7 @@ function checkValidFieldName(name: string) {
 let currentSchema: SchemaModel | null = null;
 let currentAtomic: AtomicModel | null = null;
 let currentEntity: EntityModel | null = null;
+let currentEvent: EventModel | null = null;
 
 export function declareSchema(schema: () => void) {
     currentSchema = new SchemaModel();
@@ -90,7 +91,7 @@ export function atomicBool(name: string, schema: () => void) {
 
 export function entity(name: string, schema: () => void) {
     checkValidEntityName(name);
-    if (currentAtomic || currentEntity) {
+    if (currentAtomic || currentEntity || currentEvent) {
         throw Error('You can\'t nest declarations');
     }
     if (currentSchema!.usedNames.has(name)) {
@@ -101,6 +102,21 @@ export function entity(name: string, schema: () => void) {
     currentSchema!.usedNames.add(name);
     currentSchema!.entities.push(currentEntity!!);
     currentEntity = null;
+}
+
+export function event(name: string, schema: () => void) {
+    checkValidEntityName(name);
+    if (currentAtomic || currentEntity || currentEvent) {
+        throw Error('You can\'t nest declarations');
+    }
+    if (currentSchema!.usedNames.has(name)) {
+        throw Error('Duplicate entity with name ' + name);
+    }
+    currentEvent = new EventModel(name);
+    schema();
+    currentSchema!.usedNames.add(name);
+    currentSchema!.events.push(currentEvent!);
+    currentEvent = null;
 }
 
 export function primaryKey(name: string, type: SchemaType) {
@@ -169,11 +185,15 @@ export function optional(src: SchemaType) {
 
 export function field(name: string, type: SchemaType) {
     checkValidFieldName(name);
-    if (!currentEntity) {
-        throw Error('No entity specified');
+    if (!currentEntity && !currentEvent) {
+        throw Error('No entity or event specified');
     }
     let res = new Field(name, type);
-    currentEntity!.fields.push(res);
+    if (currentEntity) {
+        currentEntity!.fields.push(res);
+    } else {
+        currentEvent!.fields.push(res);
+    }
 
     return new FieldBuilder(res);
 }

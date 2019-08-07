@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Events should decode and encode events 1`] = `
+Object {
+  "data": Object {
+    "id": "some_id",
+    "name": "name",
+  },
+  "type": "sampleEvent",
+}
+`;
+
+exports[`Events should decode and encode events 2`] = `
+SampleEvent {
+  "raw": Object {
+    "id": "some_id",
+    "name": "name",
+  },
+  "type": "sampleEvent",
+}
+`;

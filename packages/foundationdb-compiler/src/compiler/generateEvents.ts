@@ -1,0 +1,73 @@
+import { SchemaModel } from '../model';
+import { StringBuilder } from './StringBuilder';
+import * as Case from 'change-case';
+import { resolveCodec, resolveType } from './generateEntities';
+
+export function generateEvents(schema: SchemaModel, builder: StringBuilder) {
+    for (let event of schema.events) {
+        let eventKey = Case.camelCase(event.name);
+        let eventClass = Case.pascalCase(event.name);
+
+        // Codec
+        builder.append();
+        builder.append(`const ${eventKey}Codec = c.struct({`);
+        builder.addIndent();
+        for (let key of event.fields) {
+            builder.append(`${key.name}: ${resolveCodec(key.type)},`);
+        }
+        builder.removeIndent();
+        builder.append('});');
+
+        // Shape
+        builder.append();
+        builder.append(`interface ${eventClass}Shape {`);
+        builder.addIndent();
+        for (let field of event.fields) {
+            if (field.type.type === 'optional') {
+                builder.append(`${field.name}?: ${resolveType(field.type, true)};`);
+            } else {
+                builder.append(`${field.name}: ${resolveType(field.type, true)};`);
+            }
+        }
+        builder.removeIndent();
+        builder.append('}');
+
+        // Class
+        builder.append();
+        builder.append(`export class ${eventClass} extends BaseEvent {`);
+        builder.addIndent();
+        builder.append();
+        builder.append(`static create(data: ${eventClass}Shape) {`);
+        builder.addIndent();
+        builder.append(`return new ${eventClass}(${eventKey}Codec.normalize(data));`);
+        builder.removeIndent();
+        builder.append(`}`);
+        builder.append();
+        builder.append(`static decode(data: any) {`);
+        builder.addIndent();
+        builder.append(`return new ${eventClass}(${eventKey}Codec.decode(data));`);
+        builder.removeIndent();
+        builder.append(`}`);
+        builder.append();
+        builder.append(`static encode(event: ${eventClass}) {`);
+        builder.addIndent();
+        builder.append(`return ${eventKey}Codec.encode(event.raw);`);
+        builder.removeIndent();
+        builder.append(`}`);
+        builder.append();
+        builder.append(`private constructor(data: any) {`);
+        builder.addIndent();
+        builder.append(`super('${eventKey}', data);`);
+        builder.removeIndent();
+        builder.append(`}`);
+
+        builder.append();
+        for (let field of event.fields) {
+            let type: string = resolveType(field.type, false);
+            builder.append(`get ${field.name}(): ${type} { return this.raw.${field.name}; }`);
+        }
+
+        builder.removeIndent();
+        builder.append(`}`);
+    }
+}

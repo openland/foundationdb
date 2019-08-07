@@ -4,7 +4,7 @@ import { Context } from '@openland/context';
 // @ts-ignore
 import { Subspace, Watch } from '@openland/foundationdb';
 // @ts-ignore
-import { EntityStorage, BaseStore, RangeQueryOptions, codecs as c } from '@openland/foundationdb-entity';
+import { EntityStorage, EventFactory, BaseStore, RangeQueryOptions, BaseEvent, codecs as c } from '@openland/foundationdb-entity';
 // @ts-ignore
 import { AtomicIntegerFactory, AtomicBooleanFactory } from '@openland/foundationdb-entity';
 
@@ -80,8 +80,10 @@ export interface Store extends BaseStore {
 export async function openStore(storage: EntityStorage): Promise<Store> {
     let SimpleAtomicBooleanPromise = SimpleAtomicBooleanFactory.open(storage);
     let SimpleAtomicIntegerPromise = SimpleAtomicIntegerFactory.open(storage);
+    const eventFactory = new EventFactory();
     return {
         storage,
+        eventFactory,
         SimpleAtomicBoolean: await SimpleAtomicBooleanPromise,
         SimpleAtomicInteger: await SimpleAtomicIntegerPromise,
     };

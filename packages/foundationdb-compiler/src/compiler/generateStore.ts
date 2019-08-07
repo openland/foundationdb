@@ -29,9 +29,16 @@ export function generateStore(schema: SchemaModel, builder: StringBuilder) {
     for (let directory of schema.directories) {
         builder.append(`let ${directory.name}DirectoryPromise = storage.resolveCustomDirectory('${Case.camelCase(directory.name)}');`);
     }
+
+    builder.append(`const eventFactory = new EventFactory();`);
+    for (let event of schema.events) {
+        builder.append(`eventFactory.registerEventType('${Case.camelCase(event.name)}', ${Case.pascalCase(event.name)}.encode, ${Case.pascalCase(event.name)}.decode);`);
+    }
+
     builder.append('return {');
     builder.addIndent();
     builder.append('storage,');
+    builder.append('eventFactory,');
     for (let atomic of schema.atomics) {
         builder.append(`${atomic.name}: await ${atomic.name}Promise,`);
     }

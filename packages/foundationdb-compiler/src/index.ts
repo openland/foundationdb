@@ -1,2 +1,2 @@
-export { SchemaModel, PrimaryKey, PrimaryKeyType, AtomicModel } from './model';
-export { declareSchema, atomicBool, atomicInt, primaryKey, entity, field, string, integer, boolean, enumString, array, float, struct, union, optional, uniqueIndex, rangeIndex, json, customDirectory } from './builder';
+export { SchemaModel, PrimaryKey, PrimaryKeyType, AtomicModel, EventModel } from './model';
+export { event, declareSchema, atomicBool, atomicInt, primaryKey, entity, field, string, integer, boolean, enumString, array, float, struct, union, optional, uniqueIndex, rangeIndex, json, customDirectory } from './builder';
