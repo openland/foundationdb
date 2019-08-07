@@ -25,7 +25,7 @@ export function generateStore(schema: SchemaModel, builder: StringBuilder) {
     builder.addIndent();
     builder.append(`const eventFactory = new EventFactory();`);
     for (let event of schema.events) {
-        builder.append(`eventFactory.registerEventType('${Case.camelCase(event.name)}', ${Case.pascalCase(event.name)}.encode, ${Case.pascalCase(event.name)}.decode);`);
+        builder.append(`eventFactory.registerEventType('${Case.camelCase(event.name)}', ${Case.pascalCase(event.name)}.encode as any, ${Case.pascalCase(event.name)}.decode);`);
     }
     for (let atomic of schema.atomics) {
         builder.append(`let ${atomic.name}Promise = ${atomic.name}Factory.open(storage);`);
