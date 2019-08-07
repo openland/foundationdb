@@ -3,7 +3,7 @@ import { Context } from '@openland/context';
 import { transactional, TupleItem } from '@openland/foundationdb';
 import { Stream } from '../Stream';
 import { tupleToCursor, cursorToTuple } from './utils';
-import { SecondaryIndexDescriptor } from '../EntityDescriptor';
+import { SecondaryIndexDescriptor, EntityDescriptor } from '../EntityDescriptor';
 
 export class IndexStream<T> implements Stream<T> {
     readonly eventBusKey: string;
@@ -16,6 +16,7 @@ export class IndexStream<T> implements Stream<T> {
     private _cursor: TupleItem[] | undefined = undefined;
 
     constructor(
+        entityDescriptor: EntityDescriptor<unknown>,
         descriptor: SecondaryIndexDescriptor,
         prefix: TupleItem[],
         limit: number,
@@ -28,7 +29,7 @@ export class IndexStream<T> implements Stream<T> {
         this._limit = limit;
         this._reverse = reverse;
         this._prefix = prefix;
-        this.eventBusKey = 'fdb-entity-created-' + descriptor.storageKey;
+        this.eventBusKey = 'fdb-entity-created-' + entityDescriptor.storageKey;
         this.entityStorage = storage;
     }
 
