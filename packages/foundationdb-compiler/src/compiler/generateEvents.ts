@@ -103,7 +103,7 @@ export function generateEvents(schema: SchemaModel, builder: StringBuilder) {
 
         // Post
         builder.append();
-        builder.append(`post(ctx: Context, ${eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ')}, event: BaseEvent) {`);
+        builder.append(`post(ctx: Context${eventStore.keys.length > 0 ? ', ' + eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ') : ''}, event: BaseEvent) {`);
         builder.addIndent();
         builder.append(`this._post(ctx, [${eventStore.keys.map((v) => v.name).join(', ')}], event);`);
         builder.removeIndent();
@@ -111,7 +111,7 @@ export function generateEvents(schema: SchemaModel, builder: StringBuilder) {
 
         // Find All
         builder.append();
-        builder.append(`async findAll(ctx: Context, ${eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ')}) {`);
+        builder.append(`async findAll(ctx: Context${eventStore.keys.length > 0 ? ', ' + eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ') : ''}) {`);
         builder.addIndent();
         builder.append(`return this._findAll(ctx, [${eventStore.keys.map((v) => v.name).join(', ')}]);`);
         builder.removeIndent();
@@ -119,7 +119,7 @@ export function generateEvents(schema: SchemaModel, builder: StringBuilder) {
 
         // Create Stream
         builder.append();
-        builder.append(`createStream(${eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ')}, opts?: { batchSize?: number, after?: string }) {`);
+        builder.append(`createStream(${eventStore.keys.length > 0 ? eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ') + ', ' : ''}opts?: { batchSize?: number, after?: string }) {`);
         builder.addIndent();
         builder.append(`return this._createStream([${eventStore.keys.map((v) => v.name).join(', ')}], opts);`);
         builder.removeIndent();
@@ -127,7 +127,7 @@ export function generateEvents(schema: SchemaModel, builder: StringBuilder) {
 
         // Create Live Stream
         builder.append();
-        builder.append(`createLiveStream(ctx: Context, ${eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ')}, opts?: { batchSize?: number, after?: string }) {`);
+        builder.append(`createLiveStream(ctx: Context${eventStore.keys.length > 0 ? ', ' + eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ') : ''}, opts?: { batchSize?: number, after?: string }) {`);
         builder.addIndent();
         builder.append(`return this._createLiveStream(ctx, [${eventStore.keys.map((v) => v.name).join(', ')}], opts);`);
         builder.removeIndent();
