@@ -1,8 +1,8 @@
-import { delayBreakable } from '@openland/foundationdb-utils';
 import { Context } from '@openland/context';
 import { withoutTransaction } from '@openland/foundationdb';
 import { BusSubcription } from '@openland/foundationdb-bus';
 import { Stream } from './Stream';
+import { delayBreakable, onContextCancel } from '@openland/lifetime';
 
 export interface LiveStreamItem<T> {
     items: T[];
@@ -29,7 +29,7 @@ export class LiveStream<T> {
     async * generator(parent: Context): AsyncIterable<LiveStreamItem<T>> {
         let t = this;
         let ctx = withoutTransaction(parent); // Clear transaction information since live stream manage transactions by itself
-
+        onContextCancel(ctx, () => this.ended = true);
         try {
             if (!t.baseStream.cursor) {
                 let tail = await t.baseStream.tail(ctx);
@@ -42,12 +42,13 @@ export class LiveStream<T> {
                 if (res.length > 0) {
                     yield { items: res, cursor: t.baseStream.cursor };
                 } else {
-                    let w = delayBreakable(10000 + Math.random() * 15000);
-                    t.awaiter = w.resolver;
-                    await w.promise;
+                    let w = delayBreakable(ctx, 10000 + Math.random() * 15000);
+                    t.awaiter = w.cancel;
+                    await w.wait;
                     t.awaiter = undefined;
                 }
             }
+            yield { items: [], cursor: t.baseStream.cursor };
         } finally {
             t.handleEnded();
         }
