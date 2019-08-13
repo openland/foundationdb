@@ -48,7 +48,6 @@ export class LiveStream<T> {
                     t.awaiter = undefined;
                 }
             }
-            yield { items: [], cursor: t.baseStream.cursor };
         } finally {
             t.handleEnded();
         }
