@@ -1,7 +1,7 @@
 {
     "name": "@openland/foundationdb-bus",
     "description": "EventBus layer for FoundationDB",
-    "version": "4.5.0",
+    "version": "4.5.1",
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",
     "repository": "https://github.com/openland/foundationdb",
@@ -13,8 +13,8 @@
     },
     "dependencies": {
         "@openland/context": "*",
-        "@openland/foundationdb": "^4.5.0",
-        "@openland/foundationdb-utils": "^4.5.0",
+        "@openland/foundationdb": "^4.5.1",
+        "@openland/foundationdb-utils": "^4.5.1",
         "@openland/log": "*"
     }
 }
