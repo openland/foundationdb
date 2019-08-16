@@ -109,6 +109,14 @@ export function generateEvents(schema: SchemaModel, builder: StringBuilder) {
         builder.removeIndent();
         builder.append(`}`);
 
+        // Query
+        builder.append();
+        builder.append(`async query(ctx: Context${eventStore.keys.length > 0 ? ', ' + eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ') : ''}, opts?: RangeQueryOptions<Buffer>) {`);
+        builder.addIndent();
+        builder.append(`return this._query(ctx, [${eventStore.keys.map((v) => v.name).join(', ')}], opts);`);
+        builder.removeIndent();
+        builder.append(`}`);
+
         // Find All
         builder.append();
         builder.append(`async findAll(ctx: Context${eventStore.keys.length > 0 ? ', ' + eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ') : ''}) {`);

@@ -60,6 +60,10 @@ export class UserEvents extends EventStore {
         this._post(ctx, [userId], event);
     }
 
+    async query(ctx: Context, userId: string, opts?: RangeQueryOptions<Buffer>) {
+        return this._query(ctx, [userId], opts);
+    }
+
     async findAll(ctx: Context, userId: string) {
         return this._findAll(ctx, [userId]);
     }

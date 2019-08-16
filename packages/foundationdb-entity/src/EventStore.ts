@@ -36,6 +36,55 @@ export abstract class EventStore {
             .map((v) => this.descriptor.factory.decode(v.value));
     }
 
+    protected async _query(
+        ctx: Context,
+        key: PrimaryKeyType[],
+        opts?: {
+            limit?: number | undefined | null,
+            reverse?: boolean | undefined | null,
+            after?: Buffer | undefined | null,
+            afterCursor?: string | undefined | null
+        }
+    ) {
+        let after: Buffer | undefined = undefined;
+        if (opts && opts.afterCursor) {
+            after = Buffer.from(opts.afterCursor, 'base64');
+        } else if (opts && opts.after) {
+            after = opts.after;
+        }
+
+        let res = await this.descriptor.subspace.subspace(encoders.tuple.pack(key)).range(ctx, emptyBuffer, {
+            limit: opts && opts.limit ? (opts.limit + 1) : undefined,
+            reverse: opts && opts.reverse ? opts.reverse : undefined,
+            after
+        });
+
+        let items = res.map(v => ({ event: this.descriptor.factory.decode(v.value), key: v.key }));
+        if (opts && opts.limit) {
+            let haveMore = items.length > opts.limit;
+            if (haveMore) {
+                items.splice(items.length - 1, 1);
+                return {
+                    items,
+                    cursor: res[res.length - 2].key.toString('base64'),
+                    haveMore: haveMore
+                };
+            } else {
+                return {
+                    items,
+                    cursor: res[res.length - 1].key.toString('base64'),
+                    haveMore: haveMore
+                };
+            }
+        }
+
+        return {
+            items,
+            cursor: res[res.length - 1].key.toString('base64'),
+            haveMore: false
+        };
+    }
+
     protected _createStream(key: PrimaryKeyType[], opts?: { batchSize?: number, after?: string }) {
         return new EventStream(this.descriptor, encoders.tuple.pack(key), opts && opts.batchSize || 5000, opts && opts.after);
     }
