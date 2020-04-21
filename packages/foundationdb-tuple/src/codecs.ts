@@ -1,6 +1,5 @@
 import { Float } from './Float';
 import { BufferWriter, BufferReader } from './utils/buffer';
-import { TupleCodec } from './codecs';
 import { normalizeInteger } from './utils/normalizeInteger';
 import { normalizeDouble } from './utils/normalizeDouble';
 
@@ -72,8 +71,8 @@ function writeBuffer(src: Buffer, writer: BufferWriter) {
 }
 
 function readBuffer(reader: BufferReader) {
-    /** 
-     * NOTE: Our implementation is different here from node-foundationdb. 
+    /**
+     * NOTE: Our implementation is different here from node-foundationdb.
      * They are not crashing codec if they reached buffer end, but we are.
      */
     let writer = new BufferWriter();
