@@ -51,9 +51,9 @@ export interface EntityDescriptor<SHAPE> {
     storage: EntityStorage;
 
     /**
-     * Flag is entity deletable
+     * Flag if entity could be deleted
      */
-    deletable: boolean;
+    allowDelete: boolean;
 }
 
 /**

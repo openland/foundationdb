@@ -33,9 +33,9 @@ export abstract class Entity<T> {
     private _invalidated = false;
 
     /**
-     * Flag if entity was destroyed
+     * Flag if entity was deleted
      */
-    private _destroyed = false;
+    private _deleted = false;
 
     /**
      * Flush mutex to avoid consistency problems during accidental parallel flushes
@@ -84,8 +84,8 @@ export abstract class Entity<T> {
         if (this._tx.isCompleted) {
             throw Error('You can\'t update entity when transaction is in completed state.');
         }
-        if (this._destroyed) {
-            throw Error('You can\'t update destroyed entity');
+        if (this._deleted) {
+            throw Error('You can\'t update deleted entity');
         }
         if (this._invalidated) {
             return;
@@ -101,7 +101,7 @@ export abstract class Entity<T> {
     async flush(ctx: Context) {
         await this.mutex.runExclusive(async () => {
             // Check if entity was destroyed
-            if (this._destroyed) {
+            if (this._deleted) {
                 return;
             }
 
@@ -153,25 +153,24 @@ export abstract class Entity<T> {
      * Deletes entity from storage
      * @param ctx context
      */
-    async destroy(ctx: Context) {
+    async delete(ctx: Context) {
         if (this._isReadOnly) {
             throw Error('Entity is not writable. Did you wrapped everything in transaction?');
         }
         if (this._tx.isCompleted) {
-            throw Error('You can\'t destroy entity when transaction is in completed state.');
+            throw Error('You can\'t delete entity when transaction is in completed state.');
         }
-        if (!this.descriptor.deletable) {
-            throw Error('Can\'t destroy non-deletable entity');
+        if (!this.descriptor.allowDelete) {
+            throw Error('Can\'t delete non-deletable entity');
         }
-        if (this._destroyed) {
-            throw Error('Entity already destroyed');
+        if (this._deleted) {
+            throw Error('Entity already deleted');
         }
 
-        await this.mutex.runExclusive(async () => {
-            // Perform destroy
-            await this._destroyer(ctx, this._rawId, this._snapshotValue);
-            // Mark as destroyed
-            this._destroyed = true;
-        });
+        // Mark as deleted
+        this._deleted = true;
+
+        // Perform delete
+        await this._destroyer(ctx, this._rawId, this._snapshotValue);
     }
 }

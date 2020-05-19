@@ -13,21 +13,25 @@ import {
     union,
     optional,
     uniqueIndex,
-    deletableEntity
+    allowDelete
 } from '@openland/foundationdb-compiler';
 
 export default declareSchema(() => {
-    deletableEntity('UniqueIndex', () => {
+    entity('UniqueIndex', () => {
         primaryKey('id', integer());
         field('unique1', string());
         field('unique2', string());
         uniqueIndex('test', ['unique1', 'unique2']);
+
+        allowDelete();
     });
 
-    deletableEntity('UniqueConditionalIndex', () => {
+    entity('UniqueConditionalIndex', () => {
         primaryKey('id', integer());
         field('unique1', string());
         field('unique2', string());
         uniqueIndex('test', ['unique1', 'unique2']).withCondition((src) => src.unique1 === '!');
+
+        allowDelete();
     });
 });

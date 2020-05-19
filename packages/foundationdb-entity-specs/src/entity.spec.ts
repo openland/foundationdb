@@ -275,7 +275,7 @@ describe('Entity', () => {
         expect(func.mock.calls.length).toBe(1);
     });
 
-    it('should be able to destroy entity', async () => {
+    it('should be able to delete entity', async () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
@@ -283,13 +283,36 @@ describe('Entity', () => {
 
         await inTx(testCtx, async ctx => {
             let created = await factory.create(ctx, '1', { value: 'value', value2: 2, value3: false });
-            await created.destroy(ctx);
+            await created.delete(ctx);
             expect(await factory.findById(ctx, '1')).toBe(null);
-            expect(() => created.value2 = 3).toThrowError('You can\'t update destroyed entity');
+            expect(() => created.value2 = 3).toThrowError('You can\'t update deleted entity');
+        });
+
+        // Check in new tx
+        await inTx(testCtx, async ctx => {
+            expect(await factory.findById(ctx, '1')).toBe(null);
+        });
+
+        // with no await
+        await inTx(testCtx, async ctx => {
+            let created = await factory.create(ctx, '1', { value: 'value', value2: 2, value3: false });
+            let d = created.delete(ctx);
+            expect(() => created.value2 = 3).toThrowError('You can\'t update deleted entity');
+            await d;
+        });
+
+        // create-delete-create sequence in parallel
+        await inTx(testCtx, async ctx => {
+            let created = await factory.create(ctx, '1', { value: 'value', value2: 2, value3: false });
+            let d = created.delete(ctx);
+            let c = factory.create(ctx, '1', { value: 'value', value2: 2, value3: false });
+
+            await d;
+            expect((await c).id).toEqual('1');
         });
     });
 
-    it('should destroy only once', async () => {
+    it('should delete only once', async () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
@@ -297,12 +320,20 @@ describe('Entity', () => {
 
         await inTx(testCtx, async ctx => {
             let created = await factory.create(ctx, '1', { value: 'value', value2: 2, value3: false });
-            await created.destroy(ctx);
-            expect(created.destroy(ctx)).rejects.toThrowError('Entity already destroyed');
+            await created.delete(ctx);
+            expect(created.delete(ctx)).rejects.toThrowError('Entity already deleted');
+        });
+
+        // with no await
+        await inTx(testCtx, async ctx => {
+            let created = await factory.create(ctx, '1', { value: 'value', value2: 2, value3: false });
+            let d = created.delete(ctx);
+            expect(created.delete(ctx)).rejects.toThrowError('Entity already deleted');
+            await d;
         });
     });
 
-    it('should not destroy non-deletable entity', async () => {
+    it('should not delete non-deletable entity', async () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
@@ -310,7 +341,22 @@ describe('Entity', () => {
 
         await inTx(testCtx, async ctx => {
             let created = await factory.create(ctx, 1, { value: 'value' });
-            expect(created.destroy(ctx)).rejects.toThrowError('Can\'t destroy non-deletable entity');
+            expect(created.delete(ctx)).rejects.toThrowError('Can\'t delete non-deletable entity');
         });
+    });
+
+    it('should not delete in read-only transaction', async () => {
+        let testCtx = createNamedContext('test');
+        let db = await openTestDatabase();
+        let store = new EntityStorage(db);
+        let factory = await SimpleEntityFactory.open(store);
+
+        await inTx(testCtx, async _ctx => {
+            await factory.create(_ctx, '1', { value: 'value', value2: 2, value3: false });
+        });
+
+        let ctx = withReadOnlyTransaction(createNamedContext('test'));
+        let ex = await factory.findById(ctx, '1');
+        expect(ex!.delete(ctx)).rejects.toThrowError('Entity is not writable. Did you wrapped everything in transaction?');
     });
 });

@@ -12,22 +12,25 @@ import {
     struct,
     union,
     optional,
-    rangeIndex,
-    deletableEntity
+    rangeIndex, allowDelete,
 } from '@openland/foundationdb-compiler';
 
 export default declareSchema(() => {
-    deletableEntity('RangeIndex', () => {
+    entity('RangeIndex', () => {
         primaryKey('id', integer());
         field('range1', integer());
         field('range2', integer());
         rangeIndex('ranges', ['range1', 'range2']);
+
+        allowDelete();
     });
 
-    deletableEntity('RangeIndexConditional', () => {
+    entity('RangeIndexConditional', () => {
         primaryKey('id', integer());
         field('range1', integer());
         field('range2', integer());
         rangeIndex('ranges', ['range1', 'range2']).withCondition((src) => src.range1 === 0);
+
+        allowDelete();
     });
 });

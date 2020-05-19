@@ -140,7 +140,7 @@ describe('Unique index', () => {
 
         await inTx(testCtx, async ctx => {
             let created = await factory.create(ctx, 1, { unique1: '1', unique2: '2' });
-            await created.destroy(ctx);
+            await created.delete(ctx);
             expect(await factory.findById(ctx, 1)).toBe(null);
             expect(await factory.test.find(ctx, '1', '2')).toBe(null);
         });
@@ -154,7 +154,7 @@ describe('Unique index', () => {
 
         await inTx(testCtx, async ctx => {
             let created = await factory.create(ctx, 1, { unique1: '!', unique2: '2' });
-            await created.destroy(ctx);
+            await created.delete(ctx);
             expect(await factory.findById(ctx, 1)).toBe(null);
             expect(await factory.test.find(ctx, '!', '2')).toBe(null);
         });

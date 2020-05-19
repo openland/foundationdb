@@ -60,7 +60,7 @@ export class UniqueIndexFactory extends EntityFactory<UniqueIndexShape, UniqueIn
         let descriptor: EntityDescriptor<UniqueIndexShape> = {
             name: 'UniqueIndex',
             storageKey: 'uniqueIndex',
-            deletable: true,
+            allowDelete: true,
             subspace, codec, secondaryIndexes, storage, primaryKeys, fields
         };
         return new UniqueIndexFactory(descriptor);
@@ -99,7 +99,7 @@ export class UniqueIndexFactory extends EntityFactory<UniqueIndexShape, UniqueIn
     }
 
     protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<UniqueIndexShape>): UniqueIndex {
-        return new UniqueIndex([value.id], value, this.descriptor, this._flush, this._destroy, ctx);
+        return new UniqueIndex([value.id], value, this.descriptor, this._flush, this._delete, ctx);
     }
 }
 
@@ -155,7 +155,7 @@ export class UniqueConditionalIndexFactory extends EntityFactory<UniqueCondition
         let descriptor: EntityDescriptor<UniqueConditionalIndexShape> = {
             name: 'UniqueConditionalIndex',
             storageKey: 'uniqueConditionalIndex',
-            deletable: true,
+            allowDelete: true,
             subspace, codec, secondaryIndexes, storage, primaryKeys, fields
         };
         return new UniqueConditionalIndexFactory(descriptor);
@@ -194,7 +194,7 @@ export class UniqueConditionalIndexFactory extends EntityFactory<UniqueCondition
     }
 
     protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<UniqueConditionalIndexShape>): UniqueConditionalIndex {
-        return new UniqueConditionalIndex([value.id], value, this.descriptor, this._flush, this._destroy, ctx);
+        return new UniqueConditionalIndex([value.id], value, this.descriptor, this._flush, this._delete, ctx);
     }
 }
 

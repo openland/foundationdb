@@ -252,7 +252,7 @@ describe('Range Index', () => {
 
         await inTx(testCtx, async ctx => {
             let created = await factory.create(ctx, 1, { range1: 1, range2: 2 });
-            await created.destroy(ctx);
+            await created.delete(ctx);
             expect(await factory.findById(ctx, 1)).toBe(null);
             expect(await factory.ranges.findAll(ctx, 1)).toHaveLength(0);
         });
@@ -266,7 +266,7 @@ describe('Range Index', () => {
 
         await inTx(testCtx, async ctx => {
             let created = await factory.create(ctx, 1, { range1: 0, range2: 2 });
-            await created.destroy(ctx);
+            await created.delete(ctx);
             expect(await factory.findById(ctx, 1)).toBe(null);
             expect(await factory.ranges.findAll(ctx, 0)).toHaveLength(0);
         });

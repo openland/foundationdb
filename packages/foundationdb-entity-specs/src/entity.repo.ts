@@ -72,7 +72,7 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
         let descriptor: EntityDescriptor<SimpleEntityShape> = {
             name: 'SimpleEntity',
             storageKey: 'simpleEntity',
-            deletable: true,
+            allowDelete: true,
             subspace, codec, secondaryIndexes, storage, primaryKeys, fields
         };
         return new SimpleEntityFactory(descriptor);
@@ -99,7 +99,7 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
     }
 
     protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<SimpleEntityShape>): SimpleEntity {
-        return new SimpleEntity([value.id], value, this.descriptor, this._flush, this._destroy, ctx);
+        return new SimpleEntity([value.id], value, this.descriptor, this._flush, this._delete, ctx);
     }
 }
 
@@ -141,7 +141,7 @@ export class SimpleEntity2Factory extends EntityFactory<SimpleEntity2Shape, Simp
         let descriptor: EntityDescriptor<SimpleEntity2Shape> = {
             name: 'SimpleEntity2',
             storageKey: 'simpleEntity2',
-            deletable: false,
+            allowDelete: false,
             subspace, codec, secondaryIndexes, storage, primaryKeys, fields
         };
         return new SimpleEntity2Factory(descriptor);
@@ -168,7 +168,7 @@ export class SimpleEntity2Factory extends EntityFactory<SimpleEntity2Shape, Simp
     }
 
     protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<SimpleEntity2Shape>): SimpleEntity2 {
-        return new SimpleEntity2([value.id], value, this.descriptor, this._flush, this._destroy, ctx);
+        return new SimpleEntity2([value.id], value, this.descriptor, this._flush, this._delete, ctx);
     }
 }
 
@@ -405,7 +405,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
         let descriptor: EntityDescriptor<AllFieldsShape> = {
             name: 'AllFields',
             storageKey: 'allFields',
-            deletable: false,
+            allowDelete: false,
             subspace, codec, secondaryIndexes, storage, primaryKeys, fields
         };
         return new AllFieldsFactory(descriptor);
@@ -444,7 +444,7 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
     }
 
     protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<AllFieldsShape>): AllFields {
-        return new AllFields([value.key1, value.key2, value.key3, value.key4], value, this.descriptor, this._flush, this._destroy, ctx);
+        return new AllFields([value.key1, value.key2, value.key3, value.key4], value, this.descriptor, this._flush, this._delete, ctx);
     }
 }
 
