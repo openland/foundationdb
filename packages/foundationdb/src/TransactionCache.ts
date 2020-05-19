@@ -53,4 +53,22 @@ export class TransactionCache<T> {
             tx.userData.set(this.key, exm);
         }
     }
+
+    /**
+     * Delete value from transaction cache
+     *
+     * @param ctx      context
+     * @param cacheKey cache key
+     */
+    delete(ctx: Context, cacheKey: string) {
+        let tx = getTransaction(ctx);
+        let ex = tx.userData.get(this.key);
+        if (ex) {
+            let exm = ex as Map<string, T>;
+            let r = exm.get(cacheKey);
+            if (r) {
+                exm.delete(cacheKey);
+            }
+        }
+    }
 }

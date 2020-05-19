@@ -138,15 +138,24 @@ export class ConditionalMaintainer implements IndexMaintainer {
     }
 
     onDestroyLockKeys(id: TupleItem[], values: any): string[] {
+        if (this.condition(values)) {
+            return this.inner.onDestroyLockKeys(id, values);
+        }
         return [];
     }
     beforeDestory(ctx: Context, id: TupleItem[], values: any): void | Promise<void> {
-        //
+        if (this.condition(values) && this.inner.beforeDestory) {
+            return this.inner.beforeDestory(ctx, id, values);
+        }
     }
     onDestroy(ctx: Context, id: TupleItem[], value: any): void | Promise<void> {
-        //
+        if (this.condition(value) && this.inner.onDestroy) {
+            return this.inner.onDestroy(ctx, id, value);
+        }
     }
     afterDestroy(ctx: Context, id: TupleItem[], values: any): void | Promise<void> {
-        //
+        if (this.condition(values) && this.inner.afterDestroy) {
+            return this.inner.afterDestroy(ctx, id, values);
+        }
     }
 }

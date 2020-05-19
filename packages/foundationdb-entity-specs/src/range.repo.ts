@@ -60,6 +60,7 @@ export class RangeIndexFactory extends EntityFactory<RangeIndexShape, RangeIndex
         let descriptor: EntityDescriptor<RangeIndexShape> = {
             name: 'RangeIndex',
             storageKey: 'rangeIndex',
+            deletable: true,
             subspace, codec, secondaryIndexes, storage, primaryKeys, fields
         };
         return new RangeIndexFactory(descriptor);
@@ -101,7 +102,7 @@ export class RangeIndexFactory extends EntityFactory<RangeIndexShape, RangeIndex
     }
 
     protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<RangeIndexShape>): RangeIndex {
-        return new RangeIndex([value.id], value, this.descriptor, this._flush, ctx);
+        return new RangeIndex([value.id], value, this.descriptor, this._flush, this._destroy, ctx);
     }
 }
 
@@ -157,6 +158,7 @@ export class RangeIndexConditionalFactory extends EntityFactory<RangeIndexCondit
         let descriptor: EntityDescriptor<RangeIndexConditionalShape> = {
             name: 'RangeIndexConditional',
             storageKey: 'rangeIndexConditional',
+            deletable: true,
             subspace, codec, secondaryIndexes, storage, primaryKeys, fields
         };
         return new RangeIndexConditionalFactory(descriptor);
@@ -198,7 +200,7 @@ export class RangeIndexConditionalFactory extends EntityFactory<RangeIndexCondit
     }
 
     protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<RangeIndexConditionalShape>): RangeIndexConditional {
-        return new RangeIndexConditional([value.id], value, this.descriptor, this._flush, ctx);
+        return new RangeIndexConditional([value.id], value, this.descriptor, this._flush, this._destroy, ctx);
     }
 }
 

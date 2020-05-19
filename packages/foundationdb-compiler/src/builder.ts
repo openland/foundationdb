@@ -102,7 +102,22 @@ export function entity(name: string, schema: () => void) {
     if (currentSchema!.usedNames.has(name)) {
         throw Error('Duplicate entity with name ' + name);
     }
-    currentEntity = new EntityModel(name);
+    currentEntity = new EntityModel(name, false);
+    schema();
+    currentSchema!.usedNames.add(name);
+    currentSchema!.entities.push(currentEntity!!);
+    currentEntity = null;
+}
+
+export function deletableEntity(name: string, schema: () => void) {
+    checkValidEntityName(name);
+    if (currentAtomic || currentEntity || currentEventStore || currentEvent) {
+        throw Error('You can\'t nest declarations');
+    }
+    if (currentSchema!.usedNames.has(name)) {
+        throw Error('Duplicate entity with name ' + name);
+    }
+    currentEntity = new EntityModel(name, true);
     schema();
     currentSchema!.usedNames.add(name);
     currentSchema!.entities.push(currentEntity!!);

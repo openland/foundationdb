@@ -1,14 +1,30 @@
-import { declareSchema, entity, primaryKey, field, string, integer, boolean, enumString, array, float, struct, union, optional, rangeIndex } from '@openland/foundationdb-compiler';
+import {
+    declareSchema,
+    entity,
+    primaryKey,
+    field,
+    string,
+    integer,
+    boolean,
+    enumString,
+    array,
+    float,
+    struct,
+    union,
+    optional,
+    rangeIndex,
+    deletableEntity
+} from '@openland/foundationdb-compiler';
 
 export default declareSchema(() => {
-    entity('RangeIndex', () => {
+    deletableEntity('RangeIndex', () => {
         primaryKey('id', integer());
         field('range1', integer());
         field('range2', integer());
         rangeIndex('ranges', ['range1', 'range2']);
     });
 
-    entity('RangeIndexConditional', () => {
+    deletableEntity('RangeIndexConditional', () => {
         primaryKey('id', integer());
         field('range1', integer());
         field('range2', integer());

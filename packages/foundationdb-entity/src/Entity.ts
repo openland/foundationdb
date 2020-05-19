@@ -12,6 +12,7 @@ export abstract class Entity<T> {
     protected readonly _isReadOnly: boolean;
     protected readonly _tx: Transaction;
     protected readonly _flusher: (ctx: Context, id: ReadonlyArray<PrimaryKeyType>, oldValue: ShapeWithMetadata<T>, newValue: ShapeWithMetadata<T>) => Promise<void>;
+    protected readonly _destroyer: (ctx: Context, id: readonly PrimaryKeyType[], value: ShapeWithMetadata<T>) => Promise<void>;
 
     /**
      * Stores **latest** stored data in database
@@ -32,6 +33,11 @@ export abstract class Entity<T> {
     private _invalidated = false;
 
     /**
+     * Flag if entity was destroyed
+     */
+    private _destroyed = false;
+
+    /**
      * Flush mutex to avoid consistency problems during accidental parallel flushes
      */
     private mutex = new Mutex();
@@ -41,6 +47,7 @@ export abstract class Entity<T> {
         rawValue: ShapeWithMetadata<T>,
         descriptor: EntityDescriptor<T>,
         flush: (ctx: Context, id: readonly PrimaryKeyType[], oldValue: ShapeWithMetadata<T>, newValue: ShapeWithMetadata<T>) => Promise<void>,
+        destroy: (ctx: Context, id: readonly PrimaryKeyType[], value: ShapeWithMetadata<T>) => Promise<void>,
         ctx: Context
     ) {
         this._descriptor = descriptor;
@@ -50,6 +57,7 @@ export abstract class Entity<T> {
         this._tx = getTransaction(ctx);
         this._isReadOnly = this._tx.isReadOnly;
         this._flusher = flush;
+        this._destroyer = destroy;
     }
 
     /**
@@ -76,6 +84,9 @@ export abstract class Entity<T> {
         if (this._tx.isCompleted) {
             throw Error('You can\'t update entity when transaction is in completed state.');
         }
+        if (this._destroyed) {
+            throw Error('You can\'t update destroyed entity');
+        }
         if (this._invalidated) {
             return;
         }
@@ -89,6 +100,10 @@ export abstract class Entity<T> {
      */
     async flush(ctx: Context) {
         await this.mutex.runExclusive(async () => {
+            // Check if entity was destroyed
+            if (this._destroyed) {
+                return;
+            }
 
             // Check if we have something to flush
             if (!this._invalidated) {
@@ -131,6 +146,32 @@ export abstract class Entity<T> {
 
             // Update snapshot
             this._snapshotValue = value;
+        });
+    }
+
+    /**
+     * Deletes entity from storage
+     * @param ctx context
+     */
+    async destroy(ctx: Context) {
+        if (this._isReadOnly) {
+            throw Error('Entity is not writable. Did you wrapped everything in transaction?');
+        }
+        if (this._tx.isCompleted) {
+            throw Error('You can\'t destroy entity when transaction is in completed state.');
+        }
+        if (!this.descriptor.deletable) {
+            throw Error('Can\'t destroy non-deletable entity');
+        }
+        if (this._destroyed) {
+            throw Error('Entity already destroyed');
+        }
+
+        await this.mutex.runExclusive(async () => {
+            // Perform destroy
+            await this._destroyer(ctx, this._rawId, this._snapshotValue);
+            // Mark as destroyed
+            this._destroyed = true;
         });
     }
 }

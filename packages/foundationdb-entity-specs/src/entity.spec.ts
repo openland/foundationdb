@@ -274,4 +274,43 @@ describe('Entity', () => {
 
         expect(func.mock.calls.length).toBe(1);
     });
+
+    it('should be able to destroy entity', async () => {
+        let testCtx = createNamedContext('test');
+        let db = await openTestDatabase();
+        let store = new EntityStorage(db);
+        let factory = await SimpleEntityFactory.open(store);
+
+        await inTx(testCtx, async ctx => {
+            let created = await factory.create(ctx, '1', { value: 'value', value2: 2, value3: false });
+            await created.destroy(ctx);
+            expect(await factory.findById(ctx, '1')).toBe(null);
+            expect(() => created.value2 = 3).toThrowError('You can\'t update destroyed entity');
+        });
+    });
+
+    it('should destroy only once', async () => {
+        let testCtx = createNamedContext('test');
+        let db = await openTestDatabase();
+        let store = new EntityStorage(db);
+        let factory = await SimpleEntityFactory.open(store);
+
+        await inTx(testCtx, async ctx => {
+            let created = await factory.create(ctx, '1', { value: 'value', value2: 2, value3: false });
+            await created.destroy(ctx);
+            expect(created.destroy(ctx)).rejects.toThrowError('Entity already destroyed');
+        });
+    });
+
+    it('should not destroy non-deletable entity', async () => {
+        let testCtx = createNamedContext('test');
+        let db = await openTestDatabase();
+        let store = new EntityStorage(db);
+        let factory = await SimpleEntity2Factory.open(store);
+
+        await inTx(testCtx, async ctx => {
+            let created = await factory.create(ctx, 1, { value: 'value' });
+            expect(created.destroy(ctx)).rejects.toThrowError('Can\'t destroy non-deletable entity');
+        });
+    });
 });

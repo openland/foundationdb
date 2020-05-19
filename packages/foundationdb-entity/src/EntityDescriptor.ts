@@ -49,6 +49,11 @@ export interface EntityDescriptor<SHAPE> {
      * Reference to the underlying storage
      */
     storage: EntityStorage;
+
+    /**
+     * Flag is entity deletable
+     */
+    deletable: boolean;
 }
 
 /**

@@ -244,6 +244,33 @@ describe('Range Index', () => {
         expect(ex[0].id).toBe(1);
     });
 
+    it('should properly destroy', async () => {
+        let testCtx = createNamedContext('test');
+        let db = await openTestDatabase();
+        let store = new EntityStorage(db);
+        let factory = await RangeIndexFactory.open(store);
+
+        await inTx(testCtx, async ctx => {
+            let created = await factory.create(ctx, 1, { range1: 1, range2: 2 });
+            await created.destroy(ctx);
+            expect(await factory.findById(ctx, 1)).toBe(null);
+            expect(await factory.ranges.findAll(ctx, 1)).toHaveLength(0);
+        });
+    });
+
+    it('should properly destroy with condition', async () => {
+        let testCtx = createNamedContext('test');
+        let db = await openTestDatabase();
+        let store = new EntityStorage(db);
+        let factory = await RangeIndexConditionalFactory.open(store);
+
+        await inTx(testCtx, async ctx => {
+            let created = await factory.create(ctx, 1, { range1: 0, range2: 2 });
+            await created.destroy(ctx);
+            expect(await factory.findById(ctx, 1)).toBe(null);
+            expect(await factory.ranges.findAll(ctx, 0)).toHaveLength(0);
+        });
+    });
     //
     // TODO: Read your writes test
     //

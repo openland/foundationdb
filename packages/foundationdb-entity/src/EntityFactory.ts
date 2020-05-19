@@ -444,6 +444,53 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         });
     }
 
+    // Need to be arrow function since we are passing this function to entity instances
+    protected _destroy = async (ctx: Context, _id: PrimaryKeyType[], value: ShapeWithMetadata<SHAPE>) => {
+        let id = this._resolvePrimaryKey(_id);
+
+        let mutexKeys: string[] = [];
+        for (let i of this._indexMaintainers) {
+            if (i.onDestroyLockKeys) {
+                for (let k of i.onDestroyLockKeys(id, value)) {
+                    mutexKeys.push(k);
+                }
+            } else {
+                mutexKeys.push('global-lock');
+            }
+        }
+
+        await this._mutexManager.runExclusively(ctx, mutexKeys, async () => {
+            //
+            // Call beforeDestory hook
+            //
+            for (let i of this._indexMaintainers) {
+                if (i.beforeDestory) {
+                    await i.beforeDestory(ctx, id, value);
+                }
+            }
+
+            //
+            // Call onDestroy
+            //
+            for (let i of this._indexMaintainers) {
+                i.onDestroy(ctx, id, value);
+            }
+
+            //
+            // Call afterDestroy hook
+            //
+            for (let i of this._indexMaintainers) {
+                if (i.afterDestroy) {
+                    await i.afterDestroy(ctx, id, value);
+                }
+            }
+
+            // Delete from tx cache
+            let k = getCacheKey(id);
+            this._entityCache.delete(ctx, k);
+        });
+    }
+
     private _encode(ctx: Context, value: SHAPE, metadata: EntityMetadata) {
         try {
             return Object.assign({}, value, this._codec.encode(Object.assign({}, value, { createdAt: metadata.createdAt, updatedAt: metadata.updatedAt, _version: metadata.versionCode })));

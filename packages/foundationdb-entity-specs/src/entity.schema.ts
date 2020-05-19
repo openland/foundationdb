@@ -1,7 +1,7 @@
-import { declareSchema, entity, primaryKey, field, string, integer, boolean, enumString, customDirectory, json, array, float, struct, union, optional, uniqueIndex } from '@openland/foundationdb-compiler';
+import { declareSchema, entity, deletableEntity, primaryKey, field, string, integer, boolean, enumString, customDirectory, json, array, float, struct, union, optional, uniqueIndex } from '@openland/foundationdb-compiler';
 
 export default declareSchema(() => {
-    entity('SimpleEntity', () => {
+    deletableEntity('SimpleEntity', () => {
         primaryKey('id', string());
         field('value', string());
         field('value2', integer());

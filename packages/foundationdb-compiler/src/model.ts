@@ -145,9 +145,11 @@ export class EntityModel {
     readonly keys: PrimaryKey[] = [];
     readonly fields: Field[] = [];
     readonly indexes: EntityIndexModel[] = [];
+    readonly isDeletable: boolean;
 
-    constructor(name: string) {
+    constructor(name: string, isDeletable: boolean) {
         this.name = name;
+        this.isDeletable = isDeletable;
     }
 
     addKey(name: string, type: SchemaType) {

@@ -131,4 +131,32 @@ describe('Unique index', () => {
         expect(ex).not.toBeNull();
         expect(ex).not.toBeUndefined();
     });
+
+    it('should properly destroy', async () => {
+        let testCtx = createNamedContext('test');
+        let db = await openTestDatabase();
+        let store = new EntityStorage(db);
+        let factory = await UniqueIndexFactory.open(store);
+
+        await inTx(testCtx, async ctx => {
+            let created = await factory.create(ctx, 1, { unique1: '1', unique2: '2' });
+            await created.destroy(ctx);
+            expect(await factory.findById(ctx, 1)).toBe(null);
+            expect(await factory.test.find(ctx, '1', '2')).toBe(null);
+        });
+    });
+
+    it('should properly destroy with condition', async () => {
+        let testCtx = createNamedContext('test');
+        let db = await openTestDatabase();
+        let store = new EntityStorage(db);
+        let factory = await UniqueConditionalIndexFactory.open(store);
+
+        await inTx(testCtx, async ctx => {
+            let created = await factory.create(ctx, 1, { unique1: '!', unique2: '2' });
+            await created.destroy(ctx);
+            expect(await factory.findById(ctx, 1)).toBe(null);
+            expect(await factory.test.find(ctx, '!', '2')).toBe(null);
+        });
+    });
 });
