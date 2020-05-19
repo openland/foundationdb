@@ -145,6 +145,7 @@ export class EntityModel {
     readonly keys: PrimaryKey[] = [];
     readonly fields: Field[] = [];
     readonly indexes: EntityIndexModel[] = [];
+    allowDelete: boolean = false;
 
     constructor(name: string) {
         this.name = name;
@@ -154,6 +155,10 @@ export class EntityModel {
         let res = new PrimaryKey(name, type);
         this.keys.push(res);
         return res;
+    }
+
+    setAllowDelete(allowDelete: boolean) {
+        this.allowDelete = allowDelete;
     }
 }
 

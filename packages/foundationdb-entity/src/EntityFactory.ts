@@ -320,11 +320,8 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             };
             let encoded = this._encode(ctx, value, metadata);
 
-            // Check cache
+            // Cache key
             let k = getCacheKey(id);
-            if (this._entityCache.get(ctx, k)) {
-                throw Error('Entity already exists');
-            }
 
             // Compute mutex keys
             let mutexKeys: string[] = [];
@@ -339,6 +336,11 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             }
 
             await this._mutexManager.runExclusively(ctx, mutexKeys, async () => {
+                // check cache
+                if (this._entityCache.get(ctx, k)) {
+                    throw Error('Entity already exists');
+                }
+
                 await inTx(ctx, async (ctx2) => {
 
                     //
@@ -441,6 +443,53 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
                     }
                 }
             });
+        });
+    }
+
+    // Need to be arrow function since we are passing this function to entity instances
+    protected _delete = async (ctx: Context, _id: PrimaryKeyType[], value: ShapeWithMetadata<SHAPE>) => {
+        let id = this._resolvePrimaryKey(_id);
+
+        let mutexKeys: string[] = [];
+        for (let i of this._indexMaintainers) {
+            if (i.onDestroyLockKeys) {
+                for (let k of i.onDestroyLockKeys(id, value)) {
+                    mutexKeys.push(k);
+                }
+            } else {
+                mutexKeys.push('global-lock');
+            }
+        }
+
+        await this._mutexManager.runExclusively(ctx, mutexKeys, async () => {
+            //
+            // Call beforeDestory hook
+            //
+            for (let i of this._indexMaintainers) {
+                if (i.beforeDestory) {
+                    await i.beforeDestory(ctx, id, value);
+                }
+            }
+
+            //
+            // Call onDestroy
+            //
+            for (let i of this._indexMaintainers) {
+                i.onDestroy(ctx, id, value);
+            }
+
+            //
+            // Call afterDestroy hook
+            //
+            for (let i of this._indexMaintainers) {
+                if (i.afterDestroy) {
+                    await i.afterDestroy(ctx, id, value);
+                }
+            }
+
+            // Delete from tx cache
+            let k = getCacheKey(id);
+            this._entityCache.delete(ctx, k);
         });
     }
 

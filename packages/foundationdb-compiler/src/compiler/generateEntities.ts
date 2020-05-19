@@ -313,6 +313,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         builder.addIndent();
         builder.append(`name: '${entity.name}',`);
         builder.append(`storageKey: '${entityKey}',`);
+        builder.append(`allowDelete: ${entity.allowDelete},`);
         builder.append(`subspace, codec, secondaryIndexes, storage, primaryKeys, fields`);
         builder.removeIndent();
         builder.append(`};`);
@@ -490,7 +491,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         builder.append();
         builder.append(`protected _createEntityInstance(ctx: Context, value: ShapeWithMetadata<${entityClass}Shape>): ${entityClass} {`);
         builder.addIndent();
-        builder.append(`return new ${entityClass}([${entity.keys.map((v) => 'value.' + v.name).join(', ')}], value, this.descriptor, this._flush, ctx);`);
+        builder.append(`return new ${entityClass}([${entity.keys.map((v) => 'value.' + v.name).join(', ')}], value, this.descriptor, this._flush, this._delete, ctx);`);
         builder.removeIndent();
         builder.append(`}`);
 

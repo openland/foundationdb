@@ -221,6 +221,13 @@ export function field(name: string, type: SchemaType) {
     return new FieldBuilder(res);
 }
 
+export function allowDelete() {
+    if (!currentEntity) {
+        throw Error('No entity specified');
+    }
+    currentEntity.setAllowDelete(true);
+}
+
 export function uniqueIndex(name: string, fields: string[]) {
     checkValidFieldName(name);
     if (!currentEntity) {
