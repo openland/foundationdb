@@ -12,7 +12,7 @@ export abstract class Entity<T> {
     protected readonly _isReadOnly: boolean;
     protected readonly _tx: Transaction;
     protected readonly _flusher: (ctx: Context, id: ReadonlyArray<PrimaryKeyType>, oldValue: ShapeWithMetadata<T>, newValue: ShapeWithMetadata<T>) => Promise<void>;
-    protected readonly _destroyer: (ctx: Context, id: readonly PrimaryKeyType[], value: ShapeWithMetadata<T>) => Promise<void>;
+    protected readonly _destroyer: (ctx: Context, id: ReadonlyArray<PrimaryKeyType>, value: ShapeWithMetadata<T>) => Promise<void>;
 
     /**
      * Stores **latest** stored data in database
