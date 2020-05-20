@@ -13,6 +13,7 @@ export abstract class Entity<T> {
     protected readonly _tx: Transaction;
     protected readonly _flusher: (ctx: Context, id: ReadonlyArray<PrimaryKeyType>, oldValue: ShapeWithMetadata<T>, newValue: ShapeWithMetadata<T>) => Promise<void>;
     protected readonly _destroyer: (ctx: Context, id: readonly PrimaryKeyType[], value: ShapeWithMetadata<T>) => Promise<void>;
+    #allowDelete: boolean;
 
     /**
      * Stores **latest** stored data in database
@@ -58,6 +59,7 @@ export abstract class Entity<T> {
         this._isReadOnly = this._tx.isReadOnly;
         this._flusher = flush;
         this._destroyer = destroy;
+        this.#allowDelete = descriptor.allowDelete;
     }
 
     /**
@@ -160,7 +162,7 @@ export abstract class Entity<T> {
         if (this._tx.isCompleted) {
             throw Error('You can\'t delete entity when transaction is in completed state.');
         }
-        if (!this.descriptor.allowDelete) {
+        if (!this.#allowDelete) {
             throw Error('Can\'t delete non-deletable entity');
         }
         if (this._deleted) {
