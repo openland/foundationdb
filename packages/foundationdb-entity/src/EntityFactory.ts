@@ -447,7 +447,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     }
 
     // Need to be arrow function since we are passing this function to entity instances
-    protected _delete = async (ctx: Context, _id: PrimaryKeyType[], value: ShapeWithMetadata<SHAPE>) => {
+    protected _delete = async (ctx: Context, _id: ReadonlyArray<PrimaryKeyType>, value: ShapeWithMetadata<SHAPE>) => {
         let id = this._resolvePrimaryKey(_id);
 
         let mutexKeys: string[] = [];
