@@ -35,13 +35,13 @@ export class GlobalSubspace implements Subspace {
     async get(ctx: Context, key: Buffer) {
         return await SubspaceTracer.get(ctx, key, async () => {
             let tx = getTransaction(ctx).rawTransaction(this.db);
-            return await tx.get(key);
+            return (await tx.get(key)) || null;
         });
     }
     
     async snapshotGet(ctx: Context, key: Buffer) {
         let tx = getTransaction(ctx)!.rawTransaction(this.db);
-        return await tx.snapshot().get(Buffer.concat([this.prefix, key]));
+        return (await tx.snapshot().get(Buffer.concat([this.prefix, key]))) || null;
     }
 
     async range(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
