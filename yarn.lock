@@ -2282,12 +2282,11 @@ form-data@~2.3.2:
     combined-stream "^1.0.6"
     mime-types "^2.1.12"
 
-foundationdb@0.10.8:
-  version "0.10.8"
-  resolved "https://registry.yarnpkg.com/foundationdb/-/foundationdb-0.10.8.tgz#a87bbff54ea741044beb8555294b3411778e5e61"
-  integrity sha512-OjWqeAbl535D+NzVRfdcex9Y7mJ8BnvArkwW9TXSs2uFqewKU0SB0Gy25DA3wuMESTtfrWpF6WilUocoxmINWg==
+foundationdb@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/foundationdb/-/foundationdb-1.0.0.tgz#0ba4a068167559d0250280ed255ca7a757625486"
+  integrity sha512-xRNvrBt5ytJ2hiBWjCWXgSm+pYTk4ALgh4lSPdZkkh+m4diDcQaVeQE246CpYN63P3EJk1aOuRZoVxMrxDijVA==
   dependencies:
-    nan "^2.14.0"
     node-gyp-build "^4.2.0"
 
 fragment-cache@^0.2.1:
@@ -3949,7 +3948,7 @@ mute-stream@~0.0.4:
   version "0.0.8"
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-0.0.8.tgz#1630c42b2251ff81e2a283de96a5497ea92e5e0d"
 
-nan@^2.12.1, nan@^2.14.0:
+nan@^2.12.1:
   version "2.14.0"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.14.0.tgz#7818f722027b2459a86f0295d434d1fc2336c52c"
 
@@ -4008,9 +4007,9 @@ node-fetch@^2.3.0, node-fetch@^2.5.0:
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.0.tgz#e633456386d4aa55863f676a7ab0daa8fdecb0fd"
 
 node-gyp-build@^4.2.0:
-  version "4.2.1"
-  resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.2.1.tgz#f28f0d3d3ab268d48ab76c6f446f19bc3d0db9dc"
-  integrity sha512-XyCKXsqZfLqHep1hhsMncoXuUNt/cXCjg1+8CLbu69V1TKuPiOeSGbL9n+k/ByKH8UT0p4rdIX8XkTRZV0i7Sw==
+  version "4.2.2"
+  resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.2.2.tgz#3f44b65adaafd42fb6c3d81afd630e45c847eb66"
+  integrity sha512-Lqh7mrByWCM8Cf9UPqpeoVBBo5Ugx+RKu885GAzmLBVYjeywScxHXPGLa4JfYNZmcNGwzR0Glu5/9GaQZMFqyA==
 
 node-gyp@^4.0.0:
   version "4.0.0"
