@@ -39,6 +39,10 @@ export class UniqueIndex extends Entity<UniqueIndexShape> {
             this.invalidate();
         }
     }
+
+    delete(ctx: Context) {
+        return this._delete(ctx);
+    }
 }
 
 export class UniqueIndexFactory extends EntityFactory<UniqueIndexShape, UniqueIndex> {
@@ -133,6 +137,10 @@ export class UniqueConditionalIndex extends Entity<UniqueConditionalIndexShape> 
             this._updatedValues.unique2 = normalized;
             this.invalidate();
         }
+    }
+
+    delete(ctx: Context) {
+        return this._delete(ctx);
     }
 }
 

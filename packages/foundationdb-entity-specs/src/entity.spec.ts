@@ -341,7 +341,7 @@ describe('Entity', () => {
 
         await inTx(testCtx, async ctx => {
             let created = await factory.create(ctx, 1, { value: 'value' });
-            expect(created.delete(ctx)).rejects.toThrowError('Can\'t delete non-deletable entity');
+            expect((created as any)._delete(ctx)).rejects.toThrowError('Can\'t delete non-deletable entity');
         });
     });
 

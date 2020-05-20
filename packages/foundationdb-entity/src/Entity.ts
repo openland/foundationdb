@@ -159,7 +159,7 @@ export abstract class Entity<T> {
      * Deletes entity from storage
      * @param ctx context
      */
-    async delete(ctx: Context) {
+    protected async _delete(ctx: Context) {
         if (this._isReadOnly) {
             throw Error('Entity is not writable. Did you wrapped everything in transaction?');
         }

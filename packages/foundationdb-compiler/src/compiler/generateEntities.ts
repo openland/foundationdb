@@ -173,6 +173,16 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
             builder.removeIndent();
             builder.append(`}`);
         }
+        // Delete method
+        if (entity.allowDelete) {
+            builder.append();
+            builder.append(`delete(ctx: Context) {`);
+            builder.addIndent();
+            builder.append(`return this._delete(ctx);`);
+            builder.removeIndent();
+            builder.append(`}`);
+        }
+
         builder.removeIndent();
         builder.append(`}`);
 

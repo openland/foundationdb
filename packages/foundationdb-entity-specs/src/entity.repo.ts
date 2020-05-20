@@ -50,6 +50,10 @@ export class SimpleEntity extends Entity<SimpleEntityShape> {
             this.invalidate();
         }
     }
+
+    delete(ctx: Context) {
+        return this._delete(ctx);
+    }
 }
 
 export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, SimpleEntity> {
