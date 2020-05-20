@@ -42,6 +42,11 @@ export abstract class Entity<T> {
      */
     private mutex = new Mutex();
 
+    /**
+     * Flag if entity can be deleted
+     */
+    #allowDelete: boolean;
+
     constructor(
         id: PrimaryKeyType[],
         rawValue: ShapeWithMetadata<T>,
@@ -58,6 +63,7 @@ export abstract class Entity<T> {
         this._isReadOnly = this._tx.isReadOnly;
         this._flusher = flush;
         this._destroyer = destroy;
+        this.#allowDelete = descriptor.allowDelete;
     }
 
     /**
@@ -153,14 +159,14 @@ export abstract class Entity<T> {
      * Deletes entity from storage
      * @param ctx context
      */
-    async delete(ctx: Context) {
+    protected async _delete(ctx: Context) {
         if (this._isReadOnly) {
             throw Error('Entity is not writable. Did you wrapped everything in transaction?');
         }
         if (this._tx.isCompleted) {
             throw Error('You can\'t delete entity when transaction is in completed state.');
         }
-        if (!this.descriptor.allowDelete) {
+        if (!this.#allowDelete) {
             throw Error('Can\'t delete non-deletable entity');
         }
         if (this._deleted) {

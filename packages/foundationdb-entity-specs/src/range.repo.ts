@@ -39,6 +39,10 @@ export class RangeIndex extends Entity<RangeIndexShape> {
             this.invalidate();
         }
     }
+
+    delete(ctx: Context) {
+        return this._delete(ctx);
+    }
 }
 
 export class RangeIndexFactory extends EntityFactory<RangeIndexShape, RangeIndex> {
@@ -136,6 +140,10 @@ export class RangeIndexConditional extends Entity<RangeIndexConditionalShape> {
             this._updatedValues.range2 = normalized;
             this.invalidate();
         }
+    }
+
+    delete(ctx: Context) {
+        return this._delete(ctx);
     }
 }
 
