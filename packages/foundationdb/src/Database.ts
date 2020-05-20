@@ -23,7 +23,7 @@ export class Database {
      * @param clusterFile optional path to FoundationDB cluster file
      */
     static async open(args?: { layers: Layer[], clusterFile?: string }) {
-        fdb.setAPIVersion(600);
+        fdb.setAPIVersion(620);
         let db: fdb.Database = await fdb.open(args && args.clusterFile);
         let res = new Database(db);
         if (args && args.layers) {
@@ -42,7 +42,7 @@ export class Database {
      * @param name 
      */
     static async openTest(args?: { layers: Layer[], clusterFile?: string, name?: string }) {
-        fdb.setAPIVersion(600);
+        fdb.setAPIVersion(620);
         if (process.env.NODE_ENV === 'production') {
             throw Error('Trying to open test database in production mode');
         }
