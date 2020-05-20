@@ -166,7 +166,7 @@ export abstract class Entity<T> {
         if (this._tx.isCompleted) {
             throw Error('You can\'t delete entity when transaction is in completed state.');
         }
-        if (!this.#allowDelete) {
+        if (!this.#allowDelete) 
             throw Error('Can\'t delete non-deletable entity');
         }
         if (this._deleted) {
