@@ -2282,7 +2282,7 @@ form-data@~2.3.2:
     combined-stream "^1.0.6"
     mime-types "^2.1.12"
 
-foundationdb@^1.0.0:
+foundationdb@1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/foundationdb/-/foundationdb-1.0.0.tgz#0ba4a068167559d0250280ed255ca7a757625486"
   integrity sha512-xRNvrBt5ytJ2hiBWjCWXgSm+pYTk4ALgh4lSPdZkkh+m4diDcQaVeQE246CpYN63P3EJk1aOuRZoVxMrxDijVA==
