@@ -13,7 +13,6 @@ export abstract class Entity<T> {
     protected readonly _tx: Transaction;
     protected readonly _flusher: (ctx: Context, id: ReadonlyArray<PrimaryKeyType>, oldValue: ShapeWithMetadata<T>, newValue: ShapeWithMetadata<T>) => Promise<void>;
     protected readonly _destroyer: (ctx: Context, id: readonly PrimaryKeyType[], value: ShapeWithMetadata<T>) => Promise<void>;
-    #allowDelete: boolean;
 
     /**
      * Stores **latest** stored data in database
@@ -42,6 +41,11 @@ export abstract class Entity<T> {
      * Flush mutex to avoid consistency problems during accidental parallel flushes
      */
     private mutex = new Mutex();
+
+    /**
+     * Flag if entity can be deleted
+     */
+    #allowDelete: boolean;
 
     constructor(
         id: PrimaryKeyType[],
