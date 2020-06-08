@@ -27,7 +27,7 @@
     "typescript": "3.8.3"
   },
   "dependencies": {
-    "@openland/context": "*",
+    "@openland/context": "0.5.2",
     "@openland/log": "*",
     "@types/change-case": "^2.3.1",
     "@types/node": "^12.0.7",

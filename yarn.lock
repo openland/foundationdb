@@ -766,14 +766,20 @@
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/@openland/context/-/context-0.4.0.tgz#3d12934d9726b5743f9f40521e3d62e81a1f8d0c"
 
-"@openland/lifetime@^0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@openland/lifetime/-/lifetime-0.2.0.tgz#ef0a55fe7ad1e0b87104f94100dcbd31b71508f6"
-  dependencies:
-    "@openland/context" "^0.4.0"
-    "@openland/log" "^1.1.1"
+"@openland/context@0.5.2":
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/@openland/context/-/context-0.5.2.tgz#68100dd17de9782c8e736dc6a9813f5440c08cb1"
+  integrity sha512-dw3ZMGVN5Pk/XV5FJmWyEXGghVCEqtcl4Jnz4B6shk9oPtlADfiujBN8qp8hBSlEOBoLnsubd+plmekuUMfhqQ==
 
-"@openland/log@*", "@openland/log@^1.1.1":
+"@openland/lifetime@*":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@openland/lifetime/-/lifetime-0.2.1.tgz#52c540cff176cec262cdf7599d9f5cc778cfe5a6"
+  integrity sha512-hfJiDh9Hw2/kU48oUX4/E12YwKM5WtNtE7tuu4DsAVS7jvbEHLPSmh4NgKSzOozDy1s6+MF6ZFy06ShH9IrClw==
+  dependencies:
+    "@openland/context" "*"
+    "@openland/log" "*"
+
+"@openland/log@*":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@openland/log/-/log-1.1.1.tgz#0fda381e08748f03f9ec4e4316e672f44f40d45d"
   dependencies:
