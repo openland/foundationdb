@@ -16,7 +16,7 @@
         "@openland/foundationdb": "^5.2.0",
         "@openland/foundationdb-bus": "^5.2.0",
         "@openland/foundationdb-utils": "^5.2.0",
-        "@openland/lifetime": "^0.2.0",
+        "@openland/lifetime": "*",
         "@openland/log": "*"
     }
 }
