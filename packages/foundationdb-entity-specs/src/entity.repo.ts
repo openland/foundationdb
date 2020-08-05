@@ -7,6 +7,7 @@ import { Subspace, Watch } from '@openland/foundationdb';
 import { EntityStorage, EventStore, EventStoreDescriptor, EventFactory, BaseStore, RangeQueryOptions, BaseEvent, codecs as c } from '@openland/foundationdb-entity';
 // @ts-ignore
 import { Entity, EntityFactory, EntityDescriptor, SecondaryIndexDescriptor, ShapeWithMetadata, PrimaryKeyDescriptor, FieldDescriptor, StreamProps } from '@openland/foundationdb-entity';
+// Test SampleExtension header
 
 export interface SimpleEntityShape {
     id: string;
@@ -452,11 +453,14 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
     }
 }
 
+// Test Sample Extension Body
+
 export interface Store extends BaseStore {
     readonly SimpleEntity: SimpleEntityFactory;
     readonly SimpleEntity2: SimpleEntity2Factory;
     readonly AllFields: AllFieldsFactory;
     readonly directoryDirectory: Subspace;
+    readonly SampleExt: number;
 }
 
 export async function openStore(storage: EntityStorage): Promise<Store> {
@@ -465,6 +469,7 @@ export async function openStore(storage: EntityStorage): Promise<Store> {
     let SimpleEntity2Promise = SimpleEntity2Factory.open(storage);
     let AllFieldsPromise = AllFieldsFactory.open(storage);
     let directoryDirectoryPromise = storage.resolveCustomDirectory('directory');
+    let SampleExtPromise = 123;
     return {
         storage,
         eventFactory,
@@ -472,5 +477,6 @@ export async function openStore(storage: EntityStorage): Promise<Store> {
         SimpleEntity2: await SimpleEntity2Promise,
         AllFields: await AllFieldsPromise,
         directoryDirectory: await directoryDirectoryPromise,
+        SampleExt: await SampleExtPromise,
     };
 }

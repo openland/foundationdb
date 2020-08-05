@@ -18,6 +18,12 @@ export function generateStore(schema: SchemaModel, builder: StringBuilder) {
     for (let directory of schema.directories) {
         builder.append(`readonly ${directory.name}Directory: Subspace;`);
     }
+    for (let ext of schema.extensions) {
+        if (ext.field) {
+            let f = ext.field();
+            builder.append(`readonly ${f.fieldName}: ${f.typename};`);
+        }
+    }
     builder.removeIndent();
     builder.append('}');
     builder.append();
@@ -39,6 +45,12 @@ export function generateStore(schema: SchemaModel, builder: StringBuilder) {
     for (let atomic of schema.eventStores) {
         builder.append(`let ${atomic.name}Promise = ${atomic.name}.open(storage, eventFactory);`);
     }
+    for (let ext of schema.extensions) {
+        if (ext.field) {
+            let f = ext.field();
+            builder.append(`let ${f.fieldName}Promise = ${f.init};`);
+        }
+    }
 
     builder.append('return {');
     builder.addIndent();
@@ -55,6 +67,12 @@ export function generateStore(schema: SchemaModel, builder: StringBuilder) {
     }
     for (let entity of schema.eventStores) {
         builder.append(`${entity.name}: await ${entity.name}Promise,`);
+    }
+    for (let ext of schema.extensions) {
+        if (ext.field) {
+            let f = ext.field();
+            builder.append(`${f.fieldName}: await ${f.fieldName}Promise,`);
+        }
     }
     builder.removeIndent();
     builder.append('};');

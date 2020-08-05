@@ -1,7 +1,8 @@
+import { StringBuilder } from './compiler/StringBuilder';
 import {
     SchemaModel, AtomicModel, EntityModel, Field, StringType, IntegerType, FloatType, BooleanType, SchemaType,
     EnumType, ArrayType, StructType, UnionType, OptionalType, EntityIndexModel, JsonType, DirectoryModel,
-    EventModel, EventStoreModel
+    EventModel, EventStoreModel, ExtensionModel
 } from './model';
 
 const reservedFieldNames = [
@@ -258,4 +259,27 @@ export function customDirectory(name: string) {
     }
     currentSchema!.usedNames.add(name);
     currentSchema!.directories.push(new DirectoryModel(name));
+}
+
+export function extension(name: string, type: string, ext: {
+    header?: (builder: StringBuilder) => void,
+    body?: (builder: StringBuilder) => void,
+    field?: () => { typename: string, fieldName: string, init: string }
+}) {
+    checkValidEntityName(name);
+    if (currentSchema!.usedNames.has(name)) {
+        throw Error('Duplicate entity with name ' + name);
+    }
+    let extModel = new ExtensionModel(name, type);
+    if (ext.header) {
+        extModel.setHeader(ext.header);
+    }
+    if (ext.body) {
+        extModel.setBody(ext.body);
+    }
+    if (ext.field) {
+        extModel.setField(ext.field);
+    } 
+    currentSchema!.usedNames.add(name);
+    currentSchema!.extensions.push(extModel);
 }

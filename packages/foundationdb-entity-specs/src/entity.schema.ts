@@ -15,7 +15,8 @@ import {
     union,
     optional,
     uniqueIndex,
-    allowDelete
+    allowDelete,
+    extension
 } from '@openland/foundationdb-compiler';
 
 export default declareSchema(() => {
@@ -68,4 +69,17 @@ export default declareSchema(() => {
     });
 
     customDirectory('directory');
+
+    extension('SampleExtension', 'com.openland.example.sample', {
+        header: (b) => b.append('// Test SampleExtension header'),
+        body: (b) => {
+            b.append();
+            b.append('// Test Sample Extension Body');
+        },
+        field: () => ({
+            typename: 'number',
+            fieldName: 'SampleExt',
+            init: '123'
+        })
+    });
 });

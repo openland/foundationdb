@@ -1,3 +1,4 @@
+import { StringBuilder } from './compiler/StringBuilder';
 export type PrimaryKeyType = 'string' | 'integer' | 'float' | 'boolean';
 
 export abstract class SchemaType {
@@ -97,6 +98,7 @@ export class SchemaModel {
     readonly directories: DirectoryModel[] = [];
     readonly events: EventModel[] = [];
     readonly eventStores: EventStoreModel[] = [];
+    readonly extensions: ExtensionModel[] = [];
 }
 
 export class AtomicModel {
@@ -181,5 +183,31 @@ export class EventStoreModel {
         let res = new PrimaryKey(name, type);
         this.keys.push(res);
         return res;
+    }
+}
+
+export class ExtensionModel {
+    readonly name: string;
+    readonly type: string;
+
+    header: ((builder: StringBuilder) => void) | null = null;
+    body: ((builder: StringBuilder) => void) | null = null;
+    field: (() => { typename: string, fieldName: string, init: string }) | null = null;
+
+    constructor(name: string, type: string) {
+        this.name = name;
+        this.type = type;
+    }
+
+    setHeader(header: (builder: StringBuilder) => void) {
+        this.header = header;
+    }
+
+    setBody(body: (builder: StringBuilder) => void) {
+        this.body = body;
+    }
+
+    setField(field: () => { typename: string, fieldName: string, init: string }) {
+        this.field = field;
     }
 }
