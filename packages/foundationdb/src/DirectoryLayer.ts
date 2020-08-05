@@ -1,11 +1,11 @@
+import * as fdb from 'foundationdb';
 import { TupleItem } from '@openland/foundationdb-tuple';
-import { DirectorySubspace, Directory } from './Directory';
+import { DirectorySubspace } from './Directory';
 import { Database } from './Database';
 import { Context } from '@openland/context';
-import { HighContentionAllocator } from './directory/HighContentionAllocator';
 import { Subspace } from './Subspace';
-import { encoders } from './encoding';
 import { transactional } from './transactional';
+import { getTransaction } from './getTransaction';
 
 class Node {
     readonly subspace!: Subspace<TupleItem[]>;
@@ -32,261 +32,57 @@ class Node {
     }
 }
 
-const empty = Buffer.alloc(0);
-const partition = Buffer.from('partition', 'ascii');
-const SUBDIR = 0;
-
-function hasPrefix(src: Buffer, value: Buffer) {
-    if (src.length < value.length) {
-        return false;
-    }
-    return value.equals(src.slice(0, value.length));
-}
-
 export class DirectoryLayer {
-    private readonly VERSION = [1, 0, 0];
-    private readonly nodeSS: Subspace<TupleItem[]>;
-    private readonly contentSS: Subspace<TupleItem[]>;
-    private readonly rootNode: Subspace<TupleItem[]>;
-    private readonly allocator: HighContentionAllocator;
+
     readonly db: Database;
+    private readonly directory: fdb.DirectoryLayer;
 
     constructor(db: Database, nodeSS: Subspace, contentSS: Subspace) {
-        this.nodeSS = nodeSS.withKeyEncoding(encoders.tuple);
-        this.contentSS = contentSS.withKeyEncoding(encoders.tuple);
-        this.rootNode = this.nodeSS.subspace([nodeSS.prefix]);
-        this.allocator = new HighContentionAllocator(this.rootNode.subspace([Buffer.from('hca', 'ascii')]));
         this.db = db;
+        this.directory = new fdb.DirectoryLayer({
+            nodePrefix: nodeSS.prefix,
+            contentPrefix: contentSS.prefix,
+            allowManualPrefixes: true
+        });
     }
 
     @transactional
     async createOrOpen(ctx: Context, path: string[]) {
-        return this.doCreateOrOpen(ctx, path, null, null, true, true);
+        let raw = getTransaction(ctx).rawTransaction(this.db);
+        return this.wrap(await this.directory.createOrOpen(raw, path));
     }
 
     @transactional
     async create(ctx: Context, path: string[]) {
-        return this.doCreateOrOpen(ctx, path, null, null, true, false);
+        let raw = getTransaction(ctx).rawTransaction(this.db);
+        return this.wrap(await this.directory.create(raw, path));
     }
 
     @transactional
     async open(ctx: Context, path: string[]) {
-        return this.doCreateOrOpen(ctx, path, null, null, false, true);
+        let raw = getTransaction(ctx).rawTransaction(this.db);
+        return this.wrap(await this.directory.open(raw, path));
     }
 
     @transactional
     async createPrefix(ctx: Context, path: string[], prefix: Buffer) {
-        return this.doCreateOrOpen(ctx, path, null, prefix, true, false);
+        let raw = getTransaction(ctx).rawTransaction(this.db);
+        return this.wrap(await this.directory.create(raw, path, undefined, prefix));
     }
 
     @transactional
     async exists(ctx: Context, path: string[]) {
-        await this.checkVersion(ctx, false);
-        let res = await this.find(ctx, path);
-        if (!res.exists) {
-            return false;
-        }
-
-        // TODO: Implement partitions
-        if (res.layer.equals(partition)) {
-            throw Error('partitions are not supported');
-        }
-
-        return true;
+        let raw = getTransaction(ctx).rawTransaction(this.db);
+        return await this.directory.exists(raw, path);
     }
 
     @transactional
     async move(ctx: Context, oldPath: string[], newPath: string[]) {
-        await this.checkVersion(ctx, false);
-        let sliceEnd = oldPath.length;
-        if (sliceEnd > newPath.length) {
-            sliceEnd = newPath.length;
-        }
-        if (JSON.stringify(oldPath) === JSON.stringify(newPath.slice(0, sliceEnd))) {
-            throw Error('the destination directory cannot be a subdirectory of the source directory');
-        }
-
-        let oldNode = await this.find(ctx, oldPath);
-        if (!oldNode.exists) {
-            throw Error('the source directory does not exist');
-        }
-        // TODO: Implement partitions
-        if (oldNode.layer.equals(partition)) {
-            throw Error('partitions are not supported');
-        }
-
-        let newNode = await this.find(ctx, newPath);
-        if (newNode.exists) {
-            throw Error('the destination directory already exists. Remove it first');
-        }
-
-        let parentNode = await this.find(ctx, newPath.slice(0, newPath.length - 1));
-        if (!parentNode.exists) {
-            throw Error('the parent of the destination directory does not exist. Create it first');
-        }
-
-        let prefix = this.prefixFromNode(oldNode);
-        parentNode.subspace.set(ctx, [SUBDIR, newPath[newPath.length - 1]], prefix);
-
-        let oldParent = await this.find(ctx, oldPath.slice(0, oldPath.length - 1));
-        oldParent.subspace.clear(ctx, [SUBDIR, oldPath[oldPath.length - 1]]);
+        let raw = getTransaction(ctx).rawTransaction(this.db);
+        await this.directory.move(raw, oldPath, newPath);
     }
 
-    @transactional
-    private async doCreateOrOpen(ctx: Context, path: string[], layer: Buffer | null, prefix: Buffer | null, allowCreate: boolean, allowOpen: boolean) {
-        if (path.length === 0) {
-            throw Error('Path can\'t be empty');
-        }
-        await this.checkVersion(ctx, false);
-
-        let res = await this.find(ctx, path);
-        if (res.exists) {
-
-            // TODO: Implement partitions
-            if (res.layer.equals(partition)) {
-                throw Error('partitions are not supported');
-            }
-
-            if (layer) {
-                if (Buffer.compare(res.layer, layer!) !== 0) {
-                    throw Error('the directory was created with an incompatible layer');
-                }
-            }
-
-            if (!allowOpen) {
-                throw Error('directory already exists');
-            }
-
-            return new DirectorySubspace(this, path, this.prefixFromNode(res)) as Directory;
-        }
-
-        if (!allowCreate) {
-            throw Error('directory does not exists');
-        }
-
-        // Create directory if not exists
-        await this.checkVersion(ctx, true);
-
-        let resPrefix: Buffer;
-        if (!prefix) {
-
-            let allocated = await this.allocator.allocate(ctx);
-
-            // Check content keys
-            let newss = this.contentSS.subspace([allocated]);
-            if ((await newss.range(ctx, [], { limit: 1 })).length !== 0) {
-                throw Error('the database has keys stored at the prefix chosen by the automatic prefix allocator (' + newss.prefix.toString('hex') + ') for ' + JSON.stringify(path));
-            }
-
-            // Check node prefix keys
-            if (!await this.isPrefixFree(ctx, newss.prefix)) {
-                throw Error('the directory layer has manually allocated prefixes that conflict with the automatic prefix allocator (' + newss.prefix.toString('hex') + ') for ' + JSON.stringify(path));
-            }
-
-            resPrefix = newss.prefix;
-        } else {
-            if (!await this.isPrefixFree(ctx, prefix)) {
-                throw Error('the given prefix is already in use');
-            }
-            resPrefix = prefix;
-        }
-
-        // Parent directory
-        let parentPrefix = this.nodeSS.prefix;
-        if (path.length > 1) {
-            parentPrefix = (await this.doCreateOrOpen(ctx, path.slice(0, path.length - 1), null, null, true, true)).prefix;
-        }
-        let parent = this.nodeSS.subspace([parentPrefix]);
-
-        // Create node
-        let newNodeSS = this.nodeWithPrefix(resPrefix);
-        newNodeSS.set(ctx, [Buffer.from('layer', 'ascii')], layer || empty);
-
-        // Set reference to parent node
-        parent.set(ctx, [SUBDIR, path[path.length - 1]], resPrefix);
-
-        return new DirectorySubspace(this, path, resPrefix) as Directory;
-    }
-
-    private async checkVersion(ctx: Context, allowWrite: boolean) {
-        let ex = await this.rootNode.get(ctx, ([Buffer.from('version', 'ascii')]));
-        if (!ex) {
-            if (allowWrite) {
-                this.initDirectory(ctx);
-            }
-        } else {
-            var version = [];
-            for (var i = 0; i < 3; ++i) {
-                version.push(ex.readInt32LE(4 * i));
-            }
-            if (version[0] > this.VERSION[0]) {
-                throw new Error('Unsupported directory version');
-            }
-            if (version[1] > this.VERSION[1]) {
-                throw new Error('Unsupported directory version');
-            }
-        }
-    }
-
-    private initDirectory(ctx: Context) {
-        var versionBuf = Buffer.alloc(12);
-        for (var i = 0; i < 3; ++i) {
-            versionBuf.writeUInt32LE(this.VERSION[i], i * 4);
-        }
-        this.rootNode.set(ctx, [Buffer.from('version', 'ascii')], versionBuf);
-    }
-
-    private async find(ctx: Context, path: string[]) {
-        let node = new Node(this.rootNode, [], path, empty);
-        let currentPath: string[] = [];
-        for (let p of path) {
-            currentPath.push(p);
-            let prefix = await node.subspace.get(ctx, [SUBDIR, p]);
-            if (prefix) {
-                let nsp = this.nodeWithPrefix(prefix);
-                let layer = await nsp.get(ctx, [Buffer.from('layer', 'ascii')]) || empty;
-                node = new Node(nsp, [...currentPath], path, layer);
-            } else {
-                node = new Node(null, [...currentPath], path, empty);
-            }
-            if (!node.exists || Buffer.compare(node.layer, partition) === 0) {
-                return node;
-            }
-        }
-        return node;
-    }
-
-    private nodeWithPrefix(prefix: Buffer): Subspace<TupleItem[]> {
-        return this.nodeSS.subspace([prefix]);
-    }
-
-    private prefixFromNode(node: Node) {
-        let r = node.subspace.prefix.slice(this.nodeSS.prefix.length);
-        return encoders.tuple.unpack(r)[0] as Buffer;
-    }
-
-    private async isPrefixFree(ctx: Context, prefix: Buffer) {
-        if (await this.nodeContainingPrefix(ctx, prefix)) {
-            return false;
-        }
-
-        let newss = this.nodeSS.subspace([prefix]);
-        if ((await newss.range(ctx, [], { limit: 1 })).length !== 0) {
-            return false;
-        }
-        return true;
-    }
-
-    private async nodeContainingPrefix(ctx: Context, prefix: Buffer) {
-        if (hasPrefix(prefix, this.nodeSS.prefix)) {
-            return this.nodeSS;
-        }
-        let r = await this.nodeSS.range(ctx, [prefix], { limit: 1 });
-        if (r.length > 0) {
-            let key = r[0].key;
-            return this.nodeWithPrefix(key[key.length - 1] as Buffer);
-        } else {
-            return null;
-        }
+    private wrap(src: fdb.Directory) {
+        return new DirectorySubspace(this, src.getPath(), src.getSubspace().prefix);
     }
 }

@@ -66,7 +66,7 @@ describe('Directory', () => {
         let ctx = createNamedContext('test');
         let db = await Database.openTest();
         let p = await db.directories.create(ctx, ['test']);
-        await expect(db.directories.createPrefix(ctx, ['test2', 'test3'], p.prefix)).rejects.toThrowError('the given prefix is already in use');
+        await expect(db.directories.createPrefix(ctx, ['test2', 'test3'], p.prefix)).rejects.toThrowError('The given prefix is already in use.');
     });
 
     it('should create even if parent directories exists', async () => {

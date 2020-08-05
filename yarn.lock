@@ -2197,6 +2197,11 @@ fb-watchman@^2.0.0:
   dependencies:
     bser "^2.0.0"
 
+fdb-tuple@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/fdb-tuple/-/fdb-tuple-1.0.0.tgz#757f5b76264bdcc75f87773751cce844390dde44"
+  integrity sha512-8jSvKPCYCgTpi9Pt87qlfTk6griyMx4Gk3Xv31Dp72Qp8b6XgIyFsMm8KzPmFJ9iJ8K4pGvRxvOS8D0XGnrkjw==
+
 figgy-pudding@^3.4.1, figgy-pudding@^3.5.1:
   version "3.5.1"
   resolved "https://registry.yarnpkg.com/figgy-pudding/-/figgy-pudding-3.5.1.tgz#862470112901c727a0e495a80744bd5baa1d6790"
@@ -2285,11 +2290,12 @@ form-data@~2.3.2:
     combined-stream "^1.0.6"
     mime-types "^2.1.12"
 
-foundationdb@1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/foundationdb/-/foundationdb-1.0.0.tgz#0ba4a068167559d0250280ed255ca7a757625486"
-  integrity sha512-xRNvrBt5ytJ2hiBWjCWXgSm+pYTk4ALgh4lSPdZkkh+m4diDcQaVeQE246CpYN63P3EJk1aOuRZoVxMrxDijVA==
+foundationdb@1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/foundationdb/-/foundationdb-1.0.2.tgz#62628754c90bbe4a556ce2c0c47f5241a202ce99"
+  integrity sha512-Y6ukJq6vfYJLxnGVnTz1cvcAn7RrnzkCQZUSyDyMGdz+EHfHgugGmDTcRsWVItjZepIqvu2MDWEkMffX5AWmpA==
   dependencies:
+    fdb-tuple "^1.0.0"
     node-gyp-build "^4.2.0"
 
 fragment-cache@^0.2.1:
