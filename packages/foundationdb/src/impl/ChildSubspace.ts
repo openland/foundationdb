@@ -83,11 +83,7 @@ export class ChildSubspace implements Subspace {
 
     setVersionstampedKey(ctx: Context, key: Buffer, value: Buffer, suffix?: Buffer) {
         let tx = getTransaction(ctx)!.rawTransaction(this.db);
-        let s: Buffer | undefined;
-        if (suffix) {
-            s = Buffer.concat([this.prefix, suffix]);
-        }
-        tx.setVersionstampSuffixedKey(Buffer.concat([this.prefix, key]), value, s);
+        tx.setVersionstampSuffixedKey(Buffer.concat([this.prefix, key]), value, suffix);
     }
 
     clear(ctx: Context, key: Buffer) {

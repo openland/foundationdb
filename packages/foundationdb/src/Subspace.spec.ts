@@ -475,4 +475,22 @@ describe('Subspace', () => {
             expect(res.length).toBe(2);
         }
     });
+
+    it('should correcrly write versionstamp', async () => {
+        let db = await Database.openTest();
+        let rootCtx = createNamedContext('test');
+
+        // Write versionstamp
+        await inTx(rootCtx, async (ctx) => {
+            db.allKeys.setVersionstampedKey(ctx, Buffer.from('prefix', 'ascii'), Buffer.from('value', 'ascii'), Buffer.from('suffix', 'ascii'));
+        });
+
+        let keys = await inTx(rootCtx, async (ctx) => {
+            return await db.allKeys.range(ctx, Buffer.alloc(0));
+        });
+        expect(keys.length).toBe(1);
+        expect(keys[0].key.length).toBe('prefix'.length + 10 + 'suffix'.length);
+        expect(Buffer.compare(Buffer.from('prefix', 'ascii'), keys[0].key.subarray(0, 'prefix'.length)));
+        expect(Buffer.compare(Buffer.from('suffix', 'ascii'), keys[0].key.subarray('prefix'.length + 10)));
+    });
 });
