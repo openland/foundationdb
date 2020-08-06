@@ -33,6 +33,7 @@ async function doInTx<T>(leaky: boolean, _ctx: Context, callback: (ctx: Context)
                 return result;
             } catch (err) {
                 if (err instanceof FDBError) {
+                    TransactionTracer.onFDBError(ctx, err);
                     await tx._handleError(err.code);
                 } else {
                     throw err;

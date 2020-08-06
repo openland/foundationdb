@@ -1,10 +1,11 @@
+import { FDBError } from 'foundationdb';
 import { Context } from '@openland/context';
 import { RangeOptions } from './Subspace';
 
 interface SubspaceTracerConfig {
     get<T>(ctx: Context, key: Buffer, handler: () => Promise<T>): Promise<T>;
     set<T>(ctx: Context, key: Buffer, value: Buffer, handler: () => T): T;
-    range<K, V>(ctx: Context, key: Buffer, opts: RangeOptions<Buffer>|undefined, handler: () => Promise<{ key: K, value: V }[]>): Promise<{ key: K, value: V }[]>;
+    range<K, V>(ctx: Context, key: Buffer, opts: RangeOptions<Buffer> | undefined, handler: () => Promise<{ key: K, value: V }[]>): Promise<{ key: K, value: V }[]>;
 }
 
 const NoopSubspaceTracer: SubspaceTracerConfig = {
@@ -29,6 +30,7 @@ interface TransactionTracerConfig {
     commit<T>(ctx: Context, handler: () => Promise<T>): Promise<T>;
     onNewReadWriteTx(ctx: Context): void;
     onRetry(ctx: Context): void;
+    onFDBError(ctx: Context, error: FDBError): void;
     onNewEphemeralTx(ctx: Context): void;
 }
 
@@ -39,6 +41,9 @@ const NoopTransactionTracer: TransactionTracerConfig = {
         // Noop
     },
     onRetry: () => {
+        // Noop
+    },
+    onFDBError: (ctx: Context, error: FDBError) => {
         // Noop
     },
     onNewEphemeralTx: () => {
