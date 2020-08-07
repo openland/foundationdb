@@ -1,7 +1,7 @@
 {
     "name": "@openland/foundationdb",
     "description": "NodeJS FoundationDB client",
-    "version": "6.1.5",
+    "version": "6.2.0",
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",
     "repository": "https://github.com/openland/foundationdb",
@@ -13,7 +13,7 @@
     },
     "dependencies": {
         "@openland/context": "*",
-        "@openland/foundationdb-tuple": "^6.1.5",
+        "@openland/foundationdb-tuple": "^6.2.0",
         "@openland/log": "*",
         "foundationdb": "1.0.2"
     }
