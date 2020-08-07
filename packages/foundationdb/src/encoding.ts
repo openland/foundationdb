@@ -39,6 +39,17 @@ const int32LETransfromer: Transformer<Buffer, number> = {
     }
 };
 
+const int16LETransfromer: Transformer<Buffer, number> = {
+    pack(src: number) {
+        const b = Buffer.alloc(2);
+        b.writeInt16LE(src, 0);
+        return b;
+    },
+    unpack(buffer: Buffer) {
+        return buffer.readInt16LE(0);
+    }
+};
+
 const int32BETransfromer: Transformer<Buffer, number> = {
     pack(src: number) {
         const b = Buffer.alloc(4);
@@ -47,6 +58,17 @@ const int32BETransfromer: Transformer<Buffer, number> = {
     },
     unpack(buffer: Buffer) {
         return buffer.readInt32BE(0);
+    }
+};
+
+const int16BETransfromer: Transformer<Buffer, number> = {
+    pack(src: number) {
+        const b = Buffer.alloc(2);
+        b.writeUInt16BE(src, 0);
+        return b;
+    },
+    unpack(buffer: Buffer) {
+        return buffer.readInt16BE(0);
     }
 };
 
@@ -88,9 +110,17 @@ export const encoders = {
      */
     int32LE: int32LETransfromer,
     /**
+     * Int16 Little-Endian encoding. Useful for atomic counters.
+     */
+    int16LE: int16LETransfromer,
+    /**
      * Int32 Big-Endian encoding. Useful for sorting.
      */
     int32BE: int32BETransfromer,
+    /**
+     * Int16 Big-Endian encoding. Useful for sorting
+     */
+    int16BE: int16BETransfromer,
 
     /**
      * Identity transformer
