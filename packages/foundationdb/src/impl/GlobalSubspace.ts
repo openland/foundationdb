@@ -101,6 +101,26 @@ export class GlobalSubspace implements Subspace {
         tx.setVersionstampPrefixedValue(key, suffix, value);
     }
 
+    addReadConflictKey(ctx: Context, key: Buffer) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        tx.addReadConflictKey(key);
+    }
+
+    addReadConflictRange(ctx: Context, start: Buffer, end: Buffer) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        tx.addReadConflictRange(start, end);
+    }
+
+    addWriteConflictKey(ctx: Context, key: Buffer) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        tx.addWriteConflictKey(key);
+    }
+
+    addWriteConflictRange(ctx: Context, start: Buffer, end: Buffer) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        tx.addWriteConflictRange(start, end);
+    }
+
     clear(ctx: Context, key: Buffer) {
         let tx = getTransaction(ctx).rawTransaction(this.db);
         tx.clear(key);

@@ -91,6 +91,26 @@ export class ChildSubspace implements Subspace {
         tx.setVersionstampPrefixedValue(Buffer.concat([this.prefix, key]), suffix, value);
     }
 
+    addReadConflictKey(ctx: Context, key: Buffer) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        tx.addReadConflictKey(Buffer.concat([this.prefix, key]));
+    }
+
+    addReadConflictRange(ctx: Context, start: Buffer, end: Buffer) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        tx.addWriteConflictRange(Buffer.concat([this.prefix, start]), Buffer.concat([this.prefix, end]));
+    }
+
+    addWriteConflictKey(ctx: Context, key: Buffer) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        tx.addWriteConflictKey(Buffer.concat([this.prefix, key]));
+    }
+
+    addWriteConflictRange(ctx: Context, start: Buffer, end: Buffer) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        tx.addWriteConflictRange(Buffer.concat([this.prefix, start]), Buffer.concat([this.prefix, end]));
+    }
+
     clear(ctx: Context, key: Buffer) {
         let tx = getTransaction(ctx)!.rawTransaction(this.db);
         tx.clear(Buffer.concat([this.prefix, key]));

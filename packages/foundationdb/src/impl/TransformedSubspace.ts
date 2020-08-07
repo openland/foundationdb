@@ -97,6 +97,22 @@ export class TransformedSubspace<K, V, SK, SV> implements Subspace<K, V> {
         this.ops.setVersionstampedValue(ctx, this.keyTf.pack(key), this.valTf.pack(value), s);
     }
 
+    addReadConflictKey(ctx: Context, key: K) {
+        this.ops.addReadConflictKey(ctx, this.keyTf.pack((key)));
+    }
+
+    addReadConflictRange(ctx: Context, start: K, end: K) {
+        this.ops.addReadConflictRange(ctx, this.keyTf.pack((start)), this.keyTf.pack((end)));
+    }
+
+    addWriteConflictKey(ctx: Context, key: K) {
+        this.ops.addWriteConflictKey(ctx, this.keyTf.pack((key)));
+    }
+
+    addWriteConflictRange(ctx: Context, start: K, end: K) {
+        this.ops.addWriteConflictRange(ctx, this.keyTf.pack((start)), this.keyTf.pack((end)));
+    }
+
     add(ctx: Context, key: K, value: V) {
         this.ops.add(ctx, this.keyTf.pack(key), this.valTf.pack(value));
     }

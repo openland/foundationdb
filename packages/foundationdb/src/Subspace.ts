@@ -136,6 +136,36 @@ export interface Subspace<K = Buffer, V = Buffer> {
     setVersionstampedValue(ctx: Context, key: K, value: V, suffix?: V): void;
 
     /**
+     * Add read conflict key to a transaction
+     * @param ctx  context
+     * @param key  key
+     */
+    addReadConflictKey(ctx: Context, key: K): void;
+
+    /**
+     * Add read conflict range to a transaction
+     * @param ctx   context
+     * @param start start key
+     * @param end   to key
+     */
+    addReadConflictRange(ctx: Context, start: K, end: K): void;
+
+    /**
+     * Add write conflict key to a transaction
+     * @param ctx context
+     * @param key key
+     */
+    addWriteConflictKey(ctx: Context, key: K): void;
+
+    /**
+     * Add write conflict range to a transaction
+     * @param ctx   context
+     * @param start start key
+     * @param end   to key
+     */
+    addWriteConflictRange(ctx: Context, start: K, end: K): void;
+
+    /**
      * Removes the specified key (and any associated value), if it exists. 
      * Clear returns immediately, having modified the snapshot of the database represented by the transaction.
      * 
