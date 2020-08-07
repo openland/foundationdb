@@ -125,6 +125,17 @@ export interface Subspace<K = Buffer, V = Buffer> {
     setVersionstampedKey(ctx: Context, key: K, value: V, suffix?: K): void;
 
     /**
+     * Transforms value by appending versionstamp, append optional suffix and set result value at key, overwriting any previous 
+     * association with key. Set returns immediately, having modified the snapshot of the database represented by the 
+     * transaction but without versionstamp.
+     * @param ctx    context
+     * @param key    key
+     * @param value  value to set 
+     * @param suffix optional suffix to append to a value
+     */
+    setVersionstampedValue(ctx: Context, key: K, value: V, suffix?: V): void;
+
+    /**
      * Removes the specified key (and any associated value), if it exists. 
      * Clear returns immediately, having modified the snapshot of the database represented by the transaction.
      * 

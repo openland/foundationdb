@@ -476,7 +476,7 @@ describe('Subspace', () => {
         }
     });
 
-    it('should correcrly write versionstamp', async () => {
+    it('should correcrly write versionstamp key', async () => {
         let db = await Database.openTest();
         let rootCtx = createNamedContext('test');
 

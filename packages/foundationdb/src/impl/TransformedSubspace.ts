@@ -80,13 +80,21 @@ export class TransformedSubspace<K, V, SK, SV> implements Subspace<K, V> {
     set(ctx: Context, key: K, value: V) {
         this.ops.set(ctx, this.keyTf.pack(key), this.valTf.pack(value));
     }
-    
+
     setVersionstampedKey(ctx: Context, key: K, value: V, suffix?: K) {
         let s: SK | undefined;
         if (suffix) {
             s = this.keyTf.pack(suffix);
         }
         this.ops.setVersionstampedKey(ctx, this.keyTf.pack(key), this.valTf.pack(value), s);
+    }
+
+    setVersionstampedValue(ctx: Context, key: K, value: V, suffix?: V) {
+        let s: SV | undefined;
+        if (suffix) {
+            s = this.valTf.pack(suffix);
+        }
+        this.ops.setVersionstampedValue(ctx, this.keyTf.pack(key), this.valTf.pack(value), s);
     }
 
     add(ctx: Context, key: K, value: V) {

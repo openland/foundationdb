@@ -38,7 +38,7 @@ export class GlobalSubspace implements Subspace {
             return (await tx.get(key)) || null;
         });
     }
-    
+
     async snapshotGet(ctx: Context, key: Buffer) {
         let tx = getTransaction(ctx)!.rawTransaction(this.db);
         return (await tx.snapshot().get(Buffer.concat([this.prefix, key]))) || null;
@@ -94,6 +94,11 @@ export class GlobalSubspace implements Subspace {
     setVersionstampedKey(ctx: Context, key: Buffer, value: Buffer, suffix?: Buffer) {
         let tx = getTransaction(ctx)!.rawTransaction(this.db);
         tx.setVersionstampSuffixedKey(key, value, suffix);
+    }
+
+    setVersionstampedValue(ctx: Context, key: Buffer, value: Buffer, suffix?: Buffer) {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        tx.setVersionstampPrefixedValue(key, suffix, value);
     }
 
     clear(ctx: Context, key: Buffer) {
