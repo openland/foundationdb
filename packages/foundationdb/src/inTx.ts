@@ -1,4 +1,4 @@
-import { TransactionContext } from './impl/TransactionContext';
+import { TransactionContext, ReadOnlyTransactionContext } from './impl/TransactionContext';
 import { FDBError } from 'foundationdb';
 import { Context } from '@openland/context';
 import { ReadWriteTransaction } from './impl/ReadWriteTransaction';
@@ -74,4 +74,19 @@ export async function inTx<T>(ctx: Context, callback: (ctx: Context) => Promise<
  */
 export async function inTxLeaky<T>(ctx: Context, callback: (ctx: Context) => Promise<T>): Promise<T> {
     return doInTx(true, ctx, callback);
+}
+
+/**
+ * Helper method to assert non-transactional context
+ * @param ctx context
+ */
+export function assertNoTransaction(ctx: Context) {
+    let ex = TransactionContext.get(ctx);
+    if (ex) {
+        throw Error('This context must be without transaction');
+    }
+    let rex = ReadOnlyTransactionContext.get(ctx);
+    if (rex) {
+        throw Error('This context must be without transaction');
+    }
 }
