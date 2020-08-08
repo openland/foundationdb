@@ -56,6 +56,7 @@ export class TransformedSubspace<K, V, SK, SV> implements Subspace<K, V> {
         if (opts) {
             opts2 = {
                 after: opts.after ? this.keyTf.pack(opts.after) : undefined,
+                before: opts.before ? this.keyTf.pack(opts.before) : undefined,
                 limit: opts.limit,
                 reverse: opts.reverse
             };
@@ -69,6 +70,7 @@ export class TransformedSubspace<K, V, SK, SV> implements Subspace<K, V> {
         if (opts) {
             opts2 = {
                 after: opts.after ? this.keyTf.pack(opts.after) : undefined,
+                before: opts.before ? this.keyTf.pack(opts.before) : undefined,
                 limit: opts.limit,
                 reverse: opts.reverse
             };

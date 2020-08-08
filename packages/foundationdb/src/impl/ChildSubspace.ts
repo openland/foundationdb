@@ -8,6 +8,7 @@ import { keyNext, keyIncrement } from '../utils';
 import { Watch } from '../Watch';
 import * as fdb from 'foundationdb';
 import { SubspaceTracer } from '../tracing';
+import { resolveRangeParameters } from './resolveRangeParameters';
 
 export class ChildSubspace implements Subspace {
 
@@ -56,22 +57,11 @@ export class ChildSubspace implements Subspace {
     }
 
     private async doRange(tx: fdb.Transaction, key: Buffer, opts?: RangeOptions<Buffer>) {
-        if (opts && opts.after) {
-            let keyR = Buffer.concat([this.prefix, key]);
-            let after = Buffer.concat([this.prefix, opts.after!]);
-            let reversed = (opts && opts.reverse) ? true : false;
-            let start = reversed ? keyNext(keyR) : keyIncrement(after);
-            let end = reversed ? after : keyIncrement(keyR);
-            return (await tx.getRangeAll(start, end, {
-                limit: opts && opts.limit ? opts.limit! : undefined,
-                reverse: opts && opts.reverse ? opts.reverse : undefined
-            })).map((v) => ({ key: v[0].slice(this.prefix.length), value: v[1] }));
-        } else {
-            return (await tx.getRangeAll(Buffer.concat([this.prefix, key]), keyIncrement(Buffer.concat([this.prefix, key])), {
-                limit: opts && opts.limit ? opts.limit! : undefined,
-                reverse: opts && opts.reverse ? opts.reverse : undefined
-            })).map((v) => ({ key: v[0].slice(this.prefix.length), value: v[1] }));
-        }
+        let args = resolveRangeParameters({ after: opts && opts.after, before: opts && opts.before, reverse: opts && opts.reverse, prefix: this.prefix, key });
+        return (await tx.getRangeAll(args.start, args.end, {
+            limit: opts && opts.limit ? opts.limit! : undefined,
+            reverse: opts && opts.reverse ? opts.reverse : undefined
+        })).map((v) => ({ key: v[0].slice(this.prefix.length), value: v[1] }));
     }
 
     set(ctx: Context, key: Buffer, value: Buffer) {

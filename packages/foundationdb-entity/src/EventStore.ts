@@ -7,7 +7,7 @@ import { EventStoreDescriptor } from './EventStoreDescriptor';
 import { encoders } from '@openland/foundationdb';
 import { EventStream } from './EventStream';
 
-const emptyBuffer = Buffer.of();
+const ZERO = Buffer.alloc(0);
 
 const txCache = new TransactionCache<number>('event-number');
 
@@ -32,7 +32,7 @@ export abstract class EventStore {
     protected async _findAll(ctx: Context, key: PrimaryKeyType[]) {
         return (await this.descriptor.subspace
             .subspace(encoders.tuple.pack(key))
-            .range(ctx, emptyBuffer))
+            .range(ctx, ZERO))
             .map((v) => this.descriptor.factory.decode(v.value));
     }
 

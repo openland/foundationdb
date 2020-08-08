@@ -224,6 +224,23 @@ describe('Subspace', () => {
             expect(all.length).toBe(1);
             all = await keyspace.range(rootCtx, [], { reverse: false, after: ['mmm'] });
             expect(all.length).toBe(0);
+            all = await keyspace.range(rootCtx, [], { reverse: false, after: ['key'] });
+            expect(all.length).toBe(0);
+            all = await keyspace.range(rootCtx, [], { reverse: false, after: ['ke'] });
+            expect(all.length).toBe(1);
+
+            all = await keyspace.range(rootCtx, [], { reverse: true, before: ['aaa'] });
+            expect(all.length).toBe(1);
+            all = await keyspace.range(rootCtx, [], { reverse: true, before: ['mmm'] });
+            expect(all.length).toBe(0);
+            all = await keyspace.range(rootCtx, [], { reverse: false, before: ['mmm'] });
+            expect(all.length).toBe(1);
+            all = await keyspace.range(rootCtx, [], { reverse: false, before: ['key'] });
+            expect(all.length).toBe(0);
+            all = await keyspace.range(rootCtx, [], { reverse: false, before: ['ke'] });
+            expect(all.length).toBe(0);
+            all = await keyspace.range(rootCtx, [], { reverse: false, before: ['key1'] });
+            expect(all.length).toBe(1);
 
             await inTx(rootCtx, async (ctx) => {
                 keyspace.set(ctx, ['key2'], 1);
@@ -282,10 +299,24 @@ describe('Subspace', () => {
             expect(res.length).toBe(1);
             expect(res[0].value).toBe(5);
 
-            res = await keyspace.range(rootCtx, [1], { after: [2], limit: 1 });
+            res = await keyspace.range(rootCtx, [1], { after: [1, 12], limit: 1 });
             expect(res.length).toBe(0);
 
-            res = await keyspace.range(rootCtx, [1], { after: [0], limit: 1, reverse: true });
+            res = await keyspace.range(rootCtx, [1], { after: [1, 0], limit: 1, reverse: true });
+            expect(res.length).toBe(0);
+
+            res = await keyspace.range(rootCtx, [1], { before: [1, 6], limit: 1 });
+            expect(res.length).toBe(1);
+            expect(res[0].value).toBe(1);
+
+            res = await keyspace.range(rootCtx, [1], { before: [1, 6], limit: 1, reverse: true });
+            expect(res.length).toBe(1);
+            expect(res[0].value).toBe(12);
+
+            res = await keyspace.range(rootCtx, [1], { before: [1, 12], limit: 1, reverse: true });
+            expect(res.length).toBe(0);
+
+            res = await keyspace.range(rootCtx, [1], { before: [1, 0], limit: 1 });
             expect(res.length).toBe(0);
         }
     });
@@ -330,10 +361,24 @@ describe('Subspace', () => {
             expect(res.length).toBe(1);
             expect(res[0].value).toBe(5);
 
-            res = await keyspace.range(rootCtx, [1], { after: [2], limit: 1 });
+            res = await keyspace.range(rootCtx, [1], { after: [1, 12], limit: 1 });
             expect(res.length).toBe(0);
 
-            res = await keyspace.range(rootCtx, [1], { after: [0], limit: 1, reverse: true });
+            res = await keyspace.range(rootCtx, [1], { after: [1, 0], limit: 1, reverse: true });
+            expect(res.length).toBe(0);
+
+            res = await keyspace.range(rootCtx, [1], { before: [1, 6], limit: 1 });
+            expect(res.length).toBe(1);
+            expect(res[0].value).toBe(1);
+
+            res = await keyspace.range(rootCtx, [1], { before: [1, 6], limit: 1, reverse: true });
+            expect(res.length).toBe(1);
+            expect(res[0].value).toBe(12);
+
+            res = await keyspace.range(rootCtx, [1], { before: [1, 12], limit: 1, reverse: true });
+            expect(res.length).toBe(0);
+
+            res = await keyspace.range(rootCtx, [1], { before: [1, 0], limit: 1 });
             expect(res.length).toBe(0);
         }
     });

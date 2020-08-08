@@ -5,6 +5,8 @@ import { Stream } from './Stream';
 import { BaseEvent } from './BaseEvent';
 import { EventStoreDescriptor } from './EventStoreDescriptor';
 
+const ZERO = Buffer.alloc(0);
+
 export class EventStream implements Stream<BaseEvent> {
     readonly eventBusKey: string;
     readonly entityStorage: EntityStorage;
@@ -36,7 +38,7 @@ export class EventStream implements Stream<BaseEvent> {
     async tail(ctx: Context): Promise<string | null> {
         let res = await this._descriptor.subspace
             .subspace(this._prefix)
-            .range(ctx, Buffer.of(), {
+            .range(ctx, ZERO, {
                 limit: 1,
                 reverse: true
             });
@@ -51,7 +53,7 @@ export class EventStream implements Stream<BaseEvent> {
     async head(ctx: Context): Promise<string | null> {
         let res = await this._descriptor.subspace
             .subspace(this._prefix)
-            .range(ctx, Buffer.of(), {
+            .range(ctx, ZERO, {
                 limit: 1,
                 reverse: false
             });
@@ -73,7 +75,7 @@ export class EventStream implements Stream<BaseEvent> {
     @transactional
     async next(ctx: Context): Promise<BaseEvent[]> {
         let res = await this._descriptor.subspace
-            .subspace(this._prefix).range(ctx, Buffer.of(), {
+            .subspace(this._prefix).range(ctx, ZERO, {
                 limit: this._batchSize,
                 after: this._cursor ? this._cursor : undefined
             });

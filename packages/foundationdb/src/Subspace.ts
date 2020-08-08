@@ -14,6 +14,11 @@ export interface RangeOptions<K = Buffer> {
     after?: K;
 
     /**
+     * If provided specifies before what key to query data
+     */
+    before?: K;
+
+    /**
      * Maximnum number of returned values.
      */
     limit?: number;

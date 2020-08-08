@@ -8,6 +8,7 @@ import { encoders, Transformer } from '../encoding';
 import { TransformedSubspace } from './TransformedSubspace';
 import { keyNext, keyIncrement } from '../utils';
 import { SubspaceTracer } from '../tracing';
+import { resolveRangeParameters } from './resolveRangeParameters';
 
 const empty = Buffer.alloc(0);
 
@@ -47,41 +48,21 @@ export class GlobalSubspace implements Subspace {
     async range(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
         return await SubspaceTracer.range(ctx, key, opts, async () => {
             let tx = getTransaction(ctx).rawTransaction(this.db);
-            if (opts && opts.after) {
-                let after = opts.after!;
-                let reversed = (opts && opts.reverse) ? true : false;
-                let start = reversed ? keyNext(key) : keyIncrement(after);
-                let end = reversed ? after : keyIncrement(key);
-                return (await tx.getRangeAll(start, end, {
-                    limit: opts && opts.limit ? opts.limit! : undefined,
-                    reverse: opts && opts.reverse ? opts.reverse : undefined
-                })).map((v) => ({ key: v[0], value: v[1] }));
-            } else {
-                return (await tx.getRangeAll(key, keyIncrement(key), {
-                    limit: opts && opts.limit ? opts.limit! : undefined,
-                    reverse: opts && opts.reverse ? opts.reverse : undefined
-                })).map((v) => ({ key: v[0], value: v[1] }));
-            }
+            let args = resolveRangeParameters({ after: opts && opts.after, before: opts && opts.before, reverse: opts && opts.reverse, prefix: empty, key });
+            return (await tx.getRangeAll(args.start, args.end, {
+                limit: opts && opts.limit ? opts.limit! : undefined,
+                reverse: opts && opts.reverse ? opts.reverse : undefined
+            })).map((v) => ({ key: v[0], value: v[1] }));
         });
     }
 
     async snapshotRange(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
         let tx = getTransaction(ctx).rawTransaction(this.db).snapshot();
-        if (opts && opts.after) {
-            let after = opts.after!;
-            let reversed = (opts && opts.reverse) ? true : false;
-            let start = reversed ? keyNext(key) : keyIncrement(after);
-            let end = reversed ? after : keyIncrement(key);
-            return (await tx.getRangeAll(start, end, {
-                limit: opts && opts.limit ? opts.limit! : undefined,
-                reverse: opts && opts.reverse ? opts.reverse : undefined
-            })).map((v) => ({ key: v[0], value: v[1] }));
-        } else {
-            return (await tx.getRangeAll(key, keyIncrement(key), {
-                limit: opts && opts.limit ? opts.limit! : undefined,
-                reverse: opts && opts.reverse ? opts.reverse : undefined
-            })).map((v) => ({ key: v[0], value: v[1] }));
-        }
+        let args = resolveRangeParameters({ after: opts && opts.after, before: opts && opts.before, reverse: opts && opts.reverse, prefix: empty, key });
+        return (await tx.getRangeAll(args.start, args.end, {
+            limit: opts && opts.limit ? opts.limit! : undefined,
+            reverse: opts && opts.reverse ? opts.reverse : undefined
+        })).map((v) => ({ key: v[0], value: v[1] }));
     }
 
     set(ctx: Context, key: Buffer, value: Buffer) {
