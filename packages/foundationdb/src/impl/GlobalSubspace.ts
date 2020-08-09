@@ -50,6 +50,11 @@ export class GlobalSubspace implements Subspace {
         return tx.exists(key);
     }
 
+    snapshotExists(ctx: Context, key: Buffer): Promise<boolean> {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        return tx.snapshot().exists(key);
+    }
+
     async range(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
         return await SubspaceTracer.range(ctx, key, opts, async () => {
             let tx = getTransaction(ctx).rawTransaction(this.db);

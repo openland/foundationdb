@@ -49,6 +49,11 @@ export class ChildSubspace implements Subspace {
         return tx.exists(Buffer.concat([this.prefix, key]));
     }
 
+    snapshotExists(ctx: Context, key: Buffer): Promise<boolean> {
+        let tx = getTransaction(ctx)!.rawTransaction(this.db);
+        return tx.snapshot().exists(Buffer.concat([this.prefix, key]));
+    }
+
     async range(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
         return SubspaceTracer.range(ctx, key, opts, async () => {
             let tx = getTransaction(ctx)!.rawTransaction(this.db);

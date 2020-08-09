@@ -55,6 +55,10 @@ export class TransformedSubspace<K, V, SK, SV> implements Subspace<K, V> {
         return this.ops.exists(ctx, this.keyTf.pack(key));
     }
 
+    snapshotExists(ctx: Context, key: K): Promise<boolean> {
+        return this.ops.exists(ctx, this.keyTf.pack(key));
+    }
+
     async range(ctx: Context, key: K, opts?: RangeOptions<K>): Promise<{ key: K, value: V }[]> {
         let opts2: RangeOptions<SK> | undefined = undefined;
         if (opts) {

@@ -77,13 +77,35 @@ export interface Subspace<K = Buffer, V = Buffer> {
      * Get returns the promise of the value associated with the specified key. The read is performed 
      * asynchronously and does not block event loop.
      * 
-     * Unlike `get` method does not creates read conflicts
+     * Unlike `get` method does not generate read conflicts.
      * 
      * @param ctx context
      * @param key key
      * @returns   value or null if not exist
      */
     snapshotGet(ctx: Context, key: K): Promise<V | null>;
+
+    /**
+     * Check if key exists in database. Returns the promise of the status of the specified key.
+     * The read is performed asynchronously and does not block event loop.
+     * 
+     * @param ctx   context
+     * @param key   key
+     * @param value value to set
+     */
+    exists(ctx: Context, key: K): Promise<boolean>;
+
+    /**
+     * Check if key exists in database. Returns the promise of the status of the specified key.
+     * The read is performed asynchronously and does not block event loop.
+     * 
+     * Unlike `exists` method does not generate read conflicts.
+     * 
+     * @param ctx   context
+     * @param key   key
+     * @param value value to set
+     */
+    snapshotExists(ctx: Context, key: K): Promise<boolean>;
 
     /**
      * Returns the promise of values that prefixed by key in current subspace ordered by key values.
@@ -99,7 +121,7 @@ export interface Subspace<K = Buffer, V = Buffer> {
      * Returns the promise of values that prefixed by key in current subspace ordered by key values.
      * The read is performed asynchronously and does not block event loop.
      * 
-     * Unlike `range` method does not creates read conflicts
+     * Unlike `range` method does not generate read conflicts.
      * 
      * @param ctx  context
      * @param key  key prefix
@@ -116,16 +138,6 @@ export interface Subspace<K = Buffer, V = Buffer> {
      * @param value value to set
      */
     set(ctx: Context, key: K, value: V): void;
-
-    /**
-     * Check 
-     * Set returns immediately, having modified the snapshot of the database represented by the transaction.
-     * 
-     * @param ctx   context
-     * @param key   key
-     * @param value value to set
-     */
-    exists(ctx: Context, key: K): Promise<boolean>;
 
     /**
      * Transforms key by appending versionstamp, append optional suffix and set value at result key, overwriting any previous 
