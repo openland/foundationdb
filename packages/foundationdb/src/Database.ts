@@ -24,7 +24,7 @@ export class Database {
      */
     static async open(args?: { layers: Layer[], clusterFile?: string }) {
         fdb.setAPIVersion(620);
-        let db: fdb.Database = await fdb.open(args && args.clusterFile);
+        let db: fdb.Database = fdb.open(args && args.clusterFile);
         let res = new Database(db);
         if (args && args.layers) {
             for (let l of args.layers) {
@@ -47,7 +47,7 @@ export class Database {
             throw Error('Trying to open test database in production mode');
         }
         let nm = args && args.name ? args.name : 'test-' + randomNumbersString(64);
-        let db: fdb.Database = await fdb.open(args && args.clusterFile);
+        let db: fdb.Database = fdb.open(args && args.clusterFile);
         let res = new Database(db, Buffer.from(nm, 'utf-8'));
         await inTx(createNamedContext('test'), async (ctx) => {
             res.allKeys.clearPrefixed(ctx, Buffer.of());

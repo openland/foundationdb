@@ -71,7 +71,7 @@ export class DirectoryLayer {
     }
 
     @transactional
-    async exists(ctx: Context, path: string[]) {
+    async directoryExists(ctx: Context, path: string[]) {
         let raw = getTransaction(ctx).rawTransaction(this.db);
         return await this.directory.exists(raw, path);
     }

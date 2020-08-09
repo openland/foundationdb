@@ -9,7 +9,7 @@ export interface Directory extends Subspace {
     create(ctx: Context, path: string[]): Promise<Directory>;
     createOrOpen(ctx: Context, path: string[]): Promise<Directory>;
     createPrefix(ctx: Context, path: string[], prefix: Buffer): Promise<Directory>;
-    exists(ctx: Context, path: string[]): Promise<boolean>;
+    directoryExists(ctx: Context, path: string[]): Promise<boolean>;
 }
 
 export class DirectorySubspace extends ChildSubspace implements Directory {
@@ -40,7 +40,7 @@ export class DirectorySubspace extends ChildSubspace implements Directory {
         return await this.layer.createPrefix(ctx, [...this.path, ...path], prefix2);
     }
 
-    async exists(ctx: Context, path: string[]): Promise<boolean> {
-        return await this.layer.exists(ctx, [...this.path, ...path]);
+    async directoryExists(ctx: Context, path: string[]): Promise<boolean> {
+        return await this.layer.directoryExists(ctx, [...this.path, ...path]);
     }
 }

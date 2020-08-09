@@ -27,14 +27,14 @@ describe('Directory', () => {
         let db = await Database.openTest();
         let d = new DirectoryLayer(db, db.allKeys.subspace(Buffer.of(0xfe)), db.allKeys);
 
-        expect(await d.exists(ctx, ['test'])).toBeFalsy();
-        expect(await d.exists(ctx, ['test', 'test2'])).toBeFalsy();
+        expect(await d.directoryExists(ctx, ['test'])).toBeFalsy();
+        expect(await d.directoryExists(ctx, ['test', 'test2'])).toBeFalsy();
         let d1 = await d.createOrOpen(ctx, ['test']);
         let d2 = await d.createOrOpen(ctx, ['test', 'test2']);
         expect(!d1.prefix.equals(d2.prefix)).toBeTruthy();
 
-        expect(await d.exists(ctx, ['test'])).toBeTruthy();
-        expect(await d.exists(ctx, ['test', 'test2'])).toBeTruthy();
+        expect(await d.directoryExists(ctx, ['test'])).toBeTruthy();
+        expect(await d.directoryExists(ctx, ['test', 'test2'])).toBeTruthy();
 
         let d12 = await d.open(ctx, ['test']);
         let d22 = await d.createOrOpen(ctx, ['test', 'test2']);
@@ -84,8 +84,8 @@ describe('Directory', () => {
         await db.directories.move(ctx, ['test'], ['test2']);
         let t2 = await db.directories.open(ctx, ['test2']);
         expect(t1.prefix.equals(t2.prefix)).toBe(true);
-        expect(await db.directories.exists(ctx, ['test2'])).toBe(true);
-        expect(await db.directories.exists(ctx, ['test'])).toBe(false);
+        expect(await db.directories.directoryExists(ctx, ['test2'])).toBe(true);
+        expect(await db.directories.directoryExists(ctx, ['test'])).toBe(false);
         let t3 = await db.directories.create(ctx, ['test']);
         expect(t1.prefix.equals(t3.prefix)).toBe(false);
     });
