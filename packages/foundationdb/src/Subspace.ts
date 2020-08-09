@@ -118,6 +118,16 @@ export interface Subspace<K = Buffer, V = Buffer> {
     set(ctx: Context, key: K, value: V): void;
 
     /**
+     * Check 
+     * Set returns immediately, having modified the snapshot of the database represented by the transaction.
+     * 
+     * @param ctx   context
+     * @param key   key
+     * @param value value to set
+     */
+    exists(ctx: Context, key: K): Promise<boolean>;
+
+    /**
      * Transforms key by appending versionstamp, append optional suffix and set value at result key, overwriting any previous 
      * association with key. Set returns immediately, having modified the snapshot of the database represented by the 
      * transaction but without versionstamp.
