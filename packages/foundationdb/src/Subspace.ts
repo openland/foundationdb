@@ -233,6 +233,45 @@ export interface Subspace<K = Buffer, V = Buffer> {
     add(ctx: Context, key: K, value: V): void;
 
     /**
+     * Sets the value in the database to the smaller of the existing value and param. If the existing 
+     * value in the database is not present, then param is stored in the database. If the existing value 
+     * in the database is shorter than param, it is first extended to the length of param with zero bytes. 
+     * If param is shorter than the existing value in the database, the existing value is truncated to match 
+     * the length of param.
+     * 
+     * Both the existing value and param are treated as unsigned integers. (This differs from the behavior of atomic addition.)
+     * 
+     * @param ctx   context
+     * @param key   key
+     * @param value value
+     */
+    min(ctx: Context, key: K, value: V): void;
+
+    /**
+     * Sets the value in the database to the larger of the existing value and param. If the existing value 
+     * in the database is not present or shorter than param, it is first extended to the length of param with 
+     * zero bytes. If param is shorter than the existing value in the database, the existing value is truncated 
+     * to match the length of param.
+     * 
+     * Both the existing value and param are treated as unsigned integers. (This differs from the behavior of atomic addition.)
+     * 
+     * @param ctx   context
+     * @param key   key
+     * @param value value
+     */
+    max(ctx: Context, key: K, value: V): void;
+
+    /**
+     * Performs an atomic compare and clear operation. If the existing value in the database is equal to the given 
+     * value, then given key is cleared.
+     * 
+     * @param ctx   context
+     * @param key   key
+     * @param value value
+     */
+    compareAndClear(ctx: Context, key: K, value: V): void;
+
+    /**
      * Performs a bitwise “or“ operation. If the existing value in the database is not present or shorter than “param“, 
      * it is first extended to the length of “param“ with zero bytes. If “param“ is shorter than the existing value in 
      * the database, the existing value is truncated to match the length of “param“.
@@ -264,6 +303,26 @@ export interface Subspace<K = Buffer, V = Buffer> {
      * @param value value
      */
     bitXor(ctx: Context, key: K, value: V): void;
+
+    /**
+     * Performs lexicographic comparison of byte strings. If the existing value in the database is not present, then param 
+     * is stored. Otherwise the larger of the two values is then stored in the database.
+     * 
+     * @param ctx   context
+     * @param key   key
+     * @param value value
+     */
+    byteMax(ctx: Context, key: K, value: V): void;
+
+    /**
+     * Performs lexicographic comparison of byte strings. If the existing value in the database is not present, then param is 
+     * stored. Otherwise the smaller of the two values is then stored in the database.
+     * 
+     * @param ctx   context
+     * @param key   key
+     * @param value value
+     */
+    byteMin(ctx: Context, key: K, value: V): void;
 
     /**
      * Watch creates a watch and returns a promise that will become ready when the watch reports a change to the value 

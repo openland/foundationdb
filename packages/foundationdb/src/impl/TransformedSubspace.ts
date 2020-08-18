@@ -139,6 +139,26 @@ export class TransformedSubspace<K, V, SK, SV> implements Subspace<K, V> {
         this.ops.bitAnd(ctx, this.keyTf.pack(key), this.valTf.pack(value));
     }
 
+    max(ctx: Context, key: K, value: V) {
+        this.ops.max(ctx, this.keyTf.pack(key), this.valTf.pack(value));
+    }
+
+    min(ctx: Context, key: K, value: V) {
+        this.ops.min(ctx, this.keyTf.pack(key), this.valTf.pack(value));
+    }
+
+    byteMax(ctx: Context, key: K, value: V) {
+        this.ops.byteMax(ctx, this.keyTf.pack(key), this.valTf.pack(value));
+    }
+
+    byteMin(ctx: Context, key: K, value: V) {
+        this.ops.byteMin(ctx, this.keyTf.pack(key), this.valTf.pack(value));
+    }
+
+    compareAndClear(ctx: Context, key: K, value: V) {
+        this.ops.compareAndClear(ctx, this.keyTf.pack(key), this.valTf.pack(value));
+    }
+
     clear(ctx: Context, key: K) {
         this.ops.clear(ctx, this.keyTf.pack(key));
     }

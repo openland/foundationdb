@@ -4,7 +4,7 @@ import { encoders, Transformer } from './../encoding';
 import { Database } from './../Database';
 import { Subspace, RangeOptions } from './../Subspace';
 import { getTransaction } from '../getTransaction';
-import { keyNext, keyIncrement } from '../utils';
+import { keyIncrement } from '../utils';
 import { Watch } from '../Watch';
 import * as fdb from 'foundationdb';
 import { SubspaceTracer } from '../tracing';
@@ -144,6 +144,31 @@ export class ChildSubspace implements Subspace {
     bitXor(ctx: Context, key: Buffer, value: Buffer) {
         let tx = getTransaction(ctx)!.rawTransaction(this.db);
         tx.bitXor(Buffer.concat([this.prefix, key]), value);
+    }
+
+    max(ctx: Context, key: Buffer, value: Buffer) {
+        let tx = getTransaction(ctx).rawTransaction(this.db);
+        tx.max(Buffer.concat([this.prefix, key]), value);
+    }
+
+    min(ctx: Context, key: Buffer, value: Buffer) {
+        let tx = getTransaction(ctx).rawTransaction(this.db);
+        tx.min(Buffer.concat([this.prefix, key]), value);
+    }
+
+    byteMax(ctx: Context, key: Buffer, value: Buffer) {
+        let tx = getTransaction(ctx).rawTransaction(this.db);
+        tx.byteMax(Buffer.concat([this.prefix, key]), value);
+    }
+
+    byteMin(ctx: Context, key: Buffer, value: Buffer) {
+        let tx = getTransaction(ctx).rawTransaction(this.db);
+        tx.byteMin(Buffer.concat([this.prefix, key]), value);
+    }
+
+    compareAndClear(ctx: Context, key: Buffer, value: Buffer) {
+        let tx = getTransaction(ctx).rawTransaction(this.db);
+        tx.atomicOp(fdb.MutationType.CompareAndClear, Buffer.concat([this.prefix, key]), value);
     }
 
     watch(ctx: Context, key: Buffer): Watch {

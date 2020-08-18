@@ -9,6 +9,7 @@ import { TransformedSubspace } from './TransformedSubspace';
 import { keyNext, keyIncrement } from '../utils';
 import { SubspaceTracer } from '../tracing';
 import { resolveRangeParameters } from './resolveRangeParameters';
+import { MutationType } from 'foundationdb';
 
 const empty = Buffer.alloc(0);
 
@@ -130,6 +131,31 @@ export class GlobalSubspace implements Subspace {
     add(ctx: Context, key: Buffer, value: Buffer) {
         let tx = getTransaction(ctx).rawTransaction(this.db);
         tx.add(key, value);
+    }
+
+    max(ctx: Context, key: Buffer, value: Buffer) {
+        let tx = getTransaction(ctx).rawTransaction(this.db);
+        tx.max(key, value);
+    }
+
+    min(ctx: Context, key: Buffer, value: Buffer) {
+        let tx = getTransaction(ctx).rawTransaction(this.db);
+        tx.min(key, value);
+    }
+
+    byteMax(ctx: Context, key: Buffer, value: Buffer) {
+        let tx = getTransaction(ctx).rawTransaction(this.db);
+        tx.byteMax(key, value);
+    }
+
+    byteMin(ctx: Context, key: Buffer, value: Buffer) {
+        let tx = getTransaction(ctx).rawTransaction(this.db);
+        tx.byteMin(key, value);
+    }
+
+    compareAndClear(ctx: Context, key: Buffer, value: Buffer) {
+        let tx = getTransaction(ctx).rawTransaction(this.db);
+        tx.atomicOp(MutationType.CompareAndClear, key, value);
     }
 
     bitOr(ctx: Context, key: Buffer, value: Buffer) {
