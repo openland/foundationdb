@@ -1,6 +1,7 @@
 export { Database } from './Database';
 export { Transaction } from './Transaction';
 export { inTx, inTxLeaky, assertNoTransaction } from './inTx';
+export { inReadOnlyTx } from './inReadOnlyTx';
 export { withoutTransaction } from './withoutTransaction';
 export { withReadOnlyTransaction } from './withReadOnlyTransaction';
 export { keyIncrement, keyNext } from './utils';
