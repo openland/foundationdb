@@ -4,6 +4,6 @@ export abstract class BaseEvent {
 
     protected constructor(raw: any) {
         this.raw = raw;
-        Object.freeze(this);
+        Object.freeze(raw);
     }
 }
