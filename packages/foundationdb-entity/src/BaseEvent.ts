@@ -1,9 +1,8 @@
 export abstract class BaseEvent {
-    readonly type: string;
+    abstract readonly type: string;
     readonly raw: any;
 
-    protected constructor(type: string, raw: any) {
-        this.type = type;
+    protected constructor(raw: any) {
         this.raw = raw;
         Object.freeze(this);
     }

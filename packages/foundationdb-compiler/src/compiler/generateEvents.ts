@@ -37,7 +37,7 @@ export function generateEvents(schema: SchemaModel, builder: StringBuilder) {
         builder.append(`export class ${eventClass} extends BaseEvent {`);
         builder.addIndent();
         builder.append();
-        builder.append(`static type: '${eventKey}' = '${eventKey}';`);
+        builder.append(`static readonly type: '${eventKey}' = '${eventKey}';`);
         builder.append();
         builder.append(`static create(data: ${eventClass}Shape) {`);
         builder.addIndent();
@@ -57,9 +57,11 @@ export function generateEvents(schema: SchemaModel, builder: StringBuilder) {
         builder.removeIndent();
         builder.append(`}`);
         builder.append();
+        builder.append(`readonly type: '${eventKey}' = '${eventKey}';`);
+        builder.append();
         builder.append(`private constructor(data: any) {`);
         builder.addIndent();
-        builder.append(`super('${eventKey}', data);`);
+        builder.append(`super(data);`);
         builder.removeIndent();
         builder.append(`}`);
         builder.append();

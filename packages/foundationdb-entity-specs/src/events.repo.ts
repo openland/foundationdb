@@ -18,7 +18,7 @@ interface SampleEventShape {
 
 export class SampleEvent extends BaseEvent {
 
-    static type: 'sampleEvent' = 'sampleEvent';
+    static readonly type: 'sampleEvent' = 'sampleEvent';
 
     static create(data: SampleEventShape) {
         return new SampleEvent(sampleEventCodec.normalize(data));
@@ -32,8 +32,10 @@ export class SampleEvent extends BaseEvent {
         return sampleEventCodec.encode(event.raw);
     }
 
+    readonly type: 'sampleEvent' = 'sampleEvent';
+
     private constructor(data: any) {
-        super('sampleEvent', data);
+        super(data);
     }
 
     get id(): string { return this.raw.id; }
