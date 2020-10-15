@@ -37,6 +37,8 @@ export function generateEvents(schema: SchemaModel, builder: StringBuilder) {
         builder.append(`export class ${eventClass} extends BaseEvent {`);
         builder.addIndent();
         builder.append();
+        builder.append(`static type: '${eventKey}' = '${eventKey}';`);
+        builder.append();
         builder.append(`static create(data: ${eventClass}Shape) {`);
         builder.addIndent();
         builder.append(`return new ${eventClass}(${eventKey}Codec.normalize(data));`);

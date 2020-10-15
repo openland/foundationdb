@@ -18,6 +18,8 @@ interface SampleEventShape {
 
 export class SampleEvent extends BaseEvent {
 
+    static type: 'sampleEvent' = 'sampleEvent';
+
     static create(data: SampleEventShape) {
         return new SampleEvent(sampleEventCodec.normalize(data));
     }
