@@ -87,4 +87,9 @@ export interface Transaction {
      * Get Read Version of transaction. Must be called after any read operation.
      */
     getReadVersion(): Promise<Buffer>;
+
+    /**
+     * Get Commited Version of transaction. Must be called after any write operation.
+     */
+    getCommittedVersion(): Promise<Buffer>;
 }

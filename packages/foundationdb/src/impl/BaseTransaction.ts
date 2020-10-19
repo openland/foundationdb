@@ -48,6 +48,18 @@ export abstract class BaseTransaction implements Transaction {
         return this.rawTx!.getReadVersion();
     }
 
+    getCommittedVersion() {
+        return new Promise<Buffer>((resolve, reject) => {
+            this.afterCommit(() => {
+                try {
+                    resolve(this.rawTx!.getCommittedVersion());
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        });
+    }
+
     abstract beforeCommit(fn: ((ctx: Context) => Promise<void>) | ((ctx: Context) => void)): void;
     abstract afterCommit(fn: (ctx: Context) => void): void;
 }
