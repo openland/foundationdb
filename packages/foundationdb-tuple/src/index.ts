@@ -1,9 +1,14 @@
 import { Float } from './Float';
+import { Versionstamp } from './Versionstamp';
+import { VersionstampRef } from './VersionstampRef';
 import { BufferWriter, BufferReader } from './utils/buffer';
-import { IntegerCodec, TextStringCodec, BooleanCodec, NullCodec, ByteStringCodec, DoubleCodec } from './codecs';
+import { IntegerCodec, TextStringCodec, BooleanCodec, NullCodec, ByteStringCodec, DoubleCodec, VersionstampCodec } from './codecs';
 
 export { Float };
-export type TupleItem = number | Float | boolean | string | Buffer | null;
+export { Versionstamp };
+export { VersionstampRef };
+export type TupleItem = number | Float | boolean | string | Buffer | Versionstamp | null;
+export type TupleItemExtended = TupleItem | VersionstampRef;
 
 /**
  * Pack tuple to a Buffer
@@ -24,6 +29,8 @@ export function pack(src: TupleItem[]): Buffer {
             ByteStringCodec.pack(itm, writer);
         } else if (itm instanceof Float) {
             DoubleCodec.pack(itm, writer);
+        } else if (itm instanceof Versionstamp) {
+            VersionstampCodec.pack(itm, writer);
         } else if (itm === null) {
             NullCodec.pack(itm, writer);
         } else {
@@ -53,6 +60,8 @@ export function unpack(src: Buffer): TupleItem[] {
             res.push(ByteStringCodec.unpack(reader));
         } else if (DoubleCodec.is(code)) {
             res.push(DoubleCodec.unpack(reader));
+        } else if (VersionstampCodec.is(code)) {
+            res.push(VersionstampCodec.unpack(reader));
         } else {
             throw Error('Unsupported tag: ' + code);
         }
@@ -91,9 +100,63 @@ export function equals(a: TupleItem[], b: TupleItem[]) {
             if ((a[i] as Float).value !== (b[i] as Float).value) {
                 return false;
             }
+        } else if (a[i] instanceof Versionstamp) {
+            if (!(b[i] instanceof Versionstamp)) {
+                return false;
+            }
+            if (!((a[i] as Versionstamp).value.equals((b[i] as Versionstamp).value))) {
+                return false;
+            }
         } else {
             throw Error('Unknown tuple item: ' + a[i]);
         }
     }
     return true;
+}
+
+/**
+ * Pack with versionstamp ref
+ * @param src source tuple
+ */
+export function packWithVersionstamp(src: TupleItemExtended[]): { prefix: Buffer, suffix: Buffer } {
+    let prefix: Buffer | null = null;
+    let suffix: Buffer | null = null;
+    let writer = new BufferWriter();
+    for (let itm of src) {
+        if (itm instanceof VersionstampRef) {
+            if (prefix) {
+                throw Error('Multiple versionstamps found');
+            }
+            // Prefix of Versionstamp
+            writer.writeByte(0x33);
+            prefix = writer.build();
+
+            // Buffer suffix (expected to be two bytes)
+            writer = new BufferWriter();
+            writer.writeBuffer(itm.index);
+        } else if (typeof itm === 'undefined') {
+            throw Error('Tuples can\'t have undefined values');
+        } else if (typeof itm === 'number') {
+            IntegerCodec.pack(itm, writer);
+        } else if (typeof itm === 'string') {
+            TextStringCodec.pack(itm, writer);
+        } else if (typeof itm === 'boolean') {
+            BooleanCodec.pack(itm, writer);
+        } else if (Buffer.isBuffer(itm)) {
+            ByteStringCodec.pack(itm, writer);
+        } else if (itm instanceof Float) {
+            DoubleCodec.pack(itm, writer);
+        } else if (itm instanceof Versionstamp) {
+            VersionstampCodec.pack(itm, writer);
+        } else if (itm === null) {
+            NullCodec.pack(itm, writer);
+        } else {
+            throw Error('Unknown tuple item: ' + itm);
+        }
+    }
+    if (!prefix) {
+        throw Error('No versionstamps found');
+    }
+    suffix = writer.build();
+    return { prefix, suffix };
 }

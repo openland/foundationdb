@@ -1,6 +1,7 @@
+import { Versionstamp } from './Versionstamp';
 import { Float } from './Float';
 import { BufferWriter, BufferReader } from './utils/buffer';
-import { NullCodec, TupleCodec, BooleanCodec, ByteStringCodec, TextStringCodec, IntegerCodec, DoubleCodec } from './codecs';
+import { NullCodec, TupleCodec, BooleanCodec, ByteStringCodec, TextStringCodec, IntegerCodec, DoubleCodec, VersionstampCodec } from './codecs';
 
 function testEncoding<T>(codec: TupleCodec<T>, src: T, expected: Buffer) {
     let writer = new BufferWriter();
@@ -24,7 +25,7 @@ function testFailedEncoding<T>(codec: TupleCodec<T>, src: T) {
     expect(() => codec.pack(src, writer)).toThrowError();
 }
 
-describe('Tuple Codecs', () => {
+describe('codecs', () => {
 
     it('should encode and decode null', () => {
         expect(NullCodec.is(0x00)).toBe(true);
@@ -44,6 +45,12 @@ describe('Tuple Codecs', () => {
         expect(ByteStringCodec.is(0x01)).toBe(true);
         expect(ByteStringCodec.is(2)).toBe(false);
         testEncoding(ByteStringCodec, Buffer.from('foo\x00bar', 'ascii'), Buffer.from('\x01foo\x00\xffbar\x00', 'ascii'));
+    });
+
+    it('should encode and decode versionstamps', () => {
+        expect(VersionstampCodec.is(0x33)).toBe(true);
+        expect(VersionstampCodec.is(0x01)).toBe(false);
+        testEncoding(VersionstampCodec, new Versionstamp(Buffer.from('abcdabcdabcd', 'ascii')), Buffer.from('\x33abcdabcdabcd', 'ascii'));
     });
 
     it('should encode and decode text string', () => {

@@ -1,3 +1,4 @@
+import { Versionstamp } from './Versionstamp';
 import { Float } from './Float';
 import { BufferWriter, BufferReader } from './utils/buffer';
 import { normalizeInteger } from './utils/normalizeInteger';
@@ -117,6 +118,23 @@ export const TextStringCodec: TupleCodec<string> = {
     unpack(reader: BufferReader) {
         reader.expect(0x02);
         return readBuffer(reader).toString(); /* UTF-8 is default encoding */
+    }
+};
+
+export const VersionstampCodec: TupleCodec<Versionstamp> = {
+    is(code: number) {
+        return code === 0x33;
+    },
+    pack(src: Versionstamp, writer: BufferWriter) {
+        if (src.value.length !== 12) {
+            throw Error('Versionstamp must be 12 bytes long');
+        }
+        writer.writeByte(0x33);
+        writer.writeBuffer(src.value);
+    },
+    unpack(reader: BufferReader) {
+        reader.expect(0x33);
+        return new Versionstamp(reader.readBuffer(12));
     }
 };
 

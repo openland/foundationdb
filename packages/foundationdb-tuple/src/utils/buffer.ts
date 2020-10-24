@@ -24,6 +24,18 @@ export class BufferReader {
         return this.bufffer.readUInt8(this.offset++);
     }
 
+    readBuffer(size: number) {
+        if (this.completed) {
+            throw Error('EOF');
+        }
+        if (this.offset + size > this.bufffer.length) {
+            throw Error('EOF');
+        }
+        let res = this.bufffer.slice(this.offset, this.offset + size);
+        this.skip(size);
+        return res;
+    }
+
     expect(byte: number) {
         let res = this.bufffer.readUInt8(this.offset++);
         if (res !== byte) {
