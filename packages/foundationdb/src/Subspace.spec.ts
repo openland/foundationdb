@@ -561,7 +561,7 @@ describe('Subspace', () => {
 
             await inTx(rootCtx, async (ctx) => {
                 expect(await keyspace.get(ctx, [1, 2, 3])).toBe(1);
-                expect(await keyspace.get(ctx, [1, 2, '1'])).toBe(1);
+                expect(await keyspace.get(ctx, [1, 2, '!'])).toBe(2);
             });
         }
     });

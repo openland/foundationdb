@@ -2,6 +2,7 @@ node_modules
 coverage
 website/build
 build
+tsconfig.tsbuildinfo
 packages/foundationdb-locks/lib
 packages/foundationdb-random/lib
 packages/foundationdb-utils/lib
@@ -15,3 +16,4 @@ packages/foundationdb-compiler/lib
 packages/foundationdb-entity/lib
 packages/foundationdb-entity-specs/lib
 packages/foundationdb-tuple/lib
+packages/foundationdb/lib
