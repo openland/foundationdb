@@ -9,6 +9,7 @@ import { Watch } from '../Watch';
 import * as fdb from 'foundationdb';
 import { SubspaceTracer } from '../tracing';
 import { resolveRangeParameters } from './resolveRangeParameters';
+import { packWithVersionstamp, TupleItemExtended } from '@openland/foundationdb-tuple';
 
 export class ChildSubspace implements Subspace {
 
@@ -79,6 +80,24 @@ export class ChildSubspace implements Subspace {
             let tx = getTransaction(ctx)!.rawTransaction(this.db);
             tx.set(Buffer.concat([this.prefix, key]), value);
         });
+    }
+
+    setTupleKey(ctx: Context, key: TupleItemExtended[], value: Buffer) {
+        let rawKey = packWithVersionstamp(key);
+        if (Buffer.isBuffer(rawKey)) {
+            this.set(ctx, rawKey, value);
+        } else {
+            this.setVersionstampedKey(ctx, rawKey.prefix, value, rawKey.suffix);
+        }
+    }
+
+    setTupleValue(ctx: Context, key: Buffer, value: TupleItemExtended[]) {
+        let rawValue = packWithVersionstamp(value);
+        if (Buffer.isBuffer(rawValue)) {
+            this.set(ctx, key, rawValue);
+        } else {
+            this.setVersionstampedValue(ctx, key, rawValue.prefix, rawValue.suffix);
+        }
     }
 
     setVersionstampedKey(ctx: Context, key: Buffer, value: Buffer, suffix?: Buffer) {

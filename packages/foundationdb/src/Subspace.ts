@@ -2,6 +2,7 @@ import { Database } from './Database';
 import { Context } from '@openland/context';
 import { Transformer } from './encoding';
 import { Watch } from './Watch';
+import { TupleItemExtended } from '@openland/foundationdb-tuple';
 
 /**
  * RangeOption contains parameters of range queries
@@ -138,6 +139,24 @@ export interface Subspace<K = Buffer, V = Buffer> {
      * @param value value to set
      */
     set(ctx: Context, key: K, value: V): void;
+
+    /**
+     * Same as set, but uses key in a tuple format. Supports versionstamps.
+     * 
+     * @param ctx   context
+     * @param key   tuple
+     * @param value value
+     */
+    setTupleKey(ctx: Context, key: TupleItemExtended[], value: V): void;
+
+    /**
+     * Same as set, but uses value in a tuple format. Supports versionstamps.
+     * 
+     * @param ctx   context
+     * @param key   tuple
+     * @param value value
+     */
+    setTupleValue(ctx: Context, key: K, value: TupleItemExtended[]): void;
 
     /**
      * Transforms key by appending versionstamp, append optional suffix and set value at result key, overwriting any previous 

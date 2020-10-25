@@ -118,7 +118,7 @@ export function equals(a: TupleItem[], b: TupleItem[]) {
  * Pack with versionstamp ref
  * @param src source tuple
  */
-export function packWithVersionstamp(src: TupleItemExtended[]): { prefix: Buffer, suffix: Buffer } {
+export function packWithVersionstamp(src: TupleItemExtended[]): Buffer | { prefix: Buffer, suffix: Buffer } {
     let prefix: Buffer | null = null;
     let suffix: Buffer | null = null;
     let writer = new BufferWriter();
@@ -155,7 +155,7 @@ export function packWithVersionstamp(src: TupleItemExtended[]): { prefix: Buffer
         }
     }
     if (!prefix) {
-        throw Error('No versionstamps found');
+        return writer.build();
     }
     suffix = writer.build();
     return { prefix, suffix };

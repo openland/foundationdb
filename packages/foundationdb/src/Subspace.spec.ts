@@ -470,7 +470,7 @@ describe('Subspace', () => {
             });
 
             await inTx(rootCtx, async (ctx) => {
-                await keyspace.clearPrefixed(ctx, []);
+                keyspace.clearPrefixed(ctx, []);
             });
 
             let res = await keyspace.range(rootCtx, []);
@@ -513,7 +513,7 @@ describe('Subspace', () => {
             });
 
             await inTx(rootCtx, async (ctx) => {
-                await keyspace.clearPrefixed(ctx, [1]);
+                keyspace.clearPrefixed(ctx, [1]);
             });
 
             let res = await keyspace.range(rootCtx, []);
@@ -537,5 +537,32 @@ describe('Subspace', () => {
         expect(keys[0].key.length).toBe('prefix'.length + 10 + 'suffix'.length);
         expect(Buffer.compare(Buffer.from('prefix', 'ascii'), keys[0].key.subarray(0, 'prefix'.length)));
         expect(Buffer.compare(Buffer.from('suffix', 'ascii'), keys[0].key.subarray('prefix'.length + 10)));
+    });
+
+    it('should correcrly write tuple key/value', async () => {
+        let db = await Database.openTest();
+        let rootCtx = createNamedContext('test');
+
+        let keyspaces = [
+            db.allKeys
+                .withKeyEncoding(encoders.tuple)
+                .withValueEncoding(encoders.int32LE),
+            db.allKeys
+                .withKeyEncoding(encoders.tuple)
+                .withValueEncoding(encoders.int32LE)
+                .subspace(['1'])
+        ];
+
+        for (let keyspace of keyspaces) {
+            await inTx(rootCtx, async (ctx) => {
+                keyspace.setTupleKey(ctx, [1, 2, 3], 1);
+                keyspace.setTupleKey(ctx, [1, 2, '!'], 2);
+            });
+
+            await inTx(rootCtx, async (ctx) => {
+                expect(await keyspace.get(ctx, [1, 2, 3])).toBe(1);
+                expect(await keyspace.get(ctx, [1, 2, '1'])).toBe(1);
+            });
+        }
     });
 });

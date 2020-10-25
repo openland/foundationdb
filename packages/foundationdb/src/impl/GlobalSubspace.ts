@@ -6,10 +6,11 @@ import { Subspace, RangeOptions } from '../Subspace';
 import { getTransaction } from '../getTransaction';
 import { encoders, Transformer } from '../encoding';
 import { TransformedSubspace } from './TransformedSubspace';
-import { keyNext, keyIncrement } from '../utils';
+import { keyIncrement } from '../utils';
 import { SubspaceTracer } from '../tracing';
 import { resolveRangeParameters } from './resolveRangeParameters';
 import { MutationType } from 'foundationdb';
+import { packWithVersionstamp, TupleItemExtended } from '@openland/foundationdb-tuple';
 
 const empty = Buffer.alloc(0);
 
@@ -81,6 +82,24 @@ export class GlobalSubspace implements Subspace {
             let tx = getTransaction(ctx).rawTransaction(this.db);
             tx.set(key, value);
         });
+    }
+
+    setTupleKey(ctx: Context, key: TupleItemExtended[], value: Buffer) {
+        let rawKey = packWithVersionstamp(key);
+        if (Buffer.isBuffer(rawKey)) {
+            this.set(ctx, rawKey, value);
+        } else {
+            this.setVersionstampedKey(ctx, rawKey.prefix, value, rawKey.suffix);
+        }
+    }
+
+    setTupleValue(ctx: Context, key: Buffer, value: TupleItemExtended[]) {
+        let rawValue = packWithVersionstamp(value);
+        if (Buffer.isBuffer(rawValue)) {
+            this.set(ctx, key, rawValue);
+        } else {
+            this.setVersionstampedValue(ctx, key, rawValue.prefix, rawValue.suffix);
+        }
     }
 
     setVersionstampedKey(ctx: Context, key: Buffer, value: Buffer, suffix?: Buffer) {

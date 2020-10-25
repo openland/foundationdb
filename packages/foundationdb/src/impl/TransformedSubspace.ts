@@ -2,6 +2,7 @@ import { Context } from '@openland/context';
 import { Subspace, RangeOptions } from '../Subspace';
 import { Transformer, encoders } from '../encoding';
 import { Watch } from '../Watch';
+import { TupleItemExtended } from '@openland/foundationdb-tuple';
 
 export class TransformedSubspace<K, V, SK, SV> implements Subspace<K, V> {
 
@@ -89,6 +90,14 @@ export class TransformedSubspace<K, V, SK, SV> implements Subspace<K, V> {
 
     set(ctx: Context, key: K, value: V) {
         this.ops.set(ctx, this.keyTf.pack(key), this.valTf.pack(value));
+    }
+
+    setTupleKey(ctx: Context, key: TupleItemExtended[], value: V) {
+        this.ops.setTupleKey(ctx, key, this.valTf.pack(value));
+    }
+
+    setTupleValue(ctx: Context, key: K, value: TupleItemExtended[]) {
+        this.ops.setTupleValue(ctx, this.keyTf.pack(key), value);
     }
 
     setVersionstampedKey(ctx: Context, key: K, value: V, suffix?: K) {
