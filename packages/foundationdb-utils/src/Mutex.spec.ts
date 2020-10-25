@@ -1,5 +1,5 @@
 // tslint:disable:no-floating-promises
-import { Mutex } from './mutex';
+import { Mutex } from './Mutex';
 import { delay } from './';
 
 describe('Mutex', () => {
