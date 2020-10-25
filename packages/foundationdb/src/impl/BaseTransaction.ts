@@ -1,7 +1,9 @@
 import * as fdb from 'foundationdb';
 import { Context } from '@openland/context';
+import { encoders } from './../encoding';
 import { Database } from './../Database';
 import { Transaction } from './../Transaction';
+import { Versionstamp, VersionstampRef } from '@openland/foundationdb-tuple';
 
 export abstract class BaseTransaction implements Transaction {
 
@@ -16,6 +18,7 @@ export abstract class BaseTransaction implements Transaction {
     protected rawTx?: fdb.Transaction;
     private options: Partial<fdb.TransactionOptions> = {};
     private version?: Buffer;
+    private versionstampIndex = 0;
 
     rawTransaction(db: Database): fdb.Transaction {
         if (this.db && this.db !== db) {
@@ -58,6 +61,29 @@ export abstract class BaseTransaction implements Transaction {
                 }
             });
         });
+    }
+
+    getVersionstamp() {
+        return new Promise<Buffer>((resolve, reject) => {
+            this.afterCommit(async () => {
+                try {
+                    resolve(await this.rawTx!.getVersionstamp().promise);
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        });
+    }
+
+    allocateVersionstampRef(): VersionstampRef {
+        let index = this.versionstampIndex;
+        this.versionstampIndex++;
+        return new VersionstampRef(encoders.int16BE.pack(index));
+    }
+
+    async resolveVersionstampRef(ref: VersionstampRef): Promise<Versionstamp> {
+        let vt = await this.getVersionstamp();
+        return new Versionstamp(Buffer.concat([vt, ref.index]));
     }
 
     abstract beforeCommit(fn: ((ctx: Context) => Promise<void>) | ((ctx: Context) => void)): void;

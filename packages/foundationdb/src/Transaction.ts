@@ -1,6 +1,7 @@
 import * as fdb from 'foundationdb';
 import { Database } from './Database';
 import { Context } from '@openland/context';
+import { Versionstamp, VersionstampRef } from '@openland/foundationdb-tuple';
 
 /**
  * FoundationDB transaction. Transactions are created lazily on first read or write operation.
@@ -92,4 +93,20 @@ export interface Transaction {
      * Get Commited Version of transaction. Must be called after any write operation.
      */
     getCommittedVersion(): Promise<Buffer>;
+
+    /**
+     * Allocates unique versionstamp reference
+     */
+    allocateVersionstampRef(): VersionstampRef;
+
+    /**
+     * Resolves versionstamp by it's ref.
+     * @param ref Versionstamp reference
+     */
+    resolveVersionstampRef(ref: VersionstampRef): Promise<Versionstamp>;
+
+    /**
+     * Get versionstamp
+     */
+    getVersionstamp(): Promise<Buffer>;
 }
