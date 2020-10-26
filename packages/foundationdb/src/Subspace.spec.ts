@@ -2,6 +2,8 @@ import { Database } from './Database';
 import { inTx } from './inTx';
 import { createNamedContext } from '@openland/context';
 import { encoders } from './encoding';
+import { createVersionstampRef } from './createVersionstampRef';
+import { Versionstamp } from '@openland/foundationdb-tuple';
 
 async function createKeyspaces() {
     let db = await Database.openTest();
@@ -562,6 +564,43 @@ describe('Subspace', () => {
             await inTx(rootCtx, async (ctx) => {
                 expect(await keyspace.get(ctx, [1, 2, 3])).toBe(1);
                 expect(await keyspace.get(ctx, [1, 2, '!'])).toBe(2);
+            });
+        }
+    });
+
+    it('should correcrly write tuple with versionstamp key/value', async () => {
+        let db = await Database.openTest();
+        let rootCtx = createNamedContext('test');
+
+        let keyspaces = [
+            db.allKeys
+                .withKeyEncoding(encoders.tuple)
+                .withValueEncoding(encoders.int32LE),
+            db.allKeys
+                .withKeyEncoding(encoders.tuple)
+                .withValueEncoding(encoders.int32LE)
+                .subspace(['1'])
+        ];
+
+        for (let keyspace of keyspaces) {
+            await inTx(rootCtx, async (ctx) => {
+                keyspace.setTupleKey(ctx, [1, 2, createVersionstampRef(ctx), 3], 1);
+                keyspace.setTupleKey(ctx, [1, 2, createVersionstampRef(ctx), 3], 2);
+            });
+
+            await inTx(rootCtx, async (ctx) => {
+                let r = await keyspace.range(ctx, [1, 2]);
+                expect(r.length).toBe(2);
+                expect(r[0].value).toBe(1);
+                expect(r[1].value).toBe(2);
+                expect(r[0].key[0]).toBe(1);
+                expect(r[0].key[1]).toBe(2);
+                expect(r[0].key[2] instanceof Versionstamp).toBe(true);
+                expect(r[1].key[3]).toBe(3);
+                expect(r[1].key[0]).toBe(1);
+                expect(r[1].key[1]).toBe(2);
+                expect(r[1].key[2] instanceof Versionstamp).toBe(true);
+                expect(r[1].key[3]).toBe(3);
             });
         }
     });

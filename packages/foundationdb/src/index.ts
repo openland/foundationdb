@@ -16,3 +16,4 @@ export { Layer, BaseLayer } from './Layer';
 export { isSubspaceEquals, syncSubspaces, deleteMissing, copySubspace } from './operations';
 export { TransactionCache } from './TransactionCache';
 export { Watch } from './Watch';
+export { createVersionstampRef } from './createVersionstampRef';
