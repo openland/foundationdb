@@ -13,8 +13,9 @@ export function createVersionstampRef(ctx: Context) {
     if (!cached) {
         let c = [res];
         cacheVtResolve.set(ctx, 'all', c);
+        let vtt = tx.getVersionstamp();
         tx.afterCommit(async () => {
-            let vt = await tx.getVersionstamp();
+            let vt = await vtt;
             for (let vtc of c) {
                 vtc.resolve(vt);
             }
