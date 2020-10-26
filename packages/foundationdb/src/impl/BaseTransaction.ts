@@ -17,6 +17,12 @@ export abstract class BaseTransaction implements Transaction {
     readonly userData: Map<string, any> = new Map();
     protected rawTx?: fdb.Transaction;
     private options: Partial<fdb.TransactionOptions> = {};
+
+    private vt: Buffer | null = null;
+    private vtRequest: ((src: Buffer) => void) | null = null;
+    private vtReject: ((src: any) => void) | null = null;
+    private vtPromise: Promise<Buffer> | null = null;
+
     private version?: Buffer;
     private versionstampIndex = 0;
 
@@ -34,6 +40,18 @@ export abstract class BaseTransaction implements Transaction {
             }
             if (this.version) {
                 this.rawTx.setReadVersion(this.version);
+            }
+            if (this.vtRequest && this.vtReject) {
+                let vtt = this.rawTx!.getVersionstamp().promise;
+                // tslint:disable-next-line:no-floating-promises
+                (async () => {
+                    try {
+                        this.vt = await vtt;
+                        this.vtRequest!(this.vt!);
+                    } catch (e) {
+                        this.vtReject!(e);
+                    }
+                })();
             }
         }
         return this.rawTx!;
@@ -63,29 +81,40 @@ export abstract class BaseTransaction implements Transaction {
         });
     }
 
-    getVersionstamp() {
-        return new Promise<Buffer>((resolve, reject) => {
-            this.afterCommit(async () => {
-                try {
-                    resolve(await this.rawTx!.getVersionstamp().promise);
-                } catch (e) {
-                    reject(e);
-                }
+    getVersionstamp(): Promise<Buffer> {
+        if (this.isReadOnly) {
+            throw Error('Versionstamps are not available in read-only transactions');
+        }
+
+        if (this.vt) {
+            return Promise.resolve(this.vt);
+        }
+        if (!this.vtPromise) {
+            this.vtPromise = new Promise((resolve, reject) => {
+                this.vtRequest = resolve;
+                this.vtReject = reject;
             });
-        });
+        }
+        return this.vtPromise!;
     }
 
     allocateVersionstampRef(): VersionstampRef {
+        if (this.isReadOnly) {
+            throw Error('Versionstamps are not available in read-only transactions');
+        }
         let index = this.versionstampIndex;
         this.versionstampIndex++;
         return new VersionstampRef(encoders.int16BE.pack(index));
     }
 
     async resolveVersionstampRef(ref: VersionstampRef): Promise<Versionstamp> {
+        if (this.isReadOnly) {
+            throw Error('Versionstamps are not available in read-only transactions');
+        }
         let vt = await this.getVersionstamp();
         return new Versionstamp(Buffer.concat([vt, ref.index]));
     }
 
     abstract beforeCommit(fn: ((ctx: Context) => Promise<void>) | ((ctx: Context) => void)): void;
-    abstract afterCommit(fn: (ctx: Context) => void): void;
+    abstract afterCommit(fn: ((ctx: Context) => Promise<void>) | ((ctx: Context) => void)): void;
 }
