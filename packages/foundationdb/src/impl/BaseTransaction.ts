@@ -94,6 +94,18 @@ export abstract class BaseTransaction implements Transaction {
                 this.vtRequest = resolve;
                 this.vtReject = reject;
             });
+            if (this.rawTx) {
+                let vtt = this.rawTx!.getVersionstamp().promise;
+                // tslint:disable-next-line:no-floating-promises
+                (async () => {
+                    try {
+                        this.vt = await vtt;
+                        this.vtRequest!(this.vt!);
+                    } catch (e) {
+                        this.vtReject!(e);
+                    }
+                })();
+            }
         }
         return this.vtPromise!;
     }

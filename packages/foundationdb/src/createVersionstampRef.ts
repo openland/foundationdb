@@ -13,17 +13,12 @@ export function createVersionstampRef(ctx: Context) {
     if (!cached) {
         let c = [res];
         cacheVtResolve.set(ctx, 'all', c);
-        // tslint:disable-next-line:no-floating-promises
-        (async () => {
-            try {
-                let vt = await tx.getVersionstamp();
-                for (let vtc of c) {
-                    vtc.resolve(vt);
-                }
-            } catch (e) {
-                // Ignore
+        tx.afterCommit(async () => {
+            let vt = await tx.getVersionstamp();
+            for (let vtc of c) {
+                vtc.resolve(vt);
             }
-        })();
+        });
     } else {
         cached.push(res);
     }
