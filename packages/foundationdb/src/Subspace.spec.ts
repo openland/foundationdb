@@ -4,6 +4,7 @@ import { createNamedContext } from '@openland/context';
 import { encoders } from './encoding';
 import { createVersionstampRef } from './createVersionstampRef';
 import { Versionstamp } from '@openland/foundationdb-tuple';
+import { delay } from './utils';
 
 async function createKeyspaces() {
     let db = await Database.openTest();
@@ -590,7 +591,10 @@ describe('Subspace', () => {
                 keyspace.setTupleKey(ctx, [1, 2, vt2, 3], 2);
                 return { vt1, vt2 };
             });
+            
             expect(vts.vt1.index).not.toBeFalsy();
+            expect(vts.vt1.resolved).not.toBeFalsy();
+            expect(vts.vt2.resolved).not.toBeFalsy();
 
             await inTx(rootCtx, async (ctx) => {
                 let r = await keyspace.range(ctx, [1, 2]);

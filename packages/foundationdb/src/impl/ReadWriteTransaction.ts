@@ -6,7 +6,7 @@ export class ReadWriteTransaction extends BaseTransaction {
     readonly isReadOnly: boolean = false;
     readonly isEphemeral: boolean = false;
     private _beforeCommit: (((ctx: Context) => void) | ((ctx: Context) => Promise<void>))[] = [];
-    private _afterCommit: ((ctx: Context) => void)[] = [];
+    private _afterCommit: (((ctx: Context) => void) | ((ctx: Context) => Promise<void>))[] = [];
     private _isCompleted = false;
 
     get isCompleted() {
@@ -17,7 +17,7 @@ export class ReadWriteTransaction extends BaseTransaction {
         this._beforeCommit.push(fn);
     }
 
-    afterCommit(fn: (ctx: Context) => void) {
+    afterCommit(fn: ((ctx: Context) => Promise<void>) | ((ctx: Context) => void)) {
         this._afterCommit.push(fn);
     }
 
@@ -57,7 +57,7 @@ export class ReadWriteTransaction extends BaseTransaction {
         this._afterCommit = [];
         if (pend2.length > 0) {
             for (let p of pend2) {
-                p(ctx);
+                await p(ctx);
             }
         }
     }

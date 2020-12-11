@@ -14,7 +14,7 @@ export class ReadOnlyTransaction extends BaseTransaction {
     beforeCommit(fn: ((ctx: Context) => Promise<void>) | ((ctx: Context) => void)) {
         throw Error('Trying to write to read-only context');
     }
-    afterCommit(fn: (ctx: Context) => void) {
+    afterCommit(fn: ((ctx: Context) => Promise<void>) | ((ctx: Context) => void)) {
         throw Error('Trying to write to read-only context');
     }
 }
