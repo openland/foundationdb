@@ -275,7 +275,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
                 if (res.items.length > 0) {
                     await handler(ctx, res.items);
                 }
-                return res.cursor !== undefined;
+                return res.cursor === undefined;
             });
         }
     }
