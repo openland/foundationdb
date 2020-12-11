@@ -1,7 +1,7 @@
 {
     "name": "@openland/foundationdb-singleton",
     "description": "Singleton worker layer for FoundationDB",
-    "version": "8.9.4",
+    "version": "8.9.5",
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",
     "repository": "https://github.com/openland/foundationdb",
@@ -13,8 +13,8 @@
     },
     "dependencies": {
         "@openland/context": "*",
-        "@openland/foundationdb": "^8.9.4",
-        "@openland/foundationdb-utils": "^8.9.4",
+        "@openland/foundationdb": "^8.9.5",
+        "@openland/foundationdb-utils": "^8.9.5",
         "@openland/log": "*"
     }
 }
