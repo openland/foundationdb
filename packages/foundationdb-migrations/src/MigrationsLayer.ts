@@ -28,7 +28,12 @@ export class MigrationsLayer extends BaseLayer {
                     for (let m of remaining) {
                         log.log(ctx, 'Starting migration: ' + m.key);
                         let ctx2 = withLogPath(ctx, m.key);
-                        await m.migration(ctx2);
+                        try {
+                            await m.migration(ctx2);
+                        } catch (e) {
+                            log.error(ctx, e);
+                            throw e;
+                        }
                         await inTx(ctx2, async (ctx3) => {
                             let ex = await dir.get(ctx3, [m.key]);
                             if (ex) {
