@@ -5,7 +5,7 @@ import { UniqueIndex } from './indexes/UniqueIndex';
 import { TupleItem, Float } from '@openland/foundationdb-tuple';
 import { uniqueSeed } from '@openland/foundationdb-utils';
 import { Context } from '@openland/context';
-import { TransactionCache, encoders, inTx, Watch } from '@openland/foundationdb';
+import { TransactionCache, encoders, inTx, Watch, inReadOnlyTx, withoutTransaction } from '@openland/foundationdb';
 import { Entity } from './Entity';
 import { EntityDescriptor, SecondaryIndexDescriptor } from './EntityDescriptor';
 import { EntityMetadata } from './EntityMetadata';
@@ -227,9 +227,57 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         });
     }
 
+    async find(ctx: Context, opts?: { limit?: number, after?: string }) {
+        let limit = 1000;
+        let after: TupleItem[] | undefined = undefined;
+        if (opts) {
+            if (opts.limit && opts.limit > 1) {
+                limit = opts.limit;
+            }
+            if (opts.after) {
+                after = cursorToTuple(opts.after);
+            }
+        }
+
+        let ex = await this.descriptor.subspace.range(ctx, [], { after, limit });
+        let items = ex.map((v) => {
+            let k = getCacheKey(v.key);
+            let cached = this._entityCache.get(ctx, k);
+            if (cached) {
+                return cached;
+            }
+            let res = this._createEntityInstance(ctx, this._decode(ctx, v.value));
+            this._entityCache.set(ctx, k, res);
+            return res;
+        });
+        let cursor2: string | undefined = undefined;
+        if (items.length > 0) {
+            cursor2 = tupleToCursor(ex[ex.length - 1].key);
+        }
+        return {
+            items: items,
+            cursor: cursor2
+        };
+    }
+
     async findAllKeys(ctx: Context) {
         let ex = await this.descriptor.subspace.range(ctx, []);
         return ex.map((v) => this._decodePrimaryKey(v.key));
+    }
+
+    async iterateAllItems(parent: Context, batchSize: number, handler: (ctx: Context, items: T[]) => Promise<void>) {
+        let cursor: string | undefined = undefined;
+        let completed = false;
+        while (!completed) {
+            completed = await inTx(withoutTransaction(parent), async (ctx) => {
+                let res = await this.find(ctx, { limit: batchSize, after: cursor });
+                cursor = res.cursor;
+                if (res.items.length > 0) {
+                    await handler(ctx, res.items);
+                }
+                return res.cursor !== undefined;
+            });
+        }
     }
 
     protected async _findById(ctx: Context, _id: PrimaryKeyType[]): Promise<T | null> {

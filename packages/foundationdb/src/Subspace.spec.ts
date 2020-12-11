@@ -583,10 +583,14 @@ describe('Subspace', () => {
         ];
 
         for (let keyspace of keyspaces) {
-            await inTx(rootCtx, async (ctx) => {
-                keyspace.setTupleKey(ctx, [1, 2, createVersionstampRef(ctx), 3], 1);
-                keyspace.setTupleKey(ctx, [1, 2, createVersionstampRef(ctx), 3], 2);
+            let vts = await inTx(rootCtx, async (ctx) => {
+                let vt1 = createVersionstampRef(ctx);
+                let vt2 = createVersionstampRef(ctx);
+                keyspace.setTupleKey(ctx, [1, 2, vt1, 3], 1);
+                keyspace.setTupleKey(ctx, [1, 2, vt2, 3], 2);
+                return { vt1, vt2 };
             });
+            expect(vts.vt1.index).not.toBeFalsy();
 
             await inTx(rootCtx, async (ctx) => {
                 let r = await keyspace.range(ctx, [1, 2]);
