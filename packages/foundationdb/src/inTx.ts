@@ -4,20 +4,11 @@ import { Context } from '@openland/context';
 import { ReadWriteTransaction } from './impl/ReadWriteTransaction';
 import { TransactionTracer } from './tracing';
 
-async function doInTx<T>(leaky: boolean, _ctx: Context, callback: (ctx: Context) => Promise<T>): Promise<T> {
+async function doInTx<T>(_ctx: Context, callback: (ctx: Context) => Promise<T>): Promise<T> {
     return await TransactionTracer.tx(_ctx, async (ctx) => {
         let ex = TransactionContext.get(ctx);
         if (ex) {
-            if (!leaky) {
-                // Flush all pending operations to avoid nasty bugs during composing of transactions
-                await ex!._flushPending(ctx);
-            }
-            let res = await callback(ctx);
-            if (!leaky) {
-                // Flush all pending operations to avoid nasty bugs during composing of transactions
-                await ex!._flushPending(ctx);
-            }
-            return res;
+            return await callback(ctx);
         }
 
         // Implementation is copied from database.js from foundationdb library.
@@ -61,19 +52,7 @@ async function doInTx<T>(leaky: boolean, _ctx: Context, callback: (ctx: Context)
  * @param callback transaction body
  */
 export async function inTx<T>(ctx: Context, callback: (ctx: Context) => Promise<T>): Promise<T> {
-    return doInTx(false, ctx, callback);
-}
-
-/**
- * Performing transaction without strict guarantees. 
- * Use only if you can guarantee that data wouldn't be corrupted if changes won't flushed 
- * between inner transactions.
- * 
- * @param ctx context
- * @param callback transaction body
- */
-export async function inTxLeaky<T>(ctx: Context, callback: (ctx: Context) => Promise<T>): Promise<T> {
-    return doInTx(true, ctx, callback);
+    return doInTx(ctx, callback);
 }
 
 /**

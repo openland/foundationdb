@@ -8,6 +8,7 @@ export class ReadWriteTransaction extends BaseTransaction {
     private _beforeCommit: (((ctx: Context) => void) | ((ctx: Context) => Promise<void>))[] = [];
     private _afterCommit: (((ctx: Context) => void) | ((ctx: Context) => Promise<void>))[] = [];
     private _isCompleted = false;
+    private _broken = false;
 
     get isCompleted() {
         return this._isCompleted;
@@ -38,6 +39,9 @@ export class ReadWriteTransaction extends BaseTransaction {
         if (this._isCompleted) {
             return;
         }
+        if (this._broken) {
+            throw Error('Transaction broken');
+        }
 
         // beforeCommit hook
         let pend = [...this._beforeCommit];
@@ -60,6 +64,10 @@ export class ReadWriteTransaction extends BaseTransaction {
                 await p(ctx);
             }
         }
+    }
+
+    async broke() {
+        this._broken = true;
     }
 
     async _handleError(code: number) {

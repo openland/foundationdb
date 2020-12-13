@@ -1,7 +1,7 @@
 import { withReadOnlyTransaction } from './withReadOnlyTransaction';
 import { createNamedContext } from '@openland/context';
 import { getTransaction } from './getTransaction';
-import { inTx, inTxLeaky } from './inTx';
+import { inTx } from './inTx';
 import { withoutTransaction } from './withoutTransaction';
 import { Database } from './Database';
 
@@ -53,16 +53,16 @@ describe('Transaction', () => {
 
                 tx.beforeCommit(beforeCommit3);
                 expect(beforeCommit3).toHaveBeenCalledTimes(0);
-                await inTxLeaky(ctx2, async (ctx3) => {
+                await inTx(ctx2, async (ctx3) => {
                     expect(beforeCommit3).toHaveBeenCalledTimes(0);
                 });
                 expect(beforeCommit3).toHaveBeenCalledTimes(0);
-                expect(beforeCommit1).toHaveBeenCalledTimes(1);
+                expect(beforeCommit1).toHaveBeenCalledTimes(0);
                 expect(afterCommit1).not.toHaveBeenCalled();
             });
 
-            expect(beforeCommit3).toHaveBeenCalledTimes(1);
-            expect(beforeCommit1).toHaveBeenCalledTimes(1);
+            expect(beforeCommit3).toHaveBeenCalledTimes(0);
+            expect(beforeCommit1).toHaveBeenCalledTimes(0);
             expect(afterCommit1).not.toHaveBeenCalled();
             tx.afterCommit(afterCommit2);
             tx.beforeCommit(beforeCommit2);
@@ -70,6 +70,7 @@ describe('Transaction', () => {
 
         expect(beforeCommit1).toHaveBeenCalledTimes(1);
         expect(beforeCommit2).toHaveBeenCalledTimes(1);
+        expect(beforeCommit3).toHaveBeenCalledTimes(1);
         expect(afterCommit1).toHaveBeenCalledTimes(1);
         expect(afterCommit2).toHaveBeenCalledTimes(1);
     });
