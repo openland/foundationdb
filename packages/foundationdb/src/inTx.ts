@@ -5,12 +5,12 @@ import { ReadWriteTransaction } from './impl/ReadWriteTransaction';
 import { TransactionTracer } from './tracing';
 
 async function doInTx<T>(_ctx: Context, callback: (ctx: Context) => Promise<T>): Promise<T> {
-    return await TransactionTracer.tx(_ctx, async (ctx) => {
-        let ex = TransactionContext.get(ctx);
-        if (ex) {
-            return await callback(ctx);
-        }
+    let ex = TransactionContext.get(_ctx);
+    if (ex) {
+        return await callback(_ctx);
+    }
 
+    return await TransactionTracer.tx(_ctx, async (ctx) => {
         // Implementation is copied from database.js from foundationdb library.
         do {
             TransactionTracer.onNewReadWriteTx(ctx);
