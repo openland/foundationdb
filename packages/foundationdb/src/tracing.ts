@@ -28,25 +28,21 @@ export function setSubspaceTracer(tracer: SubspaceTracerConfig) {
 interface TransactionTracerConfig {
     tx<T>(ctx: Context, handler: (ctx: Context) => Promise<T>): Promise<T>;
     commit<T>(ctx: Context, handler: () => Promise<T>): Promise<T>;
-    onNewReadWriteTx(ctx: Context): void;
+    onTx(ctx: Context): void;
     onRetry(ctx: Context): void;
     onFDBError(ctx: Context, error: FDBError): void;
-    onNewEphemeralTx(ctx: Context): void;
 }
 
 const NoopTransactionTracer: TransactionTracerConfig = {
     tx: async (ctx, handler) => handler(ctx),
     commit: async (ctx, handler) => handler(),
-    onNewReadWriteTx: () => {
+    onTx: () => {
         // Noop
     },
     onRetry: () => {
         // Noop
     },
     onFDBError: (ctx: Context, error: FDBError) => {
-        // Noop
-    },
-    onNewEphemeralTx: () => {
         // Noop
     }
 };
