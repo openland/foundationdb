@@ -1,7 +1,7 @@
 {
     "name": "@openland/foundationdb-utils",
     "description": "Utily classes for layer developers",
-    "version": "9.1.0",
+    "version": "10.0.0",
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",
     "repository": "https://github.com/openland/foundationdb",
@@ -13,7 +13,7 @@
     },
     "dependencies": {
         "@openland/context": "*",
-        "@openland/foundationdb": "^9.1.0",
+        "@openland/foundationdb": "^10.0.0",
         "@openland/log": "*",
         "@types/uuid": "^3.4.3",
         "uuid": "^3.2.1"
