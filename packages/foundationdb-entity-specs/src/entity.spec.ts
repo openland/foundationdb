@@ -1,7 +1,7 @@
 import { delay } from '@openland/foundationdb-utils';
 import { SimpleEntityFactory, SimpleEntity2Factory } from './entity.repo';
 import { EntityStorage } from '@openland/foundationdb-entity';
-import { withReadOnlyTransaction, inTx } from '@openland/foundationdb';
+import { inTx, inReadOnlyTx } from '@openland/foundationdb';
 import { createNamedContext } from '@openland/context';
 import { openTestDatabase } from './utils/openTestDatabase';
 
@@ -11,7 +11,7 @@ describe('Entity', () => {
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
-        expect(await factory.findById(testCtx, '1')).toBe(null);
+        expect(await inReadOnlyTx(testCtx, async (ctx) => factory.findById(ctx, '1'))).toBe(null);
     });
 
     it('should be able to create entity', async () => {
@@ -19,9 +19,9 @@ describe('Entity', () => {
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
-        expect(await factory.findById(testCtx, '1')).toBe(null);
+        expect(await inReadOnlyTx(testCtx, async (ctx) => factory.findById(ctx, '1'))).toBe(null);
         let start = Date.now();
-        let created = await factory.create(testCtx, '1', { value: 'value', value2: 2, value3: false });
+        let created = await inTx(testCtx, async (ctx) => factory.create(ctx, '1', { value: 'value', value2: 2, value3: false }));
         let end = Date.now();
         expect(created.id).toBe('1');
         expect(created.value).toBe('value');
@@ -34,7 +34,7 @@ describe('Entity', () => {
         expect(created.metadata.updatedAt).toBeLessThanOrEqual(end);
         expect(created.metadata.updatedAt).toBe(created.metadata.createdAt);
 
-        let loaded = await factory.findById(testCtx, '1');
+        let loaded = await inReadOnlyTx(testCtx, async (ctx) => factory.findById(ctx, '1'));
         expect(loaded).not.toBe(null);
         expect(loaded).not.toBe(undefined);
         expect(loaded.id).toBe('1');
@@ -49,11 +49,11 @@ describe('Entity', () => {
         expect(loaded.metadata.updatedAt).toBe(loaded.metadata.createdAt);
         expect(loaded.metadata.updatedAt).toBe(created.metadata.createdAt);
 
-        let all = await factory.findAll(testCtx);
+        let all = await inReadOnlyTx(testCtx, async (ctx) => factory.findAll(ctx));
         expect(all.length).toBe(1);
         expect(all[0].id).toBe('1');
 
-        let all2 = await factory.findAllKeys(testCtx);
+        let all2 = await inReadOnlyTx(testCtx, async (ctx) => factory.findAllKeys(ctx));
         expect(all2.length).toBe(1);
         expect(all2[0].length).toBe(1);
         expect(all2[0][0]).toBe('1');
@@ -72,7 +72,7 @@ describe('Entity', () => {
             await Promise.all(pending);
         });
         for (let i = 0; i < 100; i++) {
-            let r = await factory.findById(testCtx, 'id-' + i);
+            let r = await inReadOnlyTx(testCtx, async (ctx) => factory.findById(ctx, 'id-' + i));
             expect(r).not.toBe(null);
             expect(r).not.toBe(undefined);
             expect(r.id).toBe('id-' + i);
@@ -84,11 +84,12 @@ describe('Entity', () => {
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntityFactory.open(store);
-        await factory.create(testCtx, '1', { value: 'value', value2: 2, value3: false });
-        let ctx = withReadOnlyTransaction(testCtx);
-        let firstRead = await factory.findById(ctx, '1');
-        let secondRead = await factory.findById(ctx, '1');
-        expect(firstRead === secondRead).toBe(true);
+        await inTx(testCtx, async (ctx) => factory.create(ctx, '1', { value: 'value', value2: 2, value3: false }));
+        await inReadOnlyTx(testCtx, async (ctx) => {
+            let firstRead = await factory.findById(ctx, '1');
+            let secondRead = await factory.findById(ctx, '1');
+            expect(firstRead === secondRead).toBe(true);
+        });
     });
 
     it('should read your writes', async () => {
@@ -118,7 +119,7 @@ describe('Entity', () => {
         });
         let end = Date.now();
 
-        let read = await factory.findById(testCtx, '1');
+        let read = await inReadOnlyTx(testCtx, async (ctx) => factory.findById(ctx, '1'));
         expect(read.value).toBe('value');
         expect(read.metadata.versionCode).toBe(0);
         expect(read.metadata.createdAt).toBeGreaterThanOrEqual(start);
@@ -132,7 +133,7 @@ describe('Entity', () => {
             ex.value = 'value2';
         });
         let end2 = Date.now();
-        let read2 = await factory.findById(testCtx, '1');
+        let read2 = await inReadOnlyTx(testCtx, async (ctx) => factory.findById(ctx, '1'));
         expect(read2.value).toBe('value2');
         expect(read2.metadata.versionCode).toBe(1);
         expect(read2.metadata.updatedAt).not.toBe(read2.metadata.createdAt);
@@ -150,7 +151,7 @@ describe('Entity', () => {
         await inTx(testCtx, async (ctx) => {
             await factory.create(ctx, '1', { value: 'value', value2: 2, value3: false });
         });
-        let read = await factory.findById(testCtx, '1');
+        let read = await inReadOnlyTx(testCtx, async (ctx) => factory.findById(ctx, '1'));
         expect(() => read.value = 'hey!').toThrowError('Entity is not writable. Did you wrapped everything in transaction?');
     });
 
@@ -170,7 +171,7 @@ describe('Entity', () => {
             let f2 = ex.flush(ctx);
             await f1; await f2;
         });
-        let read = await factory.findById(testCtx, '1');
+        let read = await inReadOnlyTx(testCtx, async (ctx) => factory.findById(ctx, '1'));
         expect(read.value).toBe('value3');
     });
 
@@ -230,7 +231,7 @@ describe('Entity', () => {
             let st = await factory.findById(ctx, '1');
             st.value = 'value';
         });
-        let res = await factory.descriptor.subspace.get(testCtx, ['1']);
+        let res = await inReadOnlyTx(testCtx, async (ctx) => factory.descriptor.subspace.get(ctx, ['1']));
         expect(res.unknownField).toBe('unknown value');
     });
 
@@ -239,7 +240,7 @@ describe('Entity', () => {
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
         let factory = await SimpleEntity2Factory.open(store);
-        await expect(factory.findById(testCtx, 0.1)).rejects.toThrowError();
+        await expect(inReadOnlyTx(testCtx, async (ctx) => factory.findById(ctx, 0.1))).rejects.toThrowError();
         await expect(inTx(testCtx, async (ctx) => {
             return await factory.create(ctx, 0.1, { value: 'hello world1' });
         })).rejects.toThrowError();
@@ -255,7 +256,7 @@ describe('Entity', () => {
         await inTx(testCtx, async (ctx) => {
             return await factory.create(ctx, 1, { value: 'hello world1' });
         });
-        
+
         // tslint:disable:no-floating-promises
         (async () => {
             while (true) {
@@ -355,8 +356,7 @@ describe('Entity', () => {
             await factory.create(_ctx, '1', { value: 'value', value2: 2, value3: false });
         });
 
-        let ctx = withReadOnlyTransaction(createNamedContext('test'));
-        let ex = await factory.findById(ctx, '1');
-        expect(ex!.delete(ctx)).rejects.toThrowError('Entity is not writable. Did you wrapped everything in transaction?');
+        let ex = await inReadOnlyTx(testCtx, async (ctx) => await factory.findById(ctx, '1'));
+        expect(ex!.delete(testCtx)).rejects.toThrowError('Entity is not writable. Did you wrapped everything in transaction?');
     });
 });

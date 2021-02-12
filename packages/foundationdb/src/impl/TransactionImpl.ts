@@ -1,32 +1,67 @@
+import { WriteToReadOnlyContextError } from './../WriteToReadOnlyContextError';
 import * as fdb from 'foundationdb';
 import { Context } from '@openland/context';
-import { encoders } from './../encoding';
-import { Database } from './../Database';
-import { Transaction } from './../Transaction';
+import { encoders } from '../encoding';
+import { Database } from '../Database';
+import { Transaction } from '../Transaction';
 import { Versionstamp, VersionstampRef } from '@openland/foundationdb-tuple';
 
-export abstract class BaseTransaction implements Transaction {
+export class TransactionImpl implements Transaction {
 
-    readonly id = BaseTransaction.nextId++;
-    db!: Database;
-
+    // ID
     private static nextId = 1;
-    abstract isReadOnly: boolean;
-    abstract isCompleted: boolean;
-    abstract isEphemeral: boolean;
+    readonly id = TransactionImpl.nextId++;
+
+    // State
+    readonly isReadOnly: boolean;
+    readonly isHybrid: boolean;
+    private _broken = false;
+    private _isCompleted = false;
+    get isCompleted() {
+        return this._isCompleted;
+    }
+
+    // Cache
     readonly userData: Map<string, any> = new Map();
+
+    // Raw Transaction
+    private db!: Database;
     protected rawTx?: fdb.Transaction;
     private options: Partial<fdb.TransactionOptions> = {};
 
+    // Hooks
+    private _beforeCommit: (((ctx: Context) => void) | ((ctx: Context) => Promise<void>))[] = [];
+    private _afterCommit: (((ctx: Context) => void) | ((ctx: Context) => Promise<void>))[] = [];
+
+    // Versionstamps
     private vt: Buffer | null = null;
     private vtRequest: ((src: Buffer) => void) | null = null;
     private vtReject: ((src: any) => void) | null = null;
     private vtPromise: Promise<Buffer> | null = null;
-
     private version?: Buffer;
     private versionstampIndex = 0;
 
-    rawTransaction(db: Database): fdb.Transaction {
+    constructor(isReadOnly: boolean, isHybrid: boolean) {
+        this.isReadOnly = isReadOnly;
+        this.isHybrid = isHybrid;
+    }
+
+    //
+    // Transaction
+    //
+
+    rawWriteTransaction(db: Database): fdb.Transaction {
+        if (this.isReadOnly) {
+            throw new WriteToReadOnlyContextError();
+        }
+        return this.rawTransaction(db);
+    }
+
+    rawReadTransaction(db: Database): fdb.Transaction {
+        return this.rawTransaction(db);
+    }
+
+    private rawTransaction(db: Database): fdb.Transaction {
         if (this.db && this.db !== db) {
             throw Error('Unable to use two different connections in the same transaction');
         }
@@ -61,6 +96,10 @@ export abstract class BaseTransaction implements Transaction {
         this.options = { ...this.options, ...options };
     }
 
+    //
+    // Versions
+    //
+
     setReadVersion(version: Buffer) {
         this.version = version;
     }
@@ -81,9 +120,13 @@ export abstract class BaseTransaction implements Transaction {
         });
     }
 
+    //
+    // Versionstamps
+    //
+
     getVersionstamp(): Promise<Buffer> {
         if (this.isReadOnly) {
-            throw Error('Versionstamps are not available in read-only transactions');
+            throw new WriteToReadOnlyContextError('Versionstamps are not available in read-only transactions');
         }
 
         if (this.vt) {
@@ -112,7 +155,7 @@ export abstract class BaseTransaction implements Transaction {
 
     allocateVersionstampRef(): VersionstampRef {
         if (this.isReadOnly) {
-            throw Error('Versionstamps are not available in read-only transactions');
+            throw new WriteToReadOnlyContextError('Versionstamps are not available in read-only transactions');
         }
         let index = this.versionstampIndex;
         this.versionstampIndex++;
@@ -121,12 +164,81 @@ export abstract class BaseTransaction implements Transaction {
 
     async resolveVersionstampRef(ref: VersionstampRef): Promise<Versionstamp> {
         if (this.isReadOnly) {
-            throw Error('Versionstamps are not available in read-only transactions');
+            throw new WriteToReadOnlyContextError('Versionstamps are not available in read-only transactions');
         }
         let vt = await this.getVersionstamp();
         return new Versionstamp(Buffer.concat([vt, ref.index]));
     }
 
-    abstract beforeCommit(fn: ((ctx: Context) => Promise<void>) | ((ctx: Context) => void)): void;
-    abstract afterCommit(fn: ((ctx: Context) => Promise<void>) | ((ctx: Context) => void)): void;
+    //
+    // Hooks
+    //
+
+    beforeCommit(fn: ((ctx: Context) => void) | ((ctx: Context) => Promise<void>)) {
+        this._beforeCommit.push(fn);
+    }
+
+    afterCommit(fn: ((ctx: Context) => Promise<void>) | ((ctx: Context) => void)) {
+        this._afterCommit.push(fn);
+    }
+
+    //
+    // Commit
+    //
+
+    async flushPending(ctx: Context) {
+        if (this._isCompleted) {
+            return;
+        }
+        let pend = [...this._beforeCommit];
+        this._beforeCommit = [];
+        if (pend.length > 0) {
+            for (let p of pend) {
+                await p(ctx);
+            }
+        }
+    }
+
+    async commit(ctx: Context) {
+        if (this._isCompleted) {
+            return;
+        }
+        if (this._broken) {
+            throw Error('Transaction broken');
+        }
+
+        // beforeCommit hook
+        let pend = [...this._beforeCommit];
+        this._beforeCommit = [];
+        for (let p of pend) {
+            await p(ctx);
+        }
+
+        // Commit changes
+        this._isCompleted = true;
+        if (this.rawTx) {
+            if (this.isReadOnly) {
+                this.rawTx.rawCancel();
+            } else {
+                await this.rawTx.rawCommit();
+            }
+        }
+
+        // afterCommit hook
+        let pend2 = [...this._afterCommit];
+        this._afterCommit = [];
+        if (pend2.length > 0) {
+            for (let p of pend2) {
+                await p(ctx);
+            }
+        }
+    }
+
+    async broke() {
+        this._broken = true;
+    }
+
+    async handleError(code: number) {
+        await this.rawTx!.rawOnError(code);
+    }
 }

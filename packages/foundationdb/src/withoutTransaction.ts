@@ -1,5 +1,5 @@
 import { Context } from '@openland/context';
-import { TransactionContext, ReadOnlyTransactionContext } from './impl/TransactionContext';
+import { TransactionContext } from './impl/TransactionContext';
 
 /**
  * Removing transaction information from context. 
@@ -12,6 +12,5 @@ import { TransactionContext, ReadOnlyTransactionContext } from './impl/Transacti
 export function withoutTransaction(ctx: Context) {
     let res = ctx;
     res = TransactionContext.set(res, null);
-    res = ReadOnlyTransactionContext.set(res, null);
     return res;
 }

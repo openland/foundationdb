@@ -1,6 +1,6 @@
 import { UniqueIndexFactory, UniqueConditionalIndexFactory } from './unique.repo';
 import { EntityStorage } from '@openland/foundationdb-entity';
-import { inTx } from '@openland/foundationdb';
+import { inTx, inReadOnlyTx } from '@openland/foundationdb';
 import { createNamedContext } from '@openland/context';
 import { openTestDatabase } from './utils/openTestDatabase';
 
@@ -15,7 +15,7 @@ describe('Unique index', () => {
         await inTx(testCtx, async (ctx) => {
             await factory.create(ctx, 1, { unique1: '1', unique2: '2' });
         });
-        let ex = await factory.test.find(testCtx, '1', '2');
+        let ex = await inReadOnlyTx(testCtx, async (ctx) => factory.test.find(ctx, '1', '2'));
         expect(ex.id).toBe(1);
 
         // Should throw on constraint violation
@@ -96,7 +96,7 @@ describe('Unique index', () => {
         let store = new EntityStorage(db);
         let factory = await UniqueConditionalIndexFactory.open(store);
 
-        let ex = await factory.test.find(testCtx, '!', '2');
+        let ex = await inReadOnlyTx(testCtx, async (ctx) => factory.test.find(ctx, '!', '2'));
         expect(ex).toBeNull();
 
         await inTx(testCtx, async (ctx) => {
@@ -105,12 +105,12 @@ describe('Unique index', () => {
         });
 
         // Added to index
-        ex = await factory.test.find(testCtx, '!', '2');
+        ex = await inReadOnlyTx(testCtx, async (ctx) => factory.test.find(ctx, '!', '2'));
         expect(ex).not.toBeNull();
         expect(ex).not.toBeUndefined();
 
         // Not added to index
-        ex = await factory.test.find(testCtx, '?', '2');
+        ex = await inReadOnlyTx(testCtx, async (ctx) => factory.test.find(ctx, '?', '2'));
         expect(ex).toBeNull();
 
         // Removed from index
@@ -118,7 +118,7 @@ describe('Unique index', () => {
             let entity = await factory.findById(ctx, 1);
             entity.unique1 = '@';
         });
-        ex = await factory.test.find(testCtx, '!', '2');
+        ex = await inReadOnlyTx(testCtx, async (ctx) => factory.test.find(ctx, '!', '2'));
         expect(ex).toBeNull();
 
         // Added to index after edit
@@ -127,7 +127,7 @@ describe('Unique index', () => {
             entity.unique1 = '!';
             entity.unique2 = '3';
         });
-        ex = await factory.test.find(testCtx, '!', '3');
+        ex = await inReadOnlyTx(testCtx, async (ctx) => factory.test.find(ctx, '!', '3'));
         expect(ex).not.toBeNull();
         expect(ex).not.toBeUndefined();
     });

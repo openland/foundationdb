@@ -1,6 +1,4 @@
 import { createContextNamespace } from '@openland/context';
-import { ReadWriteTransaction } from './ReadWriteTransaction';
-import { ReadOnlyTransaction } from './ReadOnlyTransaction';
+import { Transaction } from '../Transaction';
 
-export const TransactionContext = createContextNamespace<ReadWriteTransaction | null>('fdb-tx-rw', null);
-export const ReadOnlyTransactionContext = createContextNamespace<ReadOnlyTransaction | null>('fdb-tx-ro', null);
+export const TransactionContext = createContextNamespace<Transaction | null>('fdb-tx', null);

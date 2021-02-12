@@ -4,7 +4,7 @@ import { EntityMetadata } from './EntityMetadata';
 import { EntityDescriptor } from './EntityDescriptor';
 import { PrimaryKeyType } from './PrimaryKeyType';
 import { ShapeWithMetadata } from './ShapeWithMetadata';
-import { getTransaction, Transaction } from '@openland/foundationdb';
+import { getTransaction, Transaction, WriteToReadOnlyContextError } from '@openland/foundationdb';
 
 export abstract class Entity<T> {
     protected readonly _descriptor: EntityDescriptor<T>;
@@ -85,7 +85,7 @@ export abstract class Entity<T> {
      */
     invalidate() {
         if (this._isReadOnly) {
-            throw Error('Entity is not writable. Did you wrapped everything in transaction?');
+            throw new WriteToReadOnlyContextError('Entity is not writable. Did you wrapped everything in transaction?');
         }
         if (this._tx.isCompleted) {
             throw Error('You can\'t update entity when transaction is in completed state.');
@@ -161,7 +161,7 @@ export abstract class Entity<T> {
      */
     protected async _delete(ctx: Context) {
         if (this._isReadOnly) {
-            throw Error('Entity is not writable. Did you wrapped everything in transaction?');
+            throw new WriteToReadOnlyContextError('Entity is not writable. Did you wrapped everything in transaction?');
         }
         if (this._tx.isCompleted) {
             throw Error('You can\'t delete entity when transaction is in completed state.');

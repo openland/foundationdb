@@ -48,37 +48,37 @@ export class DirectoryLayer {
 
     @transactional
     async createOrOpen(ctx: Context, path: string[]) {
-        let raw = getTransaction(ctx).rawTransaction(this.db);
+        let raw = getTransaction(ctx).rawWriteTransaction(this.db);
         return this.wrap(await this.directory.createOrOpen(raw, path));
     }
 
     @transactional
     async create(ctx: Context, path: string[]) {
-        let raw = getTransaction(ctx).rawTransaction(this.db);
+        let raw = getTransaction(ctx).rawWriteTransaction(this.db);
         return this.wrap(await this.directory.create(raw, path));
     }
 
     @transactional
     async open(ctx: Context, path: string[]) {
-        let raw = getTransaction(ctx).rawTransaction(this.db);
+        let raw = getTransaction(ctx).rawReadTransaction(this.db);
         return this.wrap(await this.directory.open(raw, path));
     }
 
     @transactional
     async createPrefix(ctx: Context, path: string[], prefix: Buffer) {
-        let raw = getTransaction(ctx).rawTransaction(this.db);
+        let raw = getTransaction(ctx).rawWriteTransaction(this.db);
         return this.wrap(await this.directory.create(raw, path, undefined, prefix));
     }
 
     @transactional
     async directoryExists(ctx: Context, path: string[]) {
-        let raw = getTransaction(ctx).rawTransaction(this.db);
+        let raw = getTransaction(ctx).rawReadTransaction(this.db);
         return await this.directory.exists(raw, path);
     }
 
     @transactional
     async move(ctx: Context, oldPath: string[], newPath: string[]) {
-        let raw = getTransaction(ctx).rawTransaction(this.db);
+        let raw = getTransaction(ctx).rawWriteTransaction(this.db);
         await this.directory.move(raw, oldPath, newPath);
     }
 

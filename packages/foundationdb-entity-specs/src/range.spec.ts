@@ -1,6 +1,6 @@
 import { RangeIndexFactory, RangeIndexConditionalFactory } from './range.repo';
 import { EntityStorage } from '@openland/foundationdb-entity';
-import { inTx } from '@openland/foundationdb';
+import { inTx, inReadOnlyTx } from '@openland/foundationdb';
 import { createNamedContext } from '@openland/context';
 import { openTestDatabase } from './utils/openTestDatabase';
 
@@ -18,18 +18,18 @@ describe('Range Index', () => {
             await factory.create(ctx, 4, { range1: 1, range2: 2 });
         });
 
-        let res = await factory.ranges.findAll(testCtx, 1);
+        let res = await inReadOnlyTx(testCtx, async (ctx) => factory.ranges.findAll(ctx, 1));
         expect(res.length).toBe(4);
         expect(res[0].id).toBe(1);
         expect(res[1].id).toBe(2);
         expect(res[2].id).toBe(3);
         expect(res[3].id).toBe(4);
 
-        let res2 = await factory.ranges.query(testCtx, 1, { limit: 1 });
+        let res2 = await inReadOnlyTx(testCtx, async (ctx) => factory.ranges.query(ctx, 1, { limit: 1 }));
         expect(res2.items.length).toBe(1);
         expect(res2.items[0].id).toBe(1);
 
-        res2 = await factory.ranges.query(testCtx, 1, { limit: 1, reverse: true });
+        res2 = await inReadOnlyTx(testCtx, async (ctx) => factory.ranges.query(ctx, 1, { limit: 1, reverse: true }));
         expect(res2.items.length).toBe(1);
         expect(res2.items[0].id).toBe(4);
     });
@@ -58,31 +58,31 @@ describe('Range Index', () => {
 
         let stream = factory.ranges.stream(1, { batchSize: 1 });
         expect(stream.cursor).toMatchSnapshot();
-        expect(await stream.tail(testCtx)).toMatchSnapshot();
-        expect(await stream.head(testCtx)).toMatchSnapshot();
+        expect(await inReadOnlyTx(testCtx, async (ctx) => stream.tail(ctx))).toMatchSnapshot();
+        expect(await inReadOnlyTx(testCtx, async (ctx) => stream.head(ctx))).toMatchSnapshot();
 
-        let next = await stream.next(testCtx);
+        let next = await inReadOnlyTx(testCtx, async (ctx) => await stream.next(ctx));
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(1);
         expect(next[0].id).toBe(1);
 
-        next = await stream.next(testCtx);
+        next = await inReadOnlyTx(testCtx, async (ctx) => await stream.next(ctx));
         let after = stream.cursor;
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(1);
         expect(next[0].id).toBe(2);
 
-        next = await stream.next(testCtx);
+        next = await inReadOnlyTx(testCtx, async (ctx) => stream.next(ctx));
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(1);
         expect(next[0].id).toBe(3);
 
-        next = await stream.next(testCtx);
+        next = await inReadOnlyTx(testCtx, async (ctx) => stream.next(ctx));
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(1);
         expect(next[0].id).toBe(4);
 
-        next = await stream.next(testCtx);
+        next = await inReadOnlyTx(testCtx, async (ctx) => stream.next(ctx));
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(0);
 
@@ -91,17 +91,17 @@ describe('Range Index', () => {
         //
         stream = factory.ranges.stream(1, { batchSize: 1, after });
 
-        next = await stream.next(testCtx);
+        next = await inReadOnlyTx(testCtx, async (ctx) => stream.next(ctx));
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(1);
         expect(next[0].id).toBe(3);
 
-        next = await stream.next(testCtx);
+        next = await inReadOnlyTx(testCtx, async (ctx) => stream.next(ctx));
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(1);
         expect(next[0].id).toBe(4);
 
-        next = await stream.next(testCtx);
+        next = await inReadOnlyTx(testCtx, async (ctx) => stream.next(ctx));
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(0);
 
@@ -111,31 +111,31 @@ describe('Range Index', () => {
 
         stream = factory.ranges.stream(1, { batchSize: 1, reverse: true });
         expect(stream.cursor).toMatchSnapshot();
-        expect(await stream.tail(testCtx)).toMatchSnapshot();
-        expect(await stream.head(testCtx)).toMatchSnapshot();
+        expect(await inReadOnlyTx(testCtx, async (ctx) => stream.tail(ctx))).toMatchSnapshot();
+        expect(await inReadOnlyTx(testCtx, async (ctx) => stream.head(ctx))).toMatchSnapshot();
 
-        next = await stream.next(testCtx);
+        next = await inReadOnlyTx(testCtx, async (ctx) => stream.next(ctx));
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(1);
         expect(next[0].id).toBe(4);
 
-        next = await stream.next(testCtx);
+        next = await inReadOnlyTx(testCtx, async (ctx) => stream.next(ctx));
         after = stream.cursor;
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(1);
         expect(next[0].id).toBe(3);
 
-        next = await stream.next(testCtx);
+        next = await inReadOnlyTx(testCtx, async (ctx) => stream.next(ctx));
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(1);
         expect(next[0].id).toBe(2);
 
-        next = await stream.next(testCtx);
+        next = await inReadOnlyTx(testCtx, async (ctx) => stream.next(ctx));
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(1);
         expect(next[0].id).toBe(1);
 
-        next = await stream.next(testCtx);
+        next = await inReadOnlyTx(testCtx, async (ctx) => stream.next(ctx));
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(0);
 
@@ -144,17 +144,17 @@ describe('Range Index', () => {
         //
         stream = factory.ranges.stream(1, { batchSize: 1, reverse: true, after });
 
-        next = await stream.next(testCtx);
+        next = await inReadOnlyTx(testCtx, async (ctx) => stream.next(ctx));
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(1);
         expect(next[0].id).toBe(2);
 
-        next = await stream.next(testCtx);
+        next = await inReadOnlyTx(testCtx, async (ctx) => stream.next(ctx));
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(1);
         expect(next[0].id).toBe(1);
 
-        next = await stream.next(testCtx);
+        next = await inReadOnlyTx(testCtx, async (ctx) => stream.next(ctx));
         expect(stream.cursor).toMatchSnapshot();
         expect(next.length).toBe(0);
     });
@@ -181,22 +181,22 @@ describe('Range Index', () => {
             await factory.create(ctx, 9, { range1: 2, range2: 2 });
         });
 
-        let res = await factory.ranges.query(testCtx, 1, { limit: 1 });
+        let res = await inReadOnlyTx(testCtx, async (ctx) => factory.ranges.query(ctx, 1, { limit: 1 }));
         expect(res.cursor).not.toBeNull();
         expect(res.cursor).not.toBeUndefined();
         expect(res.haveMore).toBe(true);
         let s = factory.ranges.stream(1, { batchSize: 1 });
         s.seek(res.cursor!);
-        let res2 = await s.next(testCtx);
+        let res2 = await inReadOnlyTx(testCtx, async (ctx) => s.next(ctx));
         expect(res2.length).toBe(1);
         expect(res2[0].id).toBe(2);
 
-        res = await factory.ranges.query(testCtx, 2, { limit: 4 });
+        res = await inReadOnlyTx(testCtx, async (ctx) => factory.ranges.query(ctx, 2, { limit: 4 }));
         expect(res.cursor).not.toBeNull();
         expect(res.cursor).not.toBeUndefined();
         expect(res.haveMore).toBe(true);
 
-        res = await factory.ranges.query(testCtx, 2, { limit: 5 });
+        res = await inReadOnlyTx(testCtx, async (ctx) => factory.ranges.query(ctx, 2, { limit: 5 }));
         expect(res.cursor).not.toBeNull();
         expect(res.cursor).not.toBeUndefined();
         expect(res.haveMore).toBe(false);
@@ -208,7 +208,7 @@ describe('Range Index', () => {
         let store = new EntityStorage(db);
         let factory = await RangeIndexConditionalFactory.open(store);
 
-        let ex = await factory.ranges.findAll(testCtx, 0);
+        let ex = await inReadOnlyTx(testCtx, async (ctx) => factory.ranges.findAll(ctx, 0));
         expect(ex.length).toBe(0);
 
         await inTx(testCtx, async (ctx) => {
@@ -217,12 +217,12 @@ describe('Range Index', () => {
         });
 
         // Added to index
-        ex = await factory.ranges.findAll(testCtx, 0);
+        ex = await inReadOnlyTx(testCtx, async (ctx) => factory.ranges.findAll(ctx, 0));
         expect(ex.length).toBe(1);
         expect(ex[0].id).toBe(1);
 
         // Not added to index
-        ex = await factory.ranges.findAll(testCtx, 1);
+        ex = await inReadOnlyTx(testCtx, async (ctx) => factory.ranges.findAll(ctx, 1));
         expect(ex.length).toBe(0);
 
         // Removed from index
@@ -230,7 +230,7 @@ describe('Range Index', () => {
             let entity = await factory.findById(ctx, 1);
             entity.range1 = 3;
         });
-        ex = await factory.ranges.findAll(testCtx, 0);
+        ex = await inReadOnlyTx(testCtx, async (ctx) => factory.ranges.findAll(ctx, 0));
         expect(ex.length).toBe(0);
 
         // Added to index after edit
@@ -239,7 +239,7 @@ describe('Range Index', () => {
             entity.range1 = 0;
             entity.range2 = 4;
         });
-        ex = await factory.ranges.findAll(testCtx, 0);
+        ex = await inReadOnlyTx(testCtx, async (ctx) => factory.ranges.findAll(ctx, 0));
         expect(ex.length).toBe(1);
         expect(ex[0].id).toBe(1);
     });

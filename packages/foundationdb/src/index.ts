@@ -1,9 +1,7 @@
 export { Database } from './Database';
 export { Transaction } from './Transaction';
-export { inTx, assertNoTransaction } from './inTx';
-export { inReadOnlyTx } from './inReadOnlyTx';
+export { inTx, inReadOnlyTx, inHybridTx, assertNoTransaction } from './inTx';
 export { withoutTransaction } from './withoutTransaction';
-export { withReadOnlyTransaction } from './withReadOnlyTransaction';
 export { keyIncrement, keyNext } from './utils';
 export { encoders, Transformer } from './encoding';
 export { TupleItem, TupleItemExtended, Versionstamp, VersionstampRef, Float } from '@openland/foundationdb-tuple';
@@ -17,3 +15,4 @@ export { isSubspaceEquals, syncSubspaces, deleteMissing, copySubspace } from './
 export { TransactionCache } from './TransactionCache';
 export { Watch } from './Watch';
 export { createVersionstampRef } from './createVersionstampRef';
+export { WriteToReadOnlyContextError } from './WriteToReadOnlyContextError';

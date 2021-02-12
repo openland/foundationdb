@@ -1,7 +1,7 @@
 import { EntityStorage } from '@openland/foundationdb-entity';
 import { openTestDatabase } from './utils/openTestDatabase';
 import { openStore, SampleEvent } from './events.repo';
-import { inTx } from '@openland/foundationdb';
+import { inTx, inReadOnlyTx } from '@openland/foundationdb';
 import { createNamedContext } from '@openland/context';
 
 describe('Events', () => {
@@ -30,7 +30,7 @@ describe('Events', () => {
             store.UserEvents.post(ctx, 'user2', SampleEvent.create({ id: '5' }));
         });
 
-        let ex = await store.UserEvents.findAll(root, 'user1');
+        let ex = await inReadOnlyTx(root, async (ctx) => store.UserEvents.findAll(ctx, 'user1'));
         expect(ex.length).toBe(4);
         expect(ex[0] instanceof SampleEvent).toBeTruthy();
         expect((ex[0] as SampleEvent).id).toBe('1');
@@ -41,10 +41,10 @@ describe('Events', () => {
         expect(ex[3] instanceof SampleEvent).toBeTruthy();
         expect((ex[3] as SampleEvent).id).toBe('4');
 
-        let ex2 = await store.UserEvents.findAll(root, 'user2');
+        let ex2 = await inReadOnlyTx(root, async (ctx) => await store.UserEvents.findAll(ctx, 'user2'));
         expect(ex2.length).toBe(1);
 
-        let ex3 = await store.UserEvents.findAll(root, 'user3');
+        let ex3 = await inReadOnlyTx(root, async (ctx) => await store.UserEvents.findAll(ctx, 'user3'));
         expect(ex3.length).toBe(0);
     });
 
@@ -60,7 +60,7 @@ describe('Events', () => {
         });
 
         let stream = store.UserEvents.createStream('user1', { batchSize: 2 });
-        let ex = await stream.next(root);
+        let ex = await inReadOnlyTx(root, async (ctx) => stream.next(ctx));
         expect(ex.length).toBe(2);
         expect(ex[0] instanceof SampleEvent).toBeTruthy();
         expect((ex[0] as SampleEvent).id).toBe('1');
@@ -69,7 +69,7 @@ describe('Events', () => {
         const cursor = stream.cursor;
         expect(cursor).not.toBeFalsy();
 
-        ex = await stream.next(root);
+        ex = await inReadOnlyTx(root, async (ctx) => stream.next(ctx));
         expect(ex.length).toBe(2);
         expect(ex[0] instanceof SampleEvent).toBeTruthy();
         expect((ex[0] as SampleEvent).id).toBe('3');
@@ -77,12 +77,12 @@ describe('Events', () => {
         expect((ex[1] as SampleEvent).id).toBe('4');
         expect(stream.cursor).not.toBeFalsy();
 
-        ex = await stream.next(root);
+        ex = await inReadOnlyTx(root, async (ctx) => stream.next(ctx));
         expect(ex.length).toBe(0);
         expect(stream.cursor).not.toBeFalsy();
 
         stream.seek(cursor);
-        ex = await stream.next(root);
+        ex = await inReadOnlyTx(root, async (ctx) => stream.next(ctx));
         expect(ex.length).toBe(2);
         expect(ex[0] instanceof SampleEvent).toBeTruthy();
         expect((ex[0] as SampleEvent).id).toBe('3');

@@ -1,10 +1,9 @@
 import { Database } from './Database';
-import { inTx } from './inTx';
+import { inTx, inReadOnlyTx } from './inTx';
 import { createNamedContext } from '@openland/context';
 import { encoders } from './encoding';
 import { createVersionstampRef } from './createVersionstampRef';
 import { Versionstamp } from '@openland/foundationdb-tuple';
-import { delay } from './utils';
 
 async function createKeyspaces() {
     let db = await Database.openTest();
@@ -54,7 +53,7 @@ describe('Subspace', () => {
             });
 
             // Read in ephemeral transaction
-            let k2 = await keyspace.get(rootCtx, ['key']);
+            let k2 = await inTx(rootCtx, async (ctx) => keyspace.get(ctx, ['key']));
             expect(k2).toBe(1);
 
             // Read in rw transaction
@@ -72,13 +71,13 @@ describe('Subspace', () => {
             await inTx(rootCtx, async (ctx) => {
                 keyspace.set(ctx, ['key'], 1);
             });
-            let ex = await keyspace.get(rootCtx, ['key']);
+            let ex = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.get(ctx, ['key']));
             expect(ex).toBe(1);
 
             await inTx(rootCtx, async (ctx) => {
                 keyspace.clear(ctx, ['key']);
             });
-            ex = await keyspace.get(rootCtx, ['key']);
+            ex = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.get(ctx, ['key']));
             expect(ex).toBe(null);
         }
     });
@@ -90,21 +89,21 @@ describe('Subspace', () => {
             await inTx(rootCtx, async (ctx) => {
                 keyspace.set(ctx, ['key', 1], 1);
             });
-            let ex = await keyspace.get(rootCtx, ['key', 1]);
+            let ex = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.get(ctx, ['key', 1]));
             expect(ex).toBe(1);
 
             await inTx(rootCtx, async (ctx) => {
                 keyspace.add(ctx, ['key', 1], 1);
             });
 
-            ex = await keyspace.get(rootCtx, ['key', 1]);
+            ex = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.get(ctx, ['key', 1]));
             expect(ex).toBe(2);
 
             await inTx(rootCtx, async (ctx) => {
                 keyspace.add(ctx, ['key', 1], -3);
             });
 
-            ex = await keyspace.get(rootCtx, ['key', 1]);
+            ex = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.get(ctx, ['key', 1]));
             expect(ex).toBe(-1);
         }
     });
@@ -116,14 +115,14 @@ describe('Subspace', () => {
             await inTx(rootCtx, async (ctx) => {
                 keyspace.set(ctx, ['key', 1], 0xf);
             });
-            let ex = await keyspace.get(rootCtx, ['key', 1]);
+            let ex = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.get(ctx, ['key', 1]));
             expect(ex).toBe(0xf);
 
             await inTx(rootCtx, async (ctx) => {
                 keyspace.bitOr(ctx, ['key', 1], 0xf0);
             });
 
-            ex = await keyspace.get(rootCtx, ['key', 1]);
+            ex = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.get(ctx, ['key', 1]));
             expect(ex).toBe(0xff);
         }
     });
@@ -135,14 +134,14 @@ describe('Subspace', () => {
             await inTx(rootCtx, async (ctx) => {
                 keyspace.set(ctx, ['key', 1], 0xff);
             });
-            let ex = await keyspace.get(rootCtx, ['key', 1]);
+            let ex = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.get(ctx, ['key', 1]));
             expect(ex).toBe(0xff);
 
             await inTx(rootCtx, async (ctx) => {
                 keyspace.bitAnd(ctx, ['key', 1], 0xf0);
             });
 
-            ex = await keyspace.get(rootCtx, ['key', 1]);
+            ex = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.get(ctx, ['key', 1]));
             expect(ex).toBe(0xf0);
         }
     });
@@ -154,14 +153,14 @@ describe('Subspace', () => {
             await inTx(rootCtx, async (ctx) => {
                 keyspace.set(ctx, ['key', 1], 0xff);
             });
-            let ex = await keyspace.get(rootCtx, ['key', 1]);
+            let ex = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.get(ctx, ['key', 1]));
             expect(ex).toBe(0xff);
 
             await inTx(rootCtx, async (ctx) => {
                 keyspace.bitXor(ctx, ['key', 1], 0x0f);
             });
 
-            ex = await keyspace.get(rootCtx, ['key', 1]);
+            ex = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.get(ctx, ['key', 1]));
             expect(ex).toBe(0xf0);
         }
     });
@@ -181,15 +180,15 @@ describe('Subspace', () => {
         await inTx(rootCtx, async (ctx) => {
             ksa.set(ctx, ['key'], 1);
         });
-        let k = await ksb.get(rootCtx, ['key']);
+        let k = await inReadOnlyTx(rootCtx, async (ctx) => await ksb.get(ctx, ['key']));
         expect(k).toBe(1);
 
         // Nothing else
-        let all = await db.allKeys.range(rootCtx, Buffer.of());
+        let all = await inReadOnlyTx(rootCtx, async (ctx) => db.allKeys.range(ctx, Buffer.of()));
         expect(all.length).toBe(1);
-        let all2 = await ksa.range(rootCtx, []);
+        let all2 = await inReadOnlyTx(rootCtx, async (ctx) => ksa.range(ctx, []));
         expect(all2.length).toBe(1);
-        let all3 = await ksb.range(rootCtx, []);
+        let all3 = await inReadOnlyTx(rootCtx, async (ctx) => await ksb.range(ctx, []));
         expect(all3.length).toBe(1);
     });
 
@@ -215,51 +214,51 @@ describe('Subspace', () => {
                 keyspace.set(ctx, ['key'], 1);
             });
 
-            let all = await keyspace.range(rootCtx, []);
+            let all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, []));
             expect(all.length).toBe(1);
-            all = await keyspace.range(rootCtx, [], { reverse: true });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: true }));
             expect(all.length).toBe(1);
-            all = await keyspace.range(rootCtx, [], { after: ['aaa'] });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { after: ['aaa'] }));
             expect(all.length).toBe(1);
-            all = await keyspace.range(rootCtx, [], { reverse: true, after: ['aaa'] });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: true, after: ['aaa'] }));
             expect(all.length).toBe(0);
-            all = await keyspace.range(rootCtx, [], { reverse: true, after: ['mmm'] });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: true, after: ['mmm'] }));
             expect(all.length).toBe(1);
-            all = await keyspace.range(rootCtx, [], { reverse: false, after: ['mmm'] });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: false, after: ['mmm'] }));
             expect(all.length).toBe(0);
-            all = await keyspace.range(rootCtx, [], { reverse: false, after: ['key'] });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: false, after: ['key'] }));
             expect(all.length).toBe(0);
-            all = await keyspace.range(rootCtx, [], { reverse: false, after: ['ke'] });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: false, after: ['ke'] }));
             expect(all.length).toBe(1);
 
-            all = await keyspace.range(rootCtx, [], { reverse: true, before: ['aaa'] });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: true, before: ['aaa'] }));
             expect(all.length).toBe(1);
-            all = await keyspace.range(rootCtx, [], { reverse: true, before: ['mmm'] });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: true, before: ['mmm'] }));
             expect(all.length).toBe(0);
-            all = await keyspace.range(rootCtx, [], { reverse: false, before: ['mmm'] });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: false, before: ['mmm'] }));
             expect(all.length).toBe(1);
-            all = await keyspace.range(rootCtx, [], { reverse: false, before: ['key'] });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: false, before: ['key'] }));
             expect(all.length).toBe(0);
-            all = await keyspace.range(rootCtx, [], { reverse: false, before: ['ke'] });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: false, before: ['ke'] }));
             expect(all.length).toBe(0);
-            all = await keyspace.range(rootCtx, [], { reverse: false, before: ['key1'] });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: false, before: ['key1'] }));
             expect(all.length).toBe(1);
 
             await inTx(rootCtx, async (ctx) => {
                 keyspace.set(ctx, ['key2'], 1);
             });
 
-            all = await keyspace.range(rootCtx, [], { limit: 1 });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { limit: 1 }));
             expect(all.length).toBe(1);
-            all = await keyspace.range(rootCtx, [], { reverse: true, limit: 1 });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: true, limit: 1 }));
             expect(all.length).toBe(1);
-            all = await keyspace.range(rootCtx, [], { after: ['aaa'], limit: 1 });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { after: ['aaa'], limit: 1 }));
             expect(all.length).toBe(1);
-            all = await keyspace.range(rootCtx, [], { reverse: true, after: ['aaa'], limit: 1 });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: true, after: ['aaa'], limit: 1 }));
             expect(all.length).toBe(0);
-            all = await keyspace.range(rootCtx, [], { reverse: true, after: ['mmm'], limit: 1 });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: true, after: ['mmm'], limit: 1 }));
             expect(all.length).toBe(1);
-            all = await keyspace.range(rootCtx, [], { reverse: false, after: ['mmm'], limit: 1 });
+            all = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: false, after: ['mmm'], limit: 1 }));
             expect(all.length).toBe(0);
         }
     });
@@ -294,32 +293,32 @@ describe('Subspace', () => {
                 keyspace.set(ctx, [1, 12], 12);
             });
 
-            let res = await keyspace.range(rootCtx, [1], { after: [1, 6], limit: 1 });
+            let res = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { after: [1, 6], limit: 1 }));
             expect(res.length).toBe(1);
             expect(res[0].value).toBe(7);
 
-            res = await keyspace.range(rootCtx, [1], { after: [1, 6], limit: 1, reverse: true });
+            res = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { after: [1, 6], limit: 1, reverse: true }));
             expect(res.length).toBe(1);
             expect(res[0].value).toBe(5);
 
-            res = await keyspace.range(rootCtx, [1], { after: [1, 12], limit: 1 });
+            res = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { after: [1, 12], limit: 1 }));
             expect(res.length).toBe(0);
 
-            res = await keyspace.range(rootCtx, [1], { after: [1, 0], limit: 1, reverse: true });
+            res = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { after: [1, 0], limit: 1, reverse: true }));
             expect(res.length).toBe(0);
 
-            res = await keyspace.range(rootCtx, [1], { before: [1, 6], limit: 1 });
+            res = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { before: [1, 6], limit: 1 }));
             expect(res.length).toBe(1);
             expect(res[0].value).toBe(1);
 
-            res = await keyspace.range(rootCtx, [1], { before: [1, 6], limit: 1, reverse: true });
+            res = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { before: [1, 6], limit: 1, reverse: true }));
             expect(res.length).toBe(1);
             expect(res[0].value).toBe(12);
 
-            res = await keyspace.range(rootCtx, [1], { before: [1, 12], limit: 1, reverse: true });
+            res = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { before: [1, 12], limit: 1, reverse: true }));
             expect(res.length).toBe(0);
 
-            res = await keyspace.range(rootCtx, [1], { before: [1, 0], limit: 1 });
+            res = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { before: [1, 0], limit: 1 }));
             expect(res.length).toBe(0);
         }
     });
@@ -356,32 +355,32 @@ describe('Subspace', () => {
                 keyspace.set(ctx, [1, 12, 1], 12);
             });
 
-            let res = await keyspace.range(rootCtx, [1], { after: [1, 6], limit: 1 });
+            let res = await inTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { after: [1, 6], limit: 1 }));
             expect(res.length).toBe(1);
             expect(res[0].value).toBe(7);
 
-            res = await keyspace.range(rootCtx, [1], { after: [1, 6], limit: 1, reverse: true });
+            res = await inTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { after: [1, 6], limit: 1, reverse: true }));
             expect(res.length).toBe(1);
             expect(res[0].value).toBe(5);
 
-            res = await keyspace.range(rootCtx, [1], { after: [1, 12], limit: 1 });
+            res = await inTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { after: [1, 12], limit: 1 }));
             expect(res.length).toBe(0);
 
-            res = await keyspace.range(rootCtx, [1], { after: [1, 0], limit: 1, reverse: true });
+            res = await inTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { after: [1, 0], limit: 1, reverse: true }));
             expect(res.length).toBe(0);
 
-            res = await keyspace.range(rootCtx, [1], { before: [1, 6], limit: 1 });
+            res = await inTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { before: [1, 6], limit: 1 }));
             expect(res.length).toBe(1);
             expect(res[0].value).toBe(1);
 
-            res = await keyspace.range(rootCtx, [1], { before: [1, 6], limit: 1, reverse: true });
+            res = await inTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { before: [1, 6], limit: 1, reverse: true }));
             expect(res.length).toBe(1);
             expect(res[0].value).toBe(12);
 
-            res = await keyspace.range(rootCtx, [1], { before: [1, 12], limit: 1, reverse: true });
+            res = await inTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { before: [1, 12], limit: 1, reverse: true }));
             expect(res.length).toBe(0);
 
-            res = await keyspace.range(rootCtx, [1], { before: [1, 0], limit: 1 });
+            res = await inTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { before: [1, 0], limit: 1 }));
             expect(res.length).toBe(0);
         }
     });
@@ -420,19 +419,19 @@ describe('Subspace', () => {
                 keyspace.set(ctx, [2, 1, 1], 13);
             });
 
-            let res = await keyspace.range(rootCtx, [], { reverse: true, limit: 1 });
+            let res = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: true, limit: 1 }));
             expect(res.length).toBe(1);
             expect(res[0].value).toBe(13);
 
-            res = await keyspace.range(rootCtx, [], { reverse: false, limit: 1 });
+            res = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [], { reverse: false, limit: 1 }));
             expect(res.length).toBe(1);
             expect(res[0].value).toBe(0);
 
-            res = await keyspace.range(rootCtx, [1], { reverse: true, limit: 1 });
+            res = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { reverse: true, limit: 1 }));
             expect(res.length).toBe(1);
             expect(res[0].value).toBe(12);
 
-            res = await keyspace.range(rootCtx, [1], { reverse: false, limit: 1 });
+            res = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, [1], { reverse: false, limit: 1 }));
             expect(res.length).toBe(1);
             expect(res[0].value).toBe(1);
         }
@@ -476,7 +475,7 @@ describe('Subspace', () => {
                 keyspace.clearPrefixed(ctx, []);
             });
 
-            let res = await keyspace.range(rootCtx, []);
+            let res = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, []));
             expect(res.length).toBe(0);
         }
     });
@@ -519,7 +518,7 @@ describe('Subspace', () => {
                 keyspace.clearPrefixed(ctx, [1]);
             });
 
-            let res = await keyspace.range(rootCtx, []);
+            let res = await inReadOnlyTx(rootCtx, async (ctx) => keyspace.range(ctx, []));
             expect(res.length).toBe(2);
         }
     });
@@ -591,7 +590,7 @@ describe('Subspace', () => {
                 keyspace.setTupleKey(ctx, [1, 2, vt2, 3], 2);
                 return { vt1, vt2 };
             });
-            
+
             expect(vts.vt1.index).not.toBeFalsy();
             expect(vts.vt1.resolved).not.toBeFalsy();
             expect(vts.vt2.resolved).not.toBeFalsy();

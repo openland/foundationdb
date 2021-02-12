@@ -2,7 +2,7 @@ import { encoders } from './encoding';
 import { copySubspace, deleteMissing } from './operations';
 import { createNamedContext } from '@openland/context';
 import { isSubspaceEquals } from './operations';
-import { Database, inTx } from './';
+import { Database, inTx, inReadOnlyTx } from './';
 
 describe('operations', () => {
 
@@ -20,9 +20,9 @@ describe('operations', () => {
         let to = await db.directories.createOrOpen(parent, ['to']);
 
         // Preconditions
-        let data = (await to.range(parent, Buffer.of()));
+        let data = await inReadOnlyTx(parent, async (ctx) => (await to.range(ctx, Buffer.of())));
         expect(data.length).toBe(0);
-        data = (await from.range(parent, Buffer.of()));
+        data = (await inReadOnlyTx(parent, async (ctx) => from.range(ctx, Buffer.of())));
         expect(data.length).toBe(0);
         expect(await isSubspaceEquals(parent, to, from)).toBeTruthy();
 
@@ -38,7 +38,7 @@ describe('operations', () => {
         await copySubspace(parent, from, to);
 
         // Check results
-        data = (await to.range(parent, Buffer.of()));
+        data = (await inReadOnlyTx(parent, async (ctx) => to.range(ctx, Buffer.of())));
         expect(data.length).toBe(20000);
         for (let i = 0; i < 20000; i++) {
             expect(Buffer.compare(data[i].value, encoders.json.pack({ v: i }))).toBe(0);
@@ -61,7 +61,7 @@ describe('operations', () => {
         await copySubspace(parent, from, to);
 
         // Check results
-        data = (await to.range(parent, Buffer.of()));
+        data = (await inReadOnlyTx(parent, async (ctx) => to.range(ctx, Buffer.of())));
         expect(data.length).toBe(40000);
         for (let i = 0; i < 40000; i++) {
             expect(Buffer.compare(data[i].value, encoders.json.pack({ v: i }))).toBe(0);

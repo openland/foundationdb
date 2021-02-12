@@ -1,36 +1,9 @@
-import { withReadOnlyTransaction } from './withReadOnlyTransaction';
 import { createNamedContext } from '@openland/context';
 import { getTransaction } from './getTransaction';
 import { inTx } from './inTx';
-import { withoutTransaction } from './withoutTransaction';
 import { Database } from './Database';
 
 describe('Transaction', () => {
-    it('should be ephemeral in empty context', async () => {
-        let ctx = createNamedContext('test');
-        let tx = getTransaction(ctx);
-        expect(tx.isReadOnly).toBe(true);
-        expect(tx.isCompleted).toBe(false);
-        expect(tx.isEphemeral).toBe(true);
-    });
-    it('should throw error on hooks in read only transaction', async () => {
-        let ctx = withReadOnlyTransaction(createNamedContext('test'));
-        let tx = getTransaction(ctx);
-        expect(tx.isReadOnly).toBe(true);
-        expect(tx.isCompleted).toBe(false);
-        expect(tx.isEphemeral).toBe(false);
-        expect(() => tx.afterCommit(() => { /* */ })).toThrowError();
-        expect(() => tx.beforeCommit(() => { /* */ })).toThrowError();
-    });
-
-    it('should nested read transaction be same', async () => {
-        let ctx = withReadOnlyTransaction(createNamedContext('test'));
-        let tx = getTransaction(ctx);
-        let ctx2 = withReadOnlyTransaction(ctx);
-        let tx2 = getTransaction(ctx2);
-        expect(tx).toBe(tx2);
-    });
-
     it('should nested write transaction be same', async () => {
         let root = createNamedContext('test');
         let afterCommit1 = jest.fn();
@@ -42,7 +15,6 @@ describe('Transaction', () => {
             let tx = getTransaction(ctx1);
             expect(tx.isReadOnly).toBe(false);
             expect(tx.isCompleted).toBe(false);
-            expect(tx.isEphemeral).toBe(false);
 
             tx.afterCommit(afterCommit1);
             tx.beforeCommit(beforeCommit1);
@@ -73,15 +45,6 @@ describe('Transaction', () => {
         expect(beforeCommit3).toHaveBeenCalledTimes(1);
         expect(afterCommit1).toHaveBeenCalledTimes(1);
         expect(afterCommit2).toHaveBeenCalledTimes(1);
-    });
-
-    it('should be reset after withoutTransaction', async () => {
-        let ctx = withReadOnlyTransaction(createNamedContext('test'));
-        let tx = getTransaction(ctx);
-        let tx2 = getTransaction(ctx);
-        let tx3 = getTransaction(withoutTransaction(ctx));
-        expect(tx2).toBe(tx);
-        expect(tx3).not.toBe(tx);
     });
 
     it('should crash when using two different connections in the same transaction', async () => {

@@ -1,8 +1,6 @@
-import { ReadOnlyTransaction } from './impl/ReadOnlyTransaction';
 import { Context } from '@openland/context';
-import { TransactionContext, ReadOnlyTransactionContext } from './impl/TransactionContext';
+import { TransactionContext } from './impl/TransactionContext';
 import { Transaction } from './Transaction';
-import { TransactionTracer } from './tracing';
 
 /**
  * Get Transaction from current context or create a temporary read-only one.
@@ -13,11 +11,5 @@ export function getTransaction(ctx: Context): Transaction {
     if (tx) {
         return tx;
     }
-    let cache = ReadOnlyTransactionContext.get(ctx);
-    if (cache) {
-        return cache;
-    }
-
-    TransactionTracer.onNewEphemeralTx(ctx);
-    return new ReadOnlyTransaction(true);
+    throw Error('No transaction in context');
 }

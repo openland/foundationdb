@@ -31,14 +31,14 @@ export interface Transaction {
     readonly isReadOnly: boolean;
 
     /**
+     * If transaction is hybrid
+     */
+    readonly isHybrid: boolean;
+
+    /**
      * If transaction is already completed (successfuly or not)
      */
     readonly isCompleted: boolean;
-
-    /**
-     * If transaction is ephemeral. Ephemeral transactions are never commited.
-     */
-    readonly isEphemeral: boolean;
 
     /**
      * Application or layer specific data.
@@ -66,10 +66,16 @@ export interface Transaction {
     afterCommit(fn: (ctx: Context) => void): void;
 
     /**
-     * Getting raw transaction object
+     * Getting raw transaction object for writes
      * @param db current database connnection
      */
-    rawTransaction(db: Database): fdb.Transaction;
+    rawWriteTransaction(db: Database): fdb.Transaction;
+
+    /**
+     * Getting raw transaction object for reads
+     * @param db current database connnection
+     */
+    rawReadTransaction(db: Database): fdb.Transaction;
 
     /**
      * Setting transaction options
