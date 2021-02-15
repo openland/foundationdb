@@ -19,11 +19,13 @@ async function doInTx<T>(type: 'rw' | 'ro' | 'hybrid', _ctx: Context, callback: 
             let ctxi = TransactionContext.set(ctx, tx);
             TransactionTracer.onTx(ctx);
             try {
-                const result = await callback(ctxi);
-                await TransactionTracer.commit(ctx, async () => {
-                    await tx.commit(ctxi);
+                return await TransactionTracer.txIteration(ctxi, async (ctx2) => {
+                    const result = await callback(ctx2);
+                    await TransactionTracer.commit(ctx2, async () => {
+                        await tx.commit(ctx2);
+                    });
+                    return result;
                 });
-                return result;
             } catch (err) {
                 if (err instanceof FDBError) {
                     TransactionTracer.onFDBError(ctx, err);
