@@ -22,7 +22,9 @@ export class MigrationsLayer extends BaseLayer {
                     let dir = (await this.db.directories.createOrOpen(ctx, ['com.openland.layers', 'migrator', 'completed']))
                         .withKeyEncoding(encoders.tuple)
                         .withValueEncoding(encoders.boolean);
-                    let appliedTransactions = await dir.range(ctx, []);
+                    let appliedTransactions = await inTx(ctx, async (ctx3) => {
+                        return await dir.range(ctx3, []);
+                    });
                     let remaining = this.migrations.filter((v) => !appliedTransactions.find((m) => m.key[0] === v.key));
                     if (remaining.length > 0) {
                         log.log(ctx, 'Remaining migrations: ' + remaining.length);
