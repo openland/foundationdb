@@ -27,6 +27,7 @@ async function doInTx<T>(type: 'rw' | 'ro' | 'hybrid', _ctx: Context, callback: 
                     return result;
                 });
             } catch (err) {
+                TransactionTracer.onError(ctx, err);
                 if (err instanceof FDBError) {
                     TransactionTracer.onFDBError(ctx, err);
                     await tx.handleError(err.code);

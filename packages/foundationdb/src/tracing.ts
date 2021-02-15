@@ -31,6 +31,7 @@ interface TransactionTracerConfig {
     commit<T>(ctx: Context, handler: () => Promise<T>): Promise<T>;
     onTx(ctx: Context): void;
     onRetry(ctx: Context): void;
+    onError(ctx: Context, error: any): void;
     onFDBError(ctx: Context, error: FDBError): void;
 }
 
@@ -42,6 +43,9 @@ const NoopTransactionTracer: TransactionTracerConfig = {
         // Noop
     },
     onRetry: () => {
+        // Noop
+    },
+    onError: (ctx: Context, error: any) => {
         // Noop
     },
     onFDBError: (ctx: Context, error: FDBError) => {
