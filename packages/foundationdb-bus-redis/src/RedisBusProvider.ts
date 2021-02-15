@@ -1,6 +1,9 @@
+import { createNamedContext } from '@openland/context';
 import * as Redis from 'handy-redis';
 import { BusProvider, BusSubcription } from '@openland/foundationdb-bus';
 import { backoff } from '@openland/foundationdb-utils';
+
+const ctx = createNamedContext('redis');
 
 export class RedisBusProvider implements BusProvider {
     private readonly client: Redis.IHandyRedis;
@@ -8,7 +11,7 @@ export class RedisBusProvider implements BusProvider {
     private subscribers = new Map<string, Array<{ listener: (data: any) => void }>>();
     private subscribedTopics = new Set<string>();
 
-    constructor(port: number = 6379, host?: string, ) {
+    constructor(port: number = 6379, host?: string,) {
         this.client = Redis.createHandyClient(port, host);
         this.subscribeClient = Redis.createHandyClient(port, host);
 
@@ -37,14 +40,14 @@ export class RedisBusProvider implements BusProvider {
 
     publish(topic: string, data: any) {
         // tslint:disable-next-line:no-floating-promises
-        backoff(async () => await this.client!.publish(topic, JSON.stringify(data)));
+        backoff(ctx, async () => await this.client!.publish(topic, JSON.stringify(data)));
     }
 
     subscribe(topic: string, receiver: (data: any) => void): BusSubcription {
         if (!this.subscribedTopics.has(topic)) {
             this.subscribedTopics.add(topic);
             // tslint:disable-next-line:no-floating-promises
-            backoff(async () => await this.subscribeClient.subscribe([topic]));
+            backoff(ctx, async () => await this.subscribeClient.subscribe([topic]));
         }
         if (!this.subscribers.has(topic)) {
             this.subscribers.set(topic, []);

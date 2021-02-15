@@ -14,7 +14,7 @@ export function singletonWorker(config: { db: Database, name: string, version?: 
     let refreshInterval = 5000;
     let awaiter: (() => void) | undefined;
 
-    let workLoop = foreverBreakable(async () => {
+    let workLoop = foreverBreakable(ctx, async () => {
         if (!wasStarted && config.startDelay) {
             await delay(config.startDelay);
         }
