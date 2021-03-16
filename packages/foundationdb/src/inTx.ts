@@ -21,8 +21,8 @@ async function doInTx<T>(type: 'rw' | 'ro' | 'hybrid', _ctx: Context, callback: 
             try {
                 return await TransactionTracer.txIteration(ctxi, async (ctx2) => {
                     const result = await callback(ctx2);
-                    await TransactionTracer.commit(ctx2, async () => {
-                        await tx.commit(ctx2);
+                    await TransactionTracer.commit(ctx2, async (ctx3) => {
+                        await tx.commit(ctx3);
                     });
                     return result;
                 });

@@ -80,11 +80,11 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     //
 
     protected async _findFromUniqueIndex(
-        ctx: Context,
+        parent: Context,
         _id: (PrimaryKeyType | null)[],
         descriptor: SecondaryIndexDescriptor
     ): Promise<T | null> {
-        return await EntityFactoryTracer.findFromUniqueIndex(this.descriptor, ctx, _id, descriptor, async () => {
+        return await EntityFactoryTracer.findFromUniqueIndex(this.descriptor, parent, _id, descriptor, async (ctx) => {
             // Resolve index key
             let id = resolveIndexKey(_id, descriptor.type.fields);
 
@@ -151,7 +151,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     }
 
     protected async _query(
-        ctx: Context,
+        parent: Context,
         descriptor: SecondaryIndexDescriptor,
         _id: (PrimaryKeyType | null)[],
         opts?: {
@@ -161,7 +161,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             afterCursor?: string | undefined | null
         }
     ): Promise<{ items: T[], cursor?: string, haveMore: boolean }> {
-        return await EntityFactoryTracer.query(this.descriptor, ctx, descriptor, _id, opts, async () => {
+        return await EntityFactoryTracer.query(this.descriptor, parent, descriptor, _id, opts, async (ctx) => {
             // Resolve index key
             let id = resolveIndexKey(_id, descriptor.type.fields, true /* Partial key */);
             let after: TupleItem[] | undefined = undefined;
@@ -211,8 +211,8 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         });
     }
 
-    async findAll(ctx: Context) {
-        return await EntityFactoryTracer.findAll(this.descriptor, ctx, async () => {
+    async findAll(parent: Context) {
+        return await EntityFactoryTracer.findAll(this.descriptor, parent, async (ctx) => {
             let ex = await this.descriptor.subspace.range(ctx, []);
             return ex.map((v) => {
                 let k = getCacheKey(v.key);
@@ -280,8 +280,8 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         }
     }
 
-    protected async _findById(ctx: Context, _id: PrimaryKeyType[]): Promise<T | null> {
-        return await EntityFactoryTracer.findById(this.descriptor, ctx, _id, async () => {
+    protected async _findById(parent: Context, _id: PrimaryKeyType[]): Promise<T | null> {
+        return await EntityFactoryTracer.findById(this.descriptor, parent, _id, async (ctx) => {
             // Validate input
             let id = this._resolvePrimaryKey(_id);
 
@@ -350,8 +350,8 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         return res;
     }
 
-    protected async _create(ctx: Context, _id: PrimaryKeyType[], value: SHAPE): Promise<T> {
-        return await EntityFactoryTracer.create(this.descriptor, ctx, _id, value, async () => {
+    protected async _create(parent: Context, _id: PrimaryKeyType[], value: SHAPE): Promise<T> {
+        return await EntityFactoryTracer.create(this.descriptor, parent, _id, value, async (ctx) => {
             //
             // We assume here next things:
             // * value is in normalized shape. Meaning all undefined are replaced with nulls and
@@ -442,8 +442,8 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
     }
 
     // Need to be arrow function since we are passing this function to entity instances
-    protected _flush = async (ctx: Context, _id: ReadonlyArray<PrimaryKeyType>, oldValue: ShapeWithMetadata<SHAPE>, newValue: ShapeWithMetadata<SHAPE>) => {
-        return await EntityFactoryTracer.flush(this.descriptor, ctx, _id, oldValue, newValue, async () => {
+    protected _flush = async (parent: Context, _id: ReadonlyArray<PrimaryKeyType>, oldValue: ShapeWithMetadata<SHAPE>, newValue: ShapeWithMetadata<SHAPE>) => {
+        return await EntityFactoryTracer.flush(this.descriptor, parent, _id, oldValue, newValue, async (ctx) => {
             let id = this._resolvePrimaryKey(_id);
             // Encode value before any write
             let encoded = Object.assign({}, newValue, this._codec.encode(newValue));

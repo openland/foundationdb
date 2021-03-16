@@ -5,7 +5,7 @@ import { ShapeWithMetadata } from './ShapeWithMetadata';
 import { Subspace, TupleItem } from '@openland/foundationdb';
 
 interface EntityFactoryTracerConfig {
-    findFromUniqueIndex<T>(entityDescriptor: EntityDescriptor<any>, ctx: Context, id: (PrimaryKeyType | null)[], descriptor: SecondaryIndexDescriptor, handler: () => Promise<T>): Promise<T>;
+    findFromUniqueIndex<T>(entityDescriptor: EntityDescriptor<any>, ctx: Context, id: (PrimaryKeyType | null)[], descriptor: SecondaryIndexDescriptor, handler: (ctx: Context) => Promise<T>): Promise<T>;
 
     query<T>(
         entityDescriptor: EntityDescriptor<any>,
@@ -18,25 +18,25 @@ interface EntityFactoryTracerConfig {
             after?: (PrimaryKeyType | null)[] | undefined | null,
             afterCursor?: string | undefined | null
         } | undefined,
-        handler: () => Promise<{ items: T[], cursor?: string, haveMore: boolean }>
+        handler: (ctx: Context) => Promise<{ items: T[], cursor?: string, haveMore: boolean }>
     ): Promise<{ items: T[], cursor?: string, haveMore: boolean }>;
 
-    findAll<T>(entityDescriptor: EntityDescriptor<any>, ctx: Context, handler: () => Promise<T[]>): Promise<T[]>;
+    findAll<T>(entityDescriptor: EntityDescriptor<any>, ctx: Context, handler: (ctx: Context) => Promise<T[]>): Promise<T[]>;
 
-    findById<T>(entityDescriptor: EntityDescriptor<any>, ctx: Context, id: PrimaryKeyType[], handler: () => Promise<T>): Promise<T>;
+    findById<T>(entityDescriptor: EntityDescriptor<any>, ctx: Context, id: PrimaryKeyType[], handler: (ctx: Context) => Promise<T>): Promise<T>;
 
-    create<T>(entityDescriptor: EntityDescriptor<any>, ctx: Context, id: PrimaryKeyType[], value: any, handler: () => Promise<T>): Promise<T>;
+    create<T>(entityDescriptor: EntityDescriptor<any>, ctx: Context, id: PrimaryKeyType[], value: any, handler: (ctx: Context) => Promise<T>): Promise<T>;
 
-    flush<T>(entityDescriptor: EntityDescriptor<any>, ctx: Context, id: ReadonlyArray<PrimaryKeyType>, oldValue: ShapeWithMetadata<any>, newValue: ShapeWithMetadata<any>, handler: () => Promise<T>): Promise<T>;
+    flush<T>(entityDescriptor: EntityDescriptor<any>, ctx: Context, id: ReadonlyArray<PrimaryKeyType>, oldValue: ShapeWithMetadata<any>, newValue: ShapeWithMetadata<any>, handler: (ctx: Context) => Promise<T>): Promise<T>;
 }
 
 const NoopEntityFactoryTracer: EntityFactoryTracerConfig = {
-    findFromUniqueIndex: (entityDescriptor, ctx, id, descriptor, handler) => handler(),
-    query: (entityDescriptor, ctx, descriptor, id, opts, handler) => handler(),
-    findAll: (entityDescriptor, ctx, handler) => handler(),
-    findById: (entityDescriptor, ctx, id, handler) => handler(),
-    create: (entityDescriptor, ctx, id, value, handler) => handler(),
-    flush: (entityDescriptor, ctx, id, oldValue, newValue, handler) => handler()
+    findFromUniqueIndex: (entityDescriptor, ctx, id, descriptor, handler) => handler(ctx),
+    query: (entityDescriptor, ctx, descriptor, id, opts, handler) => handler(ctx),
+    findAll: (entityDescriptor, ctx, handler) => handler(ctx),
+    findById: (entityDescriptor, ctx, id, handler) => handler(ctx),
+    create: (entityDescriptor, ctx, id, value, handler) => handler(ctx),
+    flush: (entityDescriptor, ctx, id, oldValue, newValue, handler) => handler(ctx)
 };
 
 export let EntityFactoryTracer = NoopEntityFactoryTracer;

@@ -1,3 +1,4 @@
+import { TransactionTracer } from './../tracing';
 import { WriteToReadOnlyContextError } from './../WriteToReadOnlyContextError';
 import * as fdb from 'foundationdb';
 import { Context } from '@openland/context';
@@ -208,10 +209,14 @@ export class TransactionImpl implements Transaction {
         }
 
         // beforeCommit hook
-        let pend = [...this._beforeCommit];
-        this._beforeCommit = [];
-        for (let p of pend) {
-            await p(ctx);
+        if (this._beforeCommit.length > 0) {
+            let pend = [...this._beforeCommit];
+            this._beforeCommit = [];
+            for (let p of pend) {
+                await TransactionTracer.commitPreHook(ctx, async (ctx2) => {
+                    await p(ctx2);
+                });
+            }
         }
 
         // Commit changes
@@ -220,16 +225,23 @@ export class TransactionImpl implements Transaction {
             if (this.isReadOnly) {
                 this.rawTx.rawCancel();
             } else {
-                await this.rawTx.rawCommit();
+                let rawTx = this.rawTx;
+                await TransactionTracer.commitFDB(ctx, async () => {
+                    await rawTx.rawCommit();
+                });
             }
         }
 
         // afterCommit hook
-        let pend2 = [...this._afterCommit];
-        this._afterCommit = [];
-        if (pend2.length > 0) {
-            for (let p of pend2) {
-                await p(ctx);
+        if (this._afterCommit.length > 0) {
+            let pend2 = [...this._afterCommit];
+            this._afterCommit = [];
+            if (pend2.length > 0) {
+                for (let p of pend2) {
+                    await TransactionTracer.commitPostHook(ctx, async (ctx2) => {
+                        await p(ctx2);
+                    });
+                }
             }
         }
     }
