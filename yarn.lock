@@ -2290,13 +2290,13 @@ form-data@~2.3.2:
     combined-stream "^1.0.6"
     mime-types "^2.1.12"
 
-foundationdb@1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/foundationdb/-/foundationdb-1.0.2.tgz#62628754c90bbe4a556ce2c0c47f5241a202ce99"
-  integrity sha512-Y6ukJq6vfYJLxnGVnTz1cvcAn7RrnzkCQZUSyDyMGdz+EHfHgugGmDTcRsWVItjZepIqvu2MDWEkMffX5AWmpA==
+foundationdb@1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/foundationdb/-/foundationdb-1.0.3.tgz#7abeaf7ec9cda7d3b49b6bf664f2740c71573c8b"
+  integrity sha512-bC4vi1WP7KVzXRpdc/l97tckTq3qlvlOKpC5UTV4aaArPqSTa9+8wsMrPisGOkHqFyAo+mpm8bel86PG4CVIVQ==
   dependencies:
     fdb-tuple "^1.0.0"
-    node-gyp-build "^4.2.0"
+    node-gyp-build "^4.2.3"
 
 fragment-cache@^0.2.1:
   version "0.2.1"
@@ -4015,10 +4015,10 @@ node-fetch@^2.3.0, node-fetch@^2.5.0:
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.0.tgz#e633456386d4aa55863f676a7ab0daa8fdecb0fd"
 
-node-gyp-build@^4.2.0:
-  version "4.2.2"
-  resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.2.2.tgz#3f44b65adaafd42fb6c3d81afd630e45c847eb66"
-  integrity sha512-Lqh7mrByWCM8Cf9UPqpeoVBBo5Ugx+RKu885GAzmLBVYjeywScxHXPGLa4JfYNZmcNGwzR0Glu5/9GaQZMFqyA==
+node-gyp-build@^4.2.3:
+  version "4.2.3"
+  resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.2.3.tgz#ce6277f853835f718829efb47db20f3e4d9c4739"
+  integrity sha512-MN6ZpzmfNCRM+3t57PTJHgHyw/h4OWnZ6mR8P5j/uZtqQr46RRuDE/P+g3n0YR/AiYXeWixZZzaip77gdICfRg==
 
 node-gyp@^4.0.0:
   version "4.0.0"
