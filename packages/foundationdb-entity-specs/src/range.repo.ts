@@ -97,8 +97,12 @@ export class RangeIndexFactory extends EntityFactory<RangeIndexShape, RangeIndex
         return this._create_UNSAFE(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
-    findById(ctx: Context, id: number): Promise<RangeIndex | null> {
+    findById(ctx: Context, id: number): Promise<RangeIndex | null> | RangeIndex | null {
         return this._findById(ctx, [id]);
+    }
+
+    findByIdOrFail(ctx: Context, id: number): Promise<RangeIndex> | RangeIndex {
+        return this._findByIdOrFail(ctx, [id]);
     }
 
     watch(ctx: Context, id: number): Watch {
@@ -199,8 +203,12 @@ export class RangeIndexConditionalFactory extends EntityFactory<RangeIndexCondit
         return this._create_UNSAFE(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
-    findById(ctx: Context, id: number): Promise<RangeIndexConditional | null> {
+    findById(ctx: Context, id: number): Promise<RangeIndexConditional | null> | RangeIndexConditional | null {
         return this._findById(ctx, [id]);
+    }
+
+    findByIdOrFail(ctx: Context, id: number): Promise<RangeIndexConditional> | RangeIndexConditional {
+        return this._findByIdOrFail(ctx, [id]);
     }
 
     watch(ctx: Context, id: number): Watch {

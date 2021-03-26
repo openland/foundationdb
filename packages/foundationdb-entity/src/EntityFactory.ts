@@ -19,6 +19,7 @@ import { resolveIndexKey, tupleToCursor, cursorToTuple } from './indexes/utils';
 import { RangeIndex } from './indexes/RangeIndex';
 import { IndexStream } from './indexes/IndexStream';
 import { EntityFactoryTracer } from './tracing';
+import { isPromise } from './utils/isPromise';
 
 export interface StreamProps {
     batchSize?: number;
@@ -280,15 +281,36 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
         }
     }
 
-    protected async _findById(parent: Context, _id: PrimaryKeyType[]): Promise<T | null> {
-        return await EntityFactoryTracer.findById(this.descriptor, parent, _id, async (ctx) => {
-            // Validate input
-            let id = this._resolvePrimaryKey(_id);
+    protected _findByIdOrFail(parent: Context, _id: PrimaryKeyType[]): Promise<T> | T {
+        let res = this._findById(parent, _id);
+        if (isPromise(res)) {
+            return res.then((v) => {
+                if (!v) {
+                    throw Error('Entity not found');
+                }
+                return v;
+            });
+        }
+        if (!res) {
+            throw Error('Entity not found');
+        }
+        return res;
+    }
 
+    protected _findById(parent: Context, _id: PrimaryKeyType[]): Promise<T | null> | T | null {
+
+        // Fast track
+        let id = this._resolvePrimaryKey(_id);
+        let k = getCacheKey(id);
+        let cached = this._entityCache.get(parent, k);
+        if (cached) {
+            return cached;
+        }
+
+        return EntityFactoryTracer.findById(this.descriptor, parent, _id, async (ctx) => {
             return await this._mutexManager.runExclusively(ctx, [PrimaryIndex.lockKey(id)], async () => {
 
                 // Check Cache
-                let k = getCacheKey(id);
                 let cached = this._entityCache.get(ctx, k);
                 if (cached) {
                     return cached;

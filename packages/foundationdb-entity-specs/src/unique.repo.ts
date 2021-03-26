@@ -94,8 +94,12 @@ export class UniqueIndexFactory extends EntityFactory<UniqueIndexShape, UniqueIn
         return this._create_UNSAFE(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
-    findById(ctx: Context, id: number): Promise<UniqueIndex | null> {
+    findById(ctx: Context, id: number): Promise<UniqueIndex | null> | UniqueIndex | null {
         return this._findById(ctx, [id]);
+    }
+
+    findByIdOrFail(ctx: Context, id: number): Promise<UniqueIndex> | UniqueIndex {
+        return this._findByIdOrFail(ctx, [id]);
     }
 
     watch(ctx: Context, id: number): Watch {
@@ -193,8 +197,12 @@ export class UniqueConditionalIndexFactory extends EntityFactory<UniqueCondition
         return this._create_UNSAFE(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
-    findById(ctx: Context, id: number): Promise<UniqueConditionalIndex | null> {
+    findById(ctx: Context, id: number): Promise<UniqueConditionalIndex | null> | UniqueConditionalIndex | null {
         return this._findById(ctx, [id]);
+    }
+
+    findByIdOrFail(ctx: Context, id: number): Promise<UniqueConditionalIndex> | UniqueConditionalIndex {
+        return this._findByIdOrFail(ctx, [id]);
     }
 
     watch(ctx: Context, id: number): Watch {

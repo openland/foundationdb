@@ -95,8 +95,12 @@ export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, Simple
         return this._create_UNSAFE(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
-    findById(ctx: Context, id: string): Promise<SimpleEntity | null> {
+    findById(ctx: Context, id: string): Promise<SimpleEntity | null> | SimpleEntity | null {
         return this._findById(ctx, [id]);
+    }
+
+    findByIdOrFail(ctx: Context, id: string): Promise<SimpleEntity> | SimpleEntity {
+        return this._findByIdOrFail(ctx, [id]);
     }
 
     watch(ctx: Context, id: string): Watch {
@@ -164,8 +168,12 @@ export class SimpleEntity2Factory extends EntityFactory<SimpleEntity2Shape, Simp
         return this._create_UNSAFE(ctx, [id], this.descriptor.codec.normalize({ id, ...src }));
     }
 
-    findById(ctx: Context, id: number): Promise<SimpleEntity2 | null> {
+    findById(ctx: Context, id: number): Promise<SimpleEntity2 | null> | SimpleEntity2 | null {
         return this._findById(ctx, [id]);
+    }
+
+    findByIdOrFail(ctx: Context, id: number): Promise<SimpleEntity2> | SimpleEntity2 {
+        return this._findByIdOrFail(ctx, [id]);
     }
 
     watch(ctx: Context, id: number): Watch {
@@ -440,8 +448,12 @@ export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
         return this._create_UNSAFE(ctx, [key1, key2, key3, key4], this.descriptor.codec.normalize({ key1, key2, key3, key4, ...src }));
     }
 
-    findById(ctx: Context, key1: boolean, key2: number, key3: number, key4: string): Promise<AllFields | null> {
+    findById(ctx: Context, key1: boolean, key2: number, key3: number, key4: string): Promise<AllFields | null> | AllFields | null {
         return this._findById(ctx, [key1, key2, key3, key4]);
+    }
+
+    findByIdOrFail(ctx: Context, key1: boolean, key2: number, key3: number, key4: string): Promise<AllFields> | AllFields {
+        return this._findByIdOrFail(ctx, [key1, key2, key3, key4]);
     }
 
     watch(ctx: Context, key1: boolean, key2: number, key3: number, key4: string): Watch {

@@ -483,9 +483,17 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
 
         // findById
         builder.append();
-        builder.append(`findById(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ')}): Promise<${entityClass} | null> {`);
+        builder.append(`findById(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ')}): Promise<${entityClass} | null> | ${entityClass} | null {`);
         builder.addIndent();
         builder.append(`return this._findById(ctx, [${entity.keys.map((v) => v.name).join(', ')}]);`);
+        builder.removeIndent();
+        builder.append(`}`);
+
+        // findByIdOrFail
+        builder.append();
+        builder.append(`findByIdOrFail(ctx: Context, ${entity.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ')}): Promise<${entityClass}> | ${entityClass} {`);
+        builder.addIndent();
+        builder.append(`return this._findByIdOrFail(ctx, [${entity.keys.map((v) => v.name).join(', ')}]);`);
         builder.removeIndent();
         builder.append(`}`);
 
