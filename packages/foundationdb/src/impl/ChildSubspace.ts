@@ -41,8 +41,10 @@ export class ChildSubspace implements Subspace {
     }
 
     async snapshotGet(ctx: Context, key: Buffer) {
-        let tx = getTransaction(ctx)!.rawReadTransaction(this.db);
-        return (await tx.snapshot().get(Buffer.concat([this.prefix, key]))) || null;
+        return await SubspaceTracer.get(ctx, key, async () => {
+            let tx = getTransaction(ctx)!.rawReadTransaction(this.db);
+            return (await tx.snapshot().get(Buffer.concat([this.prefix, key]))) || null;
+        });
     }
 
     exists(ctx: Context, key: Buffer): Promise<boolean> {
@@ -63,8 +65,10 @@ export class ChildSubspace implements Subspace {
     }
 
     async snapshotRange(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
-        let tx = getTransaction(ctx)!.rawReadTransaction(this.db);
-        return this.doRange(tx.snapshot(), key, opts);
+        return SubspaceTracer.range(ctx, key, opts, async () => {
+            let tx = getTransaction(ctx)!.rawReadTransaction(this.db);
+            return this.doRange(tx.snapshot(), key, opts);
+        });
     }
 
     private async doRange(tx: fdb.Transaction, key: Buffer, opts?: RangeOptions<Buffer>) {
