@@ -1,7 +1,7 @@
 {
     "name": "@openland/foundationdb-locks",
     "description": "FoundationDB distributed locks",
-    "version": "11.1.0",
+    "version": "11.1.1",
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",
     "repository": "https://github.com/openland/foundationdb",
@@ -13,8 +13,8 @@
     },
     "dependencies": {
         "@openland/context": "*",
-        "@openland/foundationdb": "^11.1.0",
-        "@openland/foundationdb-utils": "^11.1.0",
+        "@openland/foundationdb": "^11.1.1",
+        "@openland/foundationdb-utils": "^11.1.1",
         "@openland/log": "*"
     }
 }
