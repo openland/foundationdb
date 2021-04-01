@@ -7,6 +7,7 @@ import * as fdb from 'foundationdb';
 import { GlobalSubspace } from './impl/GlobalSubspace';
 import { randomNumbersString } from './utils';
 import { inTx } from './inTx';
+import { createDefaultTaskExecutor, TaskExecutor } from './TaskExecutor';
 
 const logger = createLogger('database');
 
@@ -22,10 +23,10 @@ export class Database {
      * 
      * @param clusterFile optional path to FoundationDB cluster file
      */
-    static async open(args?: { layers: Layer[], clusterFile?: string }) {
+    static async open(args?: { layers: Layer[], clusterFile?: string, microtasks?: TaskExecutor }) {
         fdb.setAPIVersion(620);
         let db: fdb.Database = fdb.open(args && args.clusterFile);
-        let res = new Database(db);
+        let res = new Database(db, undefined, args && args.microtasks);
         if (args && args.layers) {
             for (let l of args.layers) {
                 res.register(l);
@@ -41,14 +42,14 @@ export class Database {
      * 
      * @param name 
      */
-    static async openTest(args?: { layers: Layer[], clusterFile?: string, name?: string }) {
+    static async openTest(args?: { layers: Layer[], clusterFile?: string, name?: string, microtasks?: TaskExecutor }) {
         fdb.setAPIVersion(620);
         if (process.env.NODE_ENV === 'production') {
             throw Error('Trying to open test database in production mode');
         }
         let nm = args && args.name ? args.name : 'test-' + randomNumbersString(64);
         let db: fdb.Database = fdb.open(args && args.clusterFile);
-        let res = new Database(db, Buffer.from(nm, 'utf-8'));
+        let res = new Database(db, Buffer.from(nm, 'utf-8'), args && args.microtasks);
         await inTx(createNamedContext('test'), async (ctx) => {
             res.allKeys.clearPrefixed(ctx, Buffer.of());
         });
@@ -77,6 +78,11 @@ export class Database {
     readonly directories: DirectoryLayer;
 
     /**
+     * Executor for executing frequent, but small tasks
+     */
+    readonly microtasks: TaskExecutor;
+
+    /**
      * Flag to avoid double start
      */
     private started = false;
@@ -90,11 +96,16 @@ export class Database {
      * Constructor for client
      * @param db raw database object
      */
-    private constructor(db: fdb.Database, prefix?: Buffer) {
+    private constructor(db: fdb.Database, prefix?: Buffer, microtasks?: TaskExecutor) {
         this.rawDB = db;
         let global: Subspace = new GlobalSubspace(this);
         if (prefix) {
             global = global.subspace(prefix);
+        }
+        if (microtasks) {
+            this.microtasks = microtasks;
+        } else {
+            this.microtasks = createDefaultTaskExecutor('fdb-microtasks', 100, 50);
         }
         this.allKeys = global;
         this.directories = new DirectoryLayer(this, this.allKeys.subspace(Buffer.of(0xfe)), this.allKeys);

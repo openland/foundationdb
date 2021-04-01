@@ -32,13 +32,13 @@ export class LiveStream<T> {
         onContextCancel(ctx, () => this.ended = true);
         try {
             if (!t.baseStream.cursor) {
-                let tail = await t.baseStream.tail(ctx);
+                let tail = await this.baseStream.entityStorage.db.microtasks.execute((c) => t.baseStream.tail(c));
                 if (tail) {
                     t.baseStream.seek(tail);
                 }
             }
             while (!t.ended) {
-                let res = await t.baseStream.next(ctx);
+                let res = await this.baseStream.entityStorage.db.microtasks.execute((c) => t.baseStream.next(c));
                 if (res.length > 0) {
                     yield { items: res, cursor: t.baseStream.cursor };
                 } else {

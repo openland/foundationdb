@@ -16,3 +16,5 @@ export { TransactionCache } from './TransactionCache';
 export { Watch } from './Watch';
 export { createVersionstampRef } from './createVersionstampRef';
 export { WriteToReadOnlyContextError } from './WriteToReadOnlyContextError';
+export { TaskExecutor, Task } from './TaskExecutor';
+export { runInBatch } from './runInBatch';
