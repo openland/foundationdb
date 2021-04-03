@@ -53,13 +53,19 @@ export class RedisBusProvider implements BusProvider {
             this.subscribers.set(topic, []);
         }
         this.subscribers.get(topic)!!.push({ listener: receiver });
+        let canceled = false;
         return {
             cancel: () => {
+                if (canceled) {
+                    return;
+                }
+                canceled = true;
+
                 let subs = this.subscribers.get(topic)!;
                 let index = subs.findIndex(s => s.listener === receiver);
 
                 if (index === -1) {
-                    throw Error('Double unsubscribe from event bus for topic ' + topic);
+                    throw Error('Unable to unsubscribe');
                 } else {
                     subs.splice(index, 1);
                 }
