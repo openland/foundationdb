@@ -58,6 +58,12 @@ export class TransactionImpl implements Transaction {
 
     derive(isReadOnly: boolean, isHybrid: boolean): TransactionImpl {
         if (this.db && this.dbTx) {
+            // Reset when transaction is changed from read only to write
+            if (this.isHybrid && isHybrid) {
+                if (this.isReadOnly && !isReadOnly) {
+                    this.dbTx.rawReset();
+                }
+            }
             return new TransactionImpl(isReadOnly, isHybrid, { db: this.db, tx: this.dbTx });
         } else {
             return new TransactionImpl(isReadOnly, isHybrid);
