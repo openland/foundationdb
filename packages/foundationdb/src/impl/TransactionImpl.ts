@@ -9,6 +9,10 @@ import { Versionstamp, VersionstampRef } from '@openland/foundationdb-tuple';
 
 export class TransactionImpl implements Transaction {
 
+    static createTransaction(isReadOnly: boolean, isHybrid: boolean) {
+        return new TransactionImpl(isReadOnly, isHybrid);
+    }
+
     // ID
     private static nextId = 1;
     readonly id = TransactionImpl.nextId++;
@@ -27,7 +31,8 @@ export class TransactionImpl implements Transaction {
 
     // Raw Transaction
     private db!: Database;
-    protected rawTx?: fdb.Transaction;
+    private dbTx!: fdb.Transaction;
+    private rawTx!: fdb.Transaction;
     private options: Partial<fdb.TransactionOptions> = {};
 
     // Hooks
@@ -42,9 +47,21 @@ export class TransactionImpl implements Transaction {
     private version?: Buffer;
     private versionstampIndex = 0;
 
-    constructor(isReadOnly: boolean, isHybrid: boolean) {
+    private constructor(isReadOnly: boolean, isHybrid: boolean, retry?: { db: Database, tx: fdb.Transaction }) {
         this.isReadOnly = isReadOnly;
         this.isHybrid = isHybrid;
+        if (retry) {
+            this.db = retry.db;
+            this.dbTx = retry.tx;
+        }
+    }
+
+    derive(isReadOnly: boolean, isHybrid: boolean): TransactionImpl {
+        if (this.db && this.dbTx) {
+            return new TransactionImpl(isReadOnly, isHybrid, { db: this.db, tx: this.dbTx });
+        } else {
+            return new TransactionImpl(isReadOnly, isHybrid);
+        }
     }
 
     //
@@ -67,12 +84,15 @@ export class TransactionImpl implements Transaction {
             throw Error('Unable to use two different connections in the same transaction');
         }
 
-        if (!this.rawTx) {
+        if (!this.db || !this.dbTx) {
             this.db = db;
+            this.dbTx = db.rawDB.rawCreateTransaction(this.options);
+        }
+        if (!this.rawTx) {
             if (this.isReadOnly) {
-                this.rawTx = db.rawDB.rawCreateTransaction({ ...this.options, causal_read_risky: true }).snapshot();
+                this.rawTx = this.dbTx.snapshot();
             } else {
-                this.rawTx = db.rawDB.rawCreateTransaction(this.options);
+                this.rawTx = this.dbTx;
             }
             if (this.version) {
                 this.rawTx.setReadVersion(this.version);
