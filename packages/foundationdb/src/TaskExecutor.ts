@@ -1,5 +1,5 @@
 import { Context, createNamedContext } from '@openland/context';
-import { Future } from '@openland/foundationdb-utils';
+import { Future } from './Future';
 import { runInBatch } from './runInBatch';
 
 export type Task<T> = (ctx: Context) => Promise<T>;
