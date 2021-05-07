@@ -42,6 +42,9 @@ export class LiveStream<T> {
                 if (res.length > 0) {
                     yield { items: res, cursor: t.baseStream.cursor };
                 } else {
+                    if (t.ended) {
+                        return;
+                    }
                     let w = delayBreakable(ctx, 10000 + Math.random() * 15000);
                     t.awaiter = w.cancel;
                     await w.wait;

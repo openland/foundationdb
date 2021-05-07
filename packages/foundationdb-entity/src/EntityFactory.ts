@@ -311,7 +311,7 @@ export abstract class EntityFactory<SHAPE, T extends Entity<SHAPE>> {
             return await this._mutexManager.runExclusively(ctx, [PrimaryIndex.lockKey(id)], async () => {
 
                 // Check Cache
-                let cached = this._entityCache.get(ctx, k);
+                cached = this._entityCache.get(ctx, k);
                 if (cached) {
                     return cached;
                 }

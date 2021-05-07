@@ -164,6 +164,7 @@ export class TransactionImpl implements Transaction {
                 this.vtRequest = resolve;
                 this.vtReject = reject;
             });
+            this.vtPromise.catch(() => {/* Ignore */ });
             if (this.rawTx) {
                 let vtt = this.rawTx!.getVersionstamp().promise;
                 // tslint:disable-next-line:no-floating-promises
