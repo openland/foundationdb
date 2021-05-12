@@ -14,9 +14,9 @@ async function doInTx<T>(type: 'rw' | 'ro' | 'hybrid', _ctx: Context, callback: 
     return await TransactionTracer.tx(_ctx, async (ctx) => {
         // Implementation is copied from database.js from foundationdb library.
         let switchToWrite = false;
-        const base = TransactionImpl.createTransaction(type === 'ro' ? true : (type === 'hybrid' ? true : false), type === 'hybrid');
+        let tx = TransactionImpl.createTransaction(type === 'ro' ? true : (type === 'hybrid' ? true : false), type === 'hybrid');
         do {
-            const tx = base.derive(type === 'ro' ? true : (type === 'hybrid' ? !switchToWrite : false), type === 'hybrid');
+            tx = tx.derive(type === 'ro' ? true : (type === 'hybrid' ? !switchToWrite : false), type === 'hybrid');
             const ctxi = TransactionContext.set(ctx, tx);
             TransactionTracer.onTx(ctx);
             try {

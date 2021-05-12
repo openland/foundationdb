@@ -56,4 +56,45 @@ describe('Transaction', () => {
         });
         await expect(r).rejects.toThrowError();
     });
+
+    it('should retry on conflict', async () => {
+        let db = await Database.openTest();
+        let iteration = 0;
+        await inTx(createNamedContext('test'), async (ctx) => {
+            await db.allKeys.get(ctx, Buffer.from([1]));
+            if (iteration === 0) {
+                await inTx(createNamedContext('test'), async (ctx2) => {
+                    db.allKeys.set(ctx2, Buffer.from([1]), Buffer.from([]));
+                });
+            }
+            db.allKeys.set(ctx, Buffer.from([1]), Buffer.from([1]));
+            iteration++;
+        });
+        expect(iteration).toBe(2);
+    });
+
+    it('should limit retry attempts', async () => {
+        
+        //
+        // Original source for node-foundationdb
+        //
+        // await db.rawDB.doTn(async (tn) => {
+        //     await tn.get('key');
+        //     await db.rawDB.doTn(async (tn2) => {
+        //         tn2.set('key', 'value-1');
+        //     });
+        //     tn.set('key', 'value-1');
+        // }, { retry_limit: 1 });
+        //
+
+        let db = await Database.openTest();
+        await expect(inTx(createNamedContext('test'), async (ctx) => {
+            getTransaction(ctx).setOptions({ retry_limit: 1 });
+            await db.allKeys.get(ctx, Buffer.from([1]));
+            await inTx(createNamedContext('test'), async (ctx2) => {
+                db.allKeys.set(ctx2, Buffer.from([1]), Buffer.from([]));
+            });
+            db.allKeys.set(ctx, Buffer.from([1]), Buffer.from([1]));
+        })).rejects.toThrowError('Transaction not committed due to conflict with another transaction');
+    });
 });
