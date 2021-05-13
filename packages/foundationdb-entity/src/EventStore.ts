@@ -56,10 +56,21 @@ export abstract class EventStore {
         return events.map((e) => this.descriptor.factory.decode(e));
     }
 
+    encodeRawStreamItem(events: BaseEvent[]): any[] {
+        return events.map((e) => this.descriptor.factory.encode(e));
+    }
+
     decodeRawLiveStreamItem(event: LiveStreamItem<any>): LiveStreamItem<BaseEvent> {
         return {
             cursor: event.cursor,
             items: this.decodeRawStreamItem(event.items)
+        }
+    }
+
+    encodeRawLiveStreamItem(event: LiveStreamItem<BaseEvent>): LiveStreamItem<any> {
+        return {
+            cursor: event.cursor,
+            items: this.encodeRawStreamItem(event.items)
         }
     }
 }
