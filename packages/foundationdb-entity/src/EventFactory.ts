@@ -6,14 +6,14 @@ export class EventFactory {
         encode: (src: BaseEvent) => any
     }>();
 
-    registerEventType(key: string, encode: (src: BaseEvent) => any, decode: (src: any) => BaseEvent) {
+    registerEventType = (key: string, encode: (src: BaseEvent) => any, decode: (src: any) => BaseEvent) => {
         if (this.registrations.has(key)) {
             throw Error('Double registration for key ' + key);
         }
         this.registrations.set(key, { encode, decode });
     }
 
-    encode(src: BaseEvent) {
+    encode = (src: BaseEvent) => {
         let reg = this.registrations.get(src.type);
         if (!reg) {
             throw Error('Unknown event type ' + src.type);
@@ -21,7 +21,7 @@ export class EventFactory {
         return { type: src.type, data: reg.encode(src) };
     }
 
-    decode(src: any) {
+    decode = (src: any) => {
         if (typeof src.type !== 'string') {
             throw Error('Mailformed event');
         }

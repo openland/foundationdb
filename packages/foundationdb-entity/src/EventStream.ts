@@ -7,20 +7,22 @@ import { EventStoreDescriptor } from './EventStoreDescriptor';
 
 const ZERO = Buffer.alloc(0);
 
-export class EventStream implements Stream<BaseEvent> {
+export class EventStream<T> implements Stream<T> {
     readonly eventBusKey: string;
     readonly entityStorage: EntityStorage;
     private readonly _descriptor: EventStoreDescriptor;
     private readonly _prefix: Buffer;
     private readonly _batchSize: number;
+    private readonly _decoder: (src: any) => T;
     private _cursor: Buffer | null = null;
 
-    constructor(descriptor: EventStoreDescriptor, prefix: Buffer, batchSize: number, after?: string) {
+    constructor(descriptor: EventStoreDescriptor, prefix: Buffer, batchSize: number, decoder: (src: any) => T, after?: string) {
         this._descriptor = descriptor;
         this._prefix = prefix;
         this._batchSize = batchSize;
         this.eventBusKey = 'event-' + descriptor.storageKey + '-' + prefix.toString('base64');
         this.entityStorage = descriptor.storage;
+        this._decoder = decoder;
         if (after) {
             this.seek(after);
         }
@@ -73,14 +75,14 @@ export class EventStream implements Stream<BaseEvent> {
     }
 
     @transactional
-    async next(ctx: Context): Promise<BaseEvent[]> {
+    async next(ctx: Context): Promise<T[]> {
         let res = await this._descriptor.subspace
             .subspace(this._prefix).range(ctx, ZERO, {
                 limit: this._batchSize,
                 after: this._cursor ? this._cursor : undefined
             });
         if (res.length > 0) {
-            let r = res.map((v) => this._descriptor.factory.decode(v.value));
+            let r = res.map((v) => this._decoder(v.value));
             this._cursor = res[res.length - 1].key; // NOTE: Update cursor only after successful decoding
             return r;
         } else {

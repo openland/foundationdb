@@ -137,6 +137,22 @@ export function generateEvents(schema: SchemaModel, builder: StringBuilder) {
         builder.removeIndent();
         builder.append(`}`);
 
+        // Create Raw Stream
+        builder.append();
+        builder.append(`createRawStream(${eventStore.keys.length > 0 ? eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ') + ', ' : ''}opts?: { batchSize?: number, after?: string }) {`);
+        builder.addIndent();
+        builder.append(`return this._createRawStream([${eventStore.keys.map((v) => v.name).join(', ')}], opts);`);
+        builder.removeIndent();
+        builder.append(`}`);
+
+        // Create Raw Live Stream
+        builder.append();
+        builder.append(`createRawLiveStream(ctx: Context${eventStore.keys.length > 0 ? ', ' + eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ') : ''}, opts?: { batchSize?: number, after?: string }) {`);
+        builder.addIndent();
+        builder.append(`return this._createRawLiveStream(ctx, [${eventStore.keys.map((v) => v.name).join(', ')}], opts);`);
+        builder.removeIndent();
+        builder.append(`}`);
+
         builder.removeIndent();
         builder.append(`}`);
     }

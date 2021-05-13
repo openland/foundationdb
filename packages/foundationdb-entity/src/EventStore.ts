@@ -1,4 +1,4 @@
-import { LiveStream } from './LiveStream';
+import { LiveStream, LiveStreamItem } from './LiveStream';
 import { TransactionCache } from '@openland/foundationdb';
 import { Context } from '@openland/context';
 import { BaseEvent } from './BaseEvent';
@@ -36,11 +36,30 @@ export abstract class EventStore {
             .map((v) => this.descriptor.factory.decode(v.value));
     }
 
+    protected _createRawStream(key: PrimaryKeyType[], opts?: { batchSize?: number, after?: string }) {
+        return new EventStream<any>(this.descriptor, encoders.tuple.pack(key), opts && opts.batchSize || 5000, (src) => src, opts && opts.after);
+    }
+
+    protected _createRawLiveStream(ctx: Context, key: PrimaryKeyType[], opts?: { batchSize?: number, after?: string }) {
+        return new LiveStream<any>(this._createRawStream(key, opts)).generator(ctx);
+    }
+
     protected _createStream(key: PrimaryKeyType[], opts?: { batchSize?: number, after?: string }) {
-        return new EventStream(this.descriptor, encoders.tuple.pack(key), opts && opts.batchSize || 5000, opts && opts.after);
+        return new EventStream<BaseEvent>(this.descriptor, encoders.tuple.pack(key), opts && opts.batchSize || 5000, this.descriptor.factory.decode, opts && opts.after);
     }
 
     protected _createLiveStream(ctx: Context, key: PrimaryKeyType[], opts?: { batchSize?: number, after?: string }) {
-        return new LiveStream(this._createStream(key, opts)).generator(ctx);
+        return new LiveStream<BaseEvent>(this._createStream(key, opts)).generator(ctx);
+    }
+
+    decodeRawStreamItem(events: any[]): BaseEvent[] {
+        return events.map((e) => this.descriptor.factory.decode(e));
+    }
+
+    decodeRawLiveStreamItem(event: LiveStreamItem<any>): LiveStreamItem<BaseEvent> {
+        return {
+            cursor: event.cursor,
+            items: this.decodeRawStreamItem(event.items)
+        }
     }
 }

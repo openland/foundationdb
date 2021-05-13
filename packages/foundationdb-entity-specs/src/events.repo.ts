@@ -75,6 +75,14 @@ export class UserEvents extends EventStore {
     createLiveStream(ctx: Context, userId: string, opts?: { batchSize?: number, after?: string }) {
         return this._createLiveStream(ctx, [userId], opts);
     }
+
+    createRawStream(userId: string, opts?: { batchSize?: number, after?: string }) {
+        return this._createRawStream([userId], opts);
+    }
+
+    createRawLiveStream(ctx: Context, userId: string, opts?: { batchSize?: number, after?: string }) {
+        return this._createRawLiveStream(ctx, [userId], opts);
+    }
 }
 
 export interface Store extends BaseStore {
