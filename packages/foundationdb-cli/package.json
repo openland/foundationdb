@@ -1,0 +1,28 @@
+{
+    "name": "@openland/foundationdb-cli",
+    "description": "CLI for layer developers",
+    "version": "11.5.0",
+    "main": "lib/index.js",
+    "typings": "lib/index.d.ts",
+    "bin": {
+        "ofdbcli": "lib/index.js"
+    },
+    "repository": "https://github.com/openland/foundationdb",
+    "author": "Steve Kite <steve@openland.com>",
+    "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "@openland/context": "*",
+        "@openland/foundationdb": "^11.5.0",
+        "@openland/log": "*",
+        "@types/uuid": "^3.4.3",
+        "uuid": "^3.2.1",
+        "chalk": "^4.1.1",
+        "clear": "^0.1.0",
+        "commander": "^7.2.0",
+        "figlet": "^1.5.0",
+        "path": "^0.12.7"
+    }
+}

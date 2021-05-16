@@ -33,6 +33,7 @@ module.exports = {
         '^@openland/foundationdb-utils$': '<rootDir>/packages/foundationdb-utils/src',
         '^@openland/foundationdb-compiler$': '<rootDir>/packages/foundationdb-compiler/src',
         '^@openland/foundationdb-entity$': '<rootDir>/packages/foundationdb-entity/src',
-        '^@openland/foundationdb-tuple$': '<rootDir>/packages/foundationdb-tuple/src'
+        '^@openland/foundationdb-tuple$': '<rootDir>/packages/foundationdb-tuple/src',
+        '^@openland/foundationdb-cli$': '<rootDir>/packages/foundationdb-cli/src'
     }
 };
