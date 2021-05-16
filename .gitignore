@@ -17,3 +17,4 @@ packages/foundationdb-entity/lib
 packages/foundationdb-entity-specs/lib
 packages/foundationdb-tuple/lib
 packages/foundationdb/lib
+packages/foundationdb-cli/lib
