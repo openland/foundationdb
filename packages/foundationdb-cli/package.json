@@ -1,7 +1,7 @@
 {
     "name": "@openland/foundationdb-cli",
     "description": "CLI for layer developers",
-    "version": "11.5.0",
+    "version": "11.5.1",
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",
     "bin": {
@@ -15,14 +15,14 @@
     },
     "dependencies": {
         "@openland/context": "*",
-        "@openland/foundationdb": "^11.5.0",
+        "@openland/foundationdb": "^11.5.1",
         "@openland/log": "*",
         "@types/uuid": "^3.4.3",
-        "uuid": "^3.2.1",
         "chalk": "^4.1.1",
         "clear": "^0.1.0",
         "commander": "^7.2.0",
         "figlet": "^1.5.0",
-        "path": "^0.12.7"
+        "path": "^0.12.7",
+        "uuid": "^3.2.1"
     }
 }
