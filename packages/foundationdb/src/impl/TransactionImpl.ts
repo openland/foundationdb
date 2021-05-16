@@ -20,6 +20,8 @@ export class TransactionImpl implements Transaction {
     // State
     readonly isReadOnly: boolean;
     readonly isHybrid: boolean;
+    readonly isRetry: boolean;
+    readonly retryError: fdb.FDBError | null;
     private _broken = false;
     private _isCompleted = false;
     get isCompleted() {
@@ -47,16 +49,20 @@ export class TransactionImpl implements Transaction {
     private version?: Buffer;
     private versionstampIndex = 0;
 
-    private constructor(isReadOnly: boolean, isHybrid: boolean, retry?: { db: Database, tx: fdb.Transaction }) {
+    private constructor(isReadOnly: boolean, isHybrid: boolean, retry?: { error: fdb.FDBError | null, db: Database, tx: fdb.Transaction }) {
         this.isReadOnly = isReadOnly;
         this.isHybrid = isHybrid;
+        this.isRetry = !!retry;
         if (retry) {
+            this.retryError = retry.error;
             this.db = retry.db;
             this.dbTx = retry.tx;
+        } else {
+            this.retryError = null;
         }
     }
 
-    derive(isReadOnly: boolean, isHybrid: boolean): TransactionImpl {
+    derive(isReadOnly: boolean, isHybrid: boolean, error: fdb.FDBError | null): TransactionImpl {
         if (this.db && this.dbTx) {
             // Reset when transaction is changed from read only to write
             if (this.isHybrid && isHybrid) {
@@ -64,7 +70,7 @@ export class TransactionImpl implements Transaction {
                     this.dbTx.rawReset();
                 }
             }
-            return new TransactionImpl(isReadOnly, isHybrid, { db: this.db, tx: this.dbTx });
+            return new TransactionImpl(isReadOnly, isHybrid, { db: this.db, tx: this.dbTx, error });
         } else {
             return new TransactionImpl(isReadOnly, isHybrid);
         }

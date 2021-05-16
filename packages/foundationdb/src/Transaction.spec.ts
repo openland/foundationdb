@@ -66,6 +66,12 @@ describe('Transaction', () => {
                 await inTx(createNamedContext('test'), async (ctx2) => {
                     db.allKeys.set(ctx2, Buffer.from([1]), Buffer.from([]));
                 });
+                expect(getTransaction(ctx).isRetry).toBe(false);
+                expect(getTransaction(ctx).retryError).toBeNull();
+            } else {
+                expect(getTransaction(ctx).isRetry).toBe(true);
+                expect(getTransaction(ctx).retryError).not.toBeNull();
+                expect(getTransaction(ctx).retryError!.code).toBe(1020);
             }
             db.allKeys.set(ctx, Buffer.from([1]), Buffer.from([1]));
             iteration++;

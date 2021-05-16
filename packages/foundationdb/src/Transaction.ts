@@ -45,6 +45,16 @@ export interface Transaction {
      */
     readonly userData: Map<string, any>;
 
+    /** 
+     * If transaction in retrying state
+     */
+    readonly isRetry: boolean;
+
+    /**
+     * Retry error
+     */
+    readonly retryError: fdb.FDBError | null;
+
     /**
      * Hook that will be called right before transaction commit,  
      * before starting or before completion of inner transaction.

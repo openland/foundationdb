@@ -15,8 +15,8 @@ async function doInTx<T>(type: 'rw' | 'ro' | 'hybrid', _ctx: Context, callback: 
         // Implementation is copied from database.js from foundationdb library.
         let switchToWrite = false;
         let tx = TransactionImpl.createTransaction(type === 'ro' ? true : (type === 'hybrid' ? true : false), type === 'hybrid');
+        let error: FDBError | null = null;
         do {
-            tx = tx.derive(type === 'ro' ? true : (type === 'hybrid' ? !switchToWrite : false), type === 'hybrid');
             const ctxi = TransactionContext.set(ctx, tx);
             TransactionTracer.onTx(ctx);
             try {
@@ -30,11 +30,13 @@ async function doInTx<T>(type: 'rw' | 'ro' | 'hybrid', _ctx: Context, callback: 
             } catch (err) {
                 TransactionTracer.onError(ctx, err);
                 if (err instanceof FDBError) {
+                    error = err;
                     TransactionTracer.onFDBError(ctx, err);
                     await tx.handleError(err.code);
                 } else if (err instanceof WriteToReadOnlyContextError) {
                     if (type === 'hybrid') {
                         switchToWrite = true;
+                        error = null;
                     } else {
                         throw err;
                     }
@@ -42,6 +44,7 @@ async function doInTx<T>(type: 'rw' | 'ro' | 'hybrid', _ctx: Context, callback: 
                     throw err;
                 }
             }
+            tx = tx.derive(type === 'ro' ? true : (type === 'hybrid' ? !switchToWrite : false), type === 'hybrid', error);
             TransactionTracer.onRetry(ctx);
         } while (true);
     });
