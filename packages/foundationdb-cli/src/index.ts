@@ -2,7 +2,7 @@
 import program from 'commander';
 import treeify from 'treeify';
 
-import { Database, inTx } from '@openland/foundationdb';
+import { Database, getTransaction, inTx, resolveRangeParameters } from '@openland/foundationdb';
 import { createNamedContext } from '@openland/context';
 const version = require(__dirname + '/../package.json').version as string;
 const rootCtx = createNamedContext('ofdbcli');
@@ -39,24 +39,24 @@ program.command('du')
     .action(async () => {
         const database = await Database.open();
         async function measureDirectory(parent: string[]) {
-            console.log(parent.join(' -> ') + ': Counting');
+            // console.log(parent.join(' -> ') + ': Counting');
             let keyBytes = 0;
             let keyCount = 0;
             let valueBytes = 0;
             let cursor: Buffer | null = null;
+            let iteration = 0;
             await inTx(rootCtx, async (ctx) => {
+                if (iteration > 0) {
+                    console.log(parent.join(' -> ') + ': Counting ' + iteration);
+                }
                 let subspace = await database.directories.open(ctx, parent);
-                while (true) {
-                    let read = await subspace.range(ctx, ZERO, { after: cursor ? cursor : undefined, limit: 1000 });
-                    if (read.length === 0) {
-                        break;
-                    }
-                    for (let r of read) {
-                        keyBytes += r.key.length;
-                        valueBytes += r.value.length;
-                        keyCount++;
-                        cursor = r.key;
-                    }
+                let tx = getTransaction(ctx)!.rawReadTransaction(database);
+                let args = resolveRangeParameters({ after: cursor ? cursor : undefined, prefix: subspace.prefix, key: ZERO });
+                for await (const [key, value] of tx.getRange(args.start, args.end)) {
+                    keyBytes += key.length;
+                    valueBytes += value.length;
+                    keyCount++;
+                    cursor = key.subarray(subspace.prefix.length);
                 }
             });
             console.log(parent.join(' -> ') + ': ' + JSON.stringify({ keyBytes, valueBytes, keyCount }));

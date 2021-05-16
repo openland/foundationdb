@@ -20,3 +20,4 @@ export { TaskExecutor, Task, createDefaultTaskExecutor } from './TaskExecutor';
 export { runInBatch } from './runInBatch';
 export { TransactionContext } from './impl/TransactionContext';
 export { Future } from './Future';
+export { resolveRangeParameters } from './impl/resolveRangeParameters';
