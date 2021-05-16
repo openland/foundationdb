@@ -49,6 +49,7 @@ program.command('du')
                 if (iteration > 0) {
                     console.log(parent.join(' -> ') + ': Counting ' + iteration);
                 }
+                iteration++;
                 let subspace = await database.directories.open(ctx, parent);
                 let tx = getTransaction(ctx)!.rawReadTransaction(database);
                 let args = resolveRangeParameters({ after: cursor ? cursor : undefined, prefix: subspace.prefix, key: ZERO });
