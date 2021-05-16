@@ -121,6 +121,22 @@ export function generateEvents(schema: SchemaModel, builder: StringBuilder) {
         builder.removeIndent();
         builder.append(`}`);
 
+        // Find All with keys
+        builder.append();
+        builder.append(`async findAllWithKeys(ctx: Context${eventStore.keys.length > 0 ? ', ' + eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ') : ''}) {`);
+        builder.addIndent();
+        builder.append(`return this._findAllWithKeys(ctx, [${eventStore.keys.map((v) => v.name).join(', ')}]);`);
+        builder.removeIndent();
+        builder.append(`}`);
+
+        // Find
+        builder.append();
+        builder.append(`find(ctx: Context, ${eventStore.keys.length > 0 ? eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ') + ', ' : ''}opts?: { batchSize?: number, after?: Buffer }) {`);
+        builder.addIndent();
+        builder.append(`return this._find(ctx, [${eventStore.keys.map((v) => v.name).join(', ')}], opts);`);
+        builder.removeIndent();
+        builder.append(`}`);
+
         // Create Stream
         builder.append();
         builder.append(`createStream(${eventStore.keys.length > 0 ? eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ') + ', ' : ''}opts?: { batchSize?: number, after?: string }) {`);
@@ -150,6 +166,14 @@ export function generateEvents(schema: SchemaModel, builder: StringBuilder) {
         builder.append(`createRawLiveStream(ctx: Context${eventStore.keys.length > 0 ? ', ' + eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ') : ''}, opts?: { batchSize?: number, after?: string }) {`);
         builder.addIndent();
         builder.append(`return this._createRawLiveStream(ctx, [${eventStore.keys.map((v) => v.name).join(', ')}], opts);`);
+        builder.removeIndent();
+        builder.append(`}`);
+
+        // Delete key
+        builder.append();
+        builder.append(`deleteKey(ctx: Context${eventStore.keys.length > 0 ? ', ' + eventStore.keys.map((v) => v.name + ': ' + resolveType(v.type, false)).join(', ') : ''}, eventKey: Buffer) {`);
+        builder.addIndent();
+        builder.append(`return this._deleteEvent(ctx, [${eventStore.keys.map((v) => v.name).join(', ')}], eventKey);`);
         builder.removeIndent();
         builder.append(`}`);
 

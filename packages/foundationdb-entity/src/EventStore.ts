@@ -36,6 +36,26 @@ export abstract class EventStore {
             .map((v) => this.descriptor.factory.decode(v.value));
     }
 
+    protected async _findAllWithKeys(ctx: Context, key: PrimaryKeyType[]) {
+        return (await this.descriptor.subspace
+            .subspace(encoders.tuple.pack(key))
+            .range(ctx, ZERO))
+            .map((v) => ({ key: v.key, event: this.descriptor.factory.decode(v.value) }));
+    }
+
+    protected async _find(ctx: Context, key: PrimaryKeyType[], opts?: { batchSize?: number, after?: Buffer }) {
+        return (await this.descriptor.subspace
+            .subspace(encoders.tuple.pack(key))
+            .range(ctx, ZERO, { after: opts && opts.after ? opts.after : undefined, limit: opts && opts.batchSize ? opts.batchSize : undefined }))
+            .map((v) => ({ key: v.key, event: this.descriptor.factory.decode(v.value) }));
+    }
+
+    protected _deleteEvent(ctx: Context, key: PrimaryKeyType[], eventKey: Buffer) {
+        this.descriptor.subspace
+            .subspace(encoders.tuple.pack(key))
+            .clear(ctx, eventKey);
+    }
+
     protected _createRawStream(key: PrimaryKeyType[], opts?: { batchSize?: number, after?: string }) {
         return new EventStream<any>(this.descriptor, encoders.tuple.pack(key), opts && opts.batchSize || 5000, (src) => src, opts && opts.after);
     }
@@ -64,13 +84,13 @@ export abstract class EventStore {
         return {
             cursor: event.cursor,
             items: this.decodeRawStreamItem(event.items)
-        }
+        };
     }
 
     encodeRawLiveStreamItem(event: LiveStreamItem<BaseEvent>): LiveStreamItem<any> {
         return {
             cursor: event.cursor,
             items: this.encodeRawStreamItem(event.items)
-        }
+        };
     }
 }

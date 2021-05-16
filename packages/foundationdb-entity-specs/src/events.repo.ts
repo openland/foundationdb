@@ -68,6 +68,14 @@ export class UserEvents extends EventStore {
         return this._findAll(ctx, [userId]);
     }
 
+    async findAllWithKeys(ctx: Context, userId: string) {
+        return this._findAllWithKeys(ctx, [userId]);
+    }
+
+    find(ctx: Context, userId: string, opts?: { batchSize?: number, after?: Buffer }) {
+        return this._find(ctx, [userId], opts);
+    }
+
     createStream(userId: string, opts?: { batchSize?: number, after?: string }) {
         return this._createStream([userId], opts);
     }
@@ -82,6 +90,10 @@ export class UserEvents extends EventStore {
 
     createRawLiveStream(ctx: Context, userId: string, opts?: { batchSize?: number, after?: string }) {
         return this._createRawLiveStream(ctx, [userId], opts);
+    }
+
+    deleteKey(ctx: Context, userId: string, eventKey: Buffer) {
+        return this._deleteEvent(ctx, [userId], eventKey);
     }
 }
 
