@@ -90,4 +90,33 @@ describe('Events', () => {
         expect((ex[1] as SampleEvent).id).toBe('4');
         expect(stream.cursor).not.toBeFalsy();
     });
+
+    it('should delete events', async () => {
+        let root = createNamedContext('test');
+        let db = await openTestDatabase();
+        let store = await openStore(new EntityStorage(db));
+
+        // Create initial
+        await inTx(root, async (ctx) => {
+            store.UserEvents.post(ctx, 'user1', SampleEvent.create({ id: '1' }));
+            store.UserEvents.post(ctx, 'user1', SampleEvent.create({ id: '2' }));
+        });
+
+        // Read all events
+        let events = await inTx(root, async (ctx) => {
+            return await store.UserEvents.find(ctx, 'user1');
+        });
+        expect(events.length).toBe(2);
+
+        // Delete event
+        await inTx(root, async (ctx) => {
+            store.UserEvents.deleteKey(ctx, 'user1', events[0].key);
+        });
+
+        // Check result
+        events = await inTx(root, async (ctx) => {
+            return await store.UserEvents.find(ctx, 'user1');
+        });
+        expect(events.length).toBe(1);
+    });
 });
