@@ -2,14 +2,16 @@
 // tslint:disable:no-console
 
 import program from 'commander';
-// import treeify from 'treeify';
+import treeify from 'treeify';
 import ora from 'ora';
 import filesize from 'filesize';
+import fs from 'fs';
 
 import { Database, getTransaction, inTx, resolveRangeParameters } from '@openland/foundationdb';
 import { createNamedContext } from '@openland/context';
 import { findAllDirectories } from './ops/findAllDirectories';
 import { findMisusedRanges } from './ops/findMisusedRanges';
+import { createTree, getTreeItem, materializeTree, parseTree, setTreeItem } from './ops/tree';
 const version = require(__dirname + '/../package.json').version as string;
 const rootCtx = createNamedContext('ofdbcli');
 const ZERO = Buffer.from([]);
@@ -34,12 +36,25 @@ program.command('ls')
 // Size usage
 program.command('du')
     .description('Read all directories in database')
-    .option('-r [path]', 'Recover path')
-    .option('-o [path]', 'Output path')
-    .action(async () => {
+    .option('-r, --recover <recover>', 'Recover path')
+    .option('-o, --output <path>', 'Output path')
+    .action(async (options) => {
         function formatSize(keySize: number, valueSize: number, count: number) {
             return `${filesize(keySize)}/${filesize(valueSize)}/${count}`;
         }
+
+        // Read recovery
+        let tree = createTree<{ keySize: number, valueSize: number, count: number }>({ keySize: 0, valueSize: 0, count: 0 });
+        if (options.recover) {
+            if (fs.existsSync(options.recover)) {
+                tree = parseTree(JSON.parse(fs.readFileSync(options.recover, 'utf-8')));
+            }
+        }
+
+        function saveRecovery() {
+            fs.writeFileSync(options.recover, JSON.stringify(materializeTree(tree)), 'utf-8');
+        }
+
         const spinner = ora('Loading directories').start();
         const database = await Database.open();
         async function measureDirectory(parent: string[]) {
@@ -66,12 +81,37 @@ program.command('du')
             spinner.clear();
             console.log(parent.join(' -> ') + ': ' + (formatSize(keyBytes, valueBytes, keyCount)));
             spinner.render();
+            return { keyBytes, valueBytes, keyCount };
         }
         const directories = await findAllDirectories(rootCtx, database);
         for (let dir of directories) {
-            spinner.text = 'Measuring ' + dir.path.join(' -> ');
-            await measureDirectory(dir.path);
+            let ex = getTreeItem(tree, dir.path);
+            if (!ex) {
+                spinner.text = 'Measuring ' + dir.path.join(' -> ');
+                let r = await measureDirectory(dir.path);
+                for (let i = 0; i <= dir.path.length; i++) {
+                    let v = getTreeItem(tree, dir.path.slice(0, i))!;
+                    if (v) {
+                        v.value.count += r.keyCount;
+                        v.value.keySize += r.keyBytes;
+                        v.value.valueSize += r.valueBytes;
+                    } else {
+                        setTreeItem(tree, dir.path.slice(0, i), { count: r.keyCount, keySize: r.keyBytes, valueSize: r.valueBytes });
+                    }
+                }
+                if (options.recover) {
+                    saveRecovery();
+                }
+            }
         }
+
+        if (options.output) {
+            fs.writeFileSync(options.output, JSON.stringify(materializeTree(tree)), 'utf-8');
+        }
+
+        spinner.clear();
+        console.log(treeify.asTree(materializeTree(tree), true, false));
+        spinner.render();
         spinner.succeed('Completed').stop();
     });
 
