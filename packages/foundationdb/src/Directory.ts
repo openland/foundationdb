@@ -15,7 +15,7 @@ export interface Directory extends Subspace {
 export class DirectorySubspace extends ChildSubspace implements Directory {
     readonly path: string[];
     readonly prefix: Buffer;
-    private readonly layer: DirectoryLayer;
+    readonly layer: DirectoryLayer;
 
     constructor(layer: DirectoryLayer, path: string[], prefix: Buffer) {
         super(layer.db, prefix);
