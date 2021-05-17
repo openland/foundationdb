@@ -5,6 +5,7 @@ import program from 'commander';
 import { Database, getTransaction, inTx, resolveRangeParameters } from '@openland/foundationdb';
 import { createNamedContext } from '@openland/context';
 import { findAllDirectories } from './ops/findAllDirectories';
+import { findMisusedRanges } from './ops/findMisusedRanges';
 const version = require(__dirname + '/../package.json').version as string;
 const rootCtx = createNamedContext('ofdbcli');
 const ZERO = Buffer.from([]);
@@ -55,24 +56,37 @@ program.command('du')
             });
             console.log(parent.join(' -> ') + ': ' + JSON.stringify({ keyBytes, valueBytes, keyCount }));
         }
-        async function processDirectory(parent: string[]): Promise<any> {
-            if (parent.length > 0) {
-                await measureDirectory(parent);
-            }
-            let dirs = await inTx(rootCtx, async (ctx) => {
-                return await database.directories.listAll(ctx, parent.length > 0 ? parent : undefined);
-            });
-            for (let d of dirs) {
-                await processDirectory([...parent, d]);
-            }
+        const directories = await findAllDirectories(rootCtx, database);
+        for (let dir of directories) {
+            await measureDirectory(dir.path);
         }
-        await processDirectory([]);
     });
 
 program.command('fm')
     .description('Find used key spaces outside of directories')
     .action(async () => {
         const database = await Database.open();
+        const directories = await findAllDirectories(rootCtx, database);
+        const sorted = directories.map((v) => v.key).sort(Buffer.compare);
+        if (sorted.length === 0) {
+            console.log('No directories found');
+            return;
+        }
+
+        const misused = await findMisusedRanges(rootCtx, sorted, database.allKeys);
+        if (misused.length === 0) {
+            console.log('No misused keys found');
+        } else {
+            for (let m of misused) {
+                if (m.start === null) {
+                    console.log('Found invalid key range: <start> - 0x' + m.end!.toString('hex'));
+                } else if (m.end === null) {
+                    console.log('Found invalid key range: 0x' + m.start!.toString('hex') + ' - <end>');
+                } else {
+                    console.log('Found invalid key range: 0x' + m.start!.toString('hex') + ' - 0x' + m.end!.toString('hex'));
+                }
+            }
+        }
     });
 
 program.parse(process.argv);
