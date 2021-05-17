@@ -48,10 +48,12 @@ describe('MultiMutex', () => {
         let fn1 = jest.fn();
         let fn2 = jest.fn();
         mm.runExclusive(['123'], async () => {
+            await null;
             fn1();
             await null;
         });
         mm.runExclusive(['333'], async () => {
+            await null;
             fn2();
             await null;
         });

@@ -71,7 +71,11 @@ export class MultiMutex {
 
     runExclusive = async <T>(src: string[], fn: () => Promise<T>): Promise<T> => {
         try {
-            await this.acquire(src);
+            if (this.isLocked(src)) {
+                await this.acquire(src);
+            } else {
+                this.acquireSync(src);
+            }
             return await fn();
         } finally {
             this.release(src);

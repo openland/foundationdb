@@ -35,15 +35,15 @@ export class GlobalSubspace implements Subspace {
         return new ChildSubspace(this.db, key);
     }
 
-    async get(ctx: Context, key: Buffer) {
-        return await SubspaceTracer.get(ctx, key, async () => {
+    get(ctx: Context, key: Buffer) {
+        return SubspaceTracer.get(ctx, key, async () => {
             let tx = getTransaction(ctx).rawReadTransaction(this.db);
             return (await tx.get(key)) || null;
         });
     }
 
-    async snapshotGet(ctx: Context, key: Buffer) {
-        return await SubspaceTracer.get(ctx, key, async () => {
+    snapshotGet(ctx: Context, key: Buffer) {
+        return SubspaceTracer.get(ctx, key, async () => {
             let tx = getTransaction(ctx).rawReadTransaction(this.db);
             return (await tx.snapshot().get(Buffer.concat([this.prefix, key]))) || null;
         });
@@ -60,8 +60,8 @@ export class GlobalSubspace implements Subspace {
         return tx.snapshot().exists(key);
     }
 
-    async range(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
-        return await SubspaceTracer.range(ctx, key, opts, async () => {
+    range(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
+        return SubspaceTracer.range(ctx, key, opts, async () => {
             let tx = getTransaction(ctx).rawReadTransaction(this.db);
             let args = resolveRangeParameters({ after: opts && opts.after, before: opts && opts.before, reverse: opts && opts.reverse, prefix: empty, key });
             return (await tx.getRangeAll(args.start, args.end, {
@@ -71,8 +71,8 @@ export class GlobalSubspace implements Subspace {
         });
     }
 
-    async snapshotRange(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
-        return await SubspaceTracer.range(ctx, key, opts, async () => {
+    snapshotRange(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
+        return SubspaceTracer.range(ctx, key, opts, async () => {
             let tx = getTransaction(ctx).rawReadTransaction(this.db).snapshot();
             let args = resolveRangeParameters({ after: opts && opts.after, before: opts && opts.before, reverse: opts && opts.reverse, prefix: empty, key });
             return (await tx.getRangeAll(args.start, args.end, {

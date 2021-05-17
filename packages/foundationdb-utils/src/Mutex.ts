@@ -36,12 +36,18 @@ export class Mutex {
         }
     }
 
-    runExclusive = async <T>(fn: () => Promise<T>): Promise<T> => {
-        try {
-            await this.acquire();
-            return await fn();
-        } finally {
-            this.release();
-        }
+    runExclusive = <T>(fn: () => Promise<T>): Promise<T> => {
+        return (async () => {
+            if (!this.locked) {
+                this.acquireSync();
+            } else {
+                await this.acquire();
+            }
+            try {
+                return await fn();
+            } finally {
+                this.release();
+            }
+        })();
     }
 }

@@ -33,15 +33,15 @@ export class ChildSubspace implements Subspace {
         return new ChildSubspace(this.db, Buffer.concat([this.prefix, key]));
     }
 
-    async get(ctx: Context, key: Buffer) {
-        return await SubspaceTracer.get(ctx, key, async () => {
+    get(ctx: Context, key: Buffer) {
+        return SubspaceTracer.get(ctx, key, async () => {
             let tx = getTransaction(ctx)!.rawReadTransaction(this.db);
             return (await tx.get(Buffer.concat([this.prefix, key]))) || null;
         });
     }
 
-    async snapshotGet(ctx: Context, key: Buffer) {
-        return await SubspaceTracer.get(ctx, key, async () => {
+    snapshotGet(ctx: Context, key: Buffer) {
+        return SubspaceTracer.get(ctx, key, async () => {
             let tx = getTransaction(ctx)!.rawReadTransaction(this.db);
             return (await tx.snapshot().get(Buffer.concat([this.prefix, key]))) || null;
         });
@@ -57,15 +57,15 @@ export class ChildSubspace implements Subspace {
         return tx.snapshot().exists(Buffer.concat([this.prefix, key]));
     }
 
-    async range(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
-        return SubspaceTracer.range(ctx, key, opts, async () => {
+    range(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
+        return SubspaceTracer.range(ctx, key, opts, () => {
             let tx = getTransaction(ctx)!.rawReadTransaction(this.db);
             return this.doRange(tx, key, opts);
         });
     }
 
-    async snapshotRange(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
-        return SubspaceTracer.range(ctx, key, opts, async () => {
+    snapshotRange(ctx: Context, key: Buffer, opts?: RangeOptions<Buffer>) {
+        return SubspaceTracer.range(ctx, key, opts, () => {
             let tx = getTransaction(ctx)!.rawReadTransaction(this.db);
             return this.doRange(tx.snapshot(), key, opts);
         });
