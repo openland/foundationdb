@@ -1,6 +1,10 @@
 #!/usr/bin/env node
+// tslint:disable:no-console
+
 import program from 'commander';
 // import treeify from 'treeify';
+import ora from 'ora';
+import filesize from 'filesize';
 
 import { Database, getTransaction, inTx, resolveRangeParameters } from '@openland/foundationdb';
 import { createNamedContext } from '@openland/context';
@@ -30,10 +34,15 @@ program.command('ls')
 // Size usage
 program.command('du')
     .description('Read all directories in database')
+    .option('-r [path]', 'Recover path')
+    .option('-o [path]', 'Output path')
     .action(async () => {
+        function formatSize(keySize: number, valueSize: number, count: number) {
+            return `${filesize(keySize)}/${filesize(valueSize)}/${count}`;
+        }
+        const spinner = ora('Loading directories').start();
         const database = await Database.open();
         async function measureDirectory(parent: string[]) {
-            // console.log(parent.join(' -> ') + ': Counting');
             let keyBytes = 0;
             let keyCount = 0;
             let valueBytes = 0;
@@ -41,7 +50,7 @@ program.command('du')
             let iteration = 0;
             await inTx(rootCtx, async (ctx) => {
                 if (iteration > 0) {
-                    console.log(parent.join(' -> ') + ': Counting ' + iteration);
+                    spinner.text = 'Measuring ' + parent.join(' -> ') + ': ' + (formatSize(keyBytes, valueBytes, keyCount));
                 }
                 iteration++;
                 let subspace = await database.directories.open(ctx, parent);
@@ -54,12 +63,16 @@ program.command('du')
                     cursor = key.subarray(subspace.prefix.length);
                 }
             });
-            console.log(parent.join(' -> ') + ': ' + JSON.stringify({ keyBytes, valueBytes, keyCount }));
+            spinner.clear();
+            console.log(parent.join(' -> ') + ': ' + (formatSize(keyBytes, valueBytes, keyCount)));
+            spinner.render();
         }
         const directories = await findAllDirectories(rootCtx, database);
         for (let dir of directories) {
+            spinner.text = 'Measuring ' + dir.path.join(' -> ');
             await measureDirectory(dir.path);
         }
+        spinner.succeed('Completed').stop();
     });
 
 program.command('fm')
