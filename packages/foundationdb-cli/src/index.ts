@@ -144,6 +144,18 @@ program.command('fm')
         }
     });
 
+// Size usage
+program.command('status')
+    .description('Read status')
+    .action(async () => {
+        const database = await Database.open();
+        let status = await inTx(rootCtx, async (ctx) => {
+            getTransaction(ctx).setOptions({ read_system_keys: true });
+            return (await database.allKeys.get(ctx, Buffer.concat([Buffer.of(0xff, 0xff), Buffer.from('/status/json', 'utf-8')])))!;
+        });
+        console.log(status.toString('utf-8'));
+    });
+
 program.parse(process.argv);
 
 // console.log('Hello world, ', process.argv);
