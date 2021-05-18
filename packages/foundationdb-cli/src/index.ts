@@ -6,6 +6,8 @@ import treeify from 'treeify';
 import ora from 'ora';
 import filesize from 'filesize';
 import fs from 'fs';
+import { disableAll } from '@openland/log';
+disableAll();
 
 import { Database, getTransaction, inTx, resolveRangeParameters } from '@openland/foundationdb';
 import { createNamedContext } from '@openland/context';
