@@ -1,4 +1,4 @@
-type Tree<T> = { child: Map<string, Tree<T>>, value: T };
+export type Tree<T> = { child: Map<string, Tree<T>>, value: T };
 
 export function createTree<T>(rootValue: T): Tree<T> {
     return { child: new Map(), value: rootValue };

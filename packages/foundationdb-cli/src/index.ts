@@ -13,7 +13,7 @@ import { Database, getTransaction, inTx, resolveRangeParameters } from '@openlan
 import { createNamedContext } from '@openland/context';
 import { findAllDirectories } from './ops/findAllDirectories';
 import { findMisusedRanges } from './ops/findMisusedRanges';
-import { createTree, getTreeItem, materializeTree, parseTree, setTreeItem } from './ops/tree';
+import { createTree, getTreeItem, materializeTree, parseTree, setTreeItem, Tree } from './ops/tree';
 const version = require(__dirname + '/../package.json').version as string;
 const rootCtx = createNamedContext('ofdbcli');
 const ZERO = Buffer.from([]);
@@ -92,13 +92,12 @@ program.command('du')
                 spinner.text = 'Measuring ' + dir.path.join(' -> ');
                 let r = await measureDirectory(dir.path);
                 for (let i = 0; i <= dir.path.length; i++) {
-                    let v = getTreeItem(tree, dir.path.slice(0, i))!;
-                    if (v) {
-                        v.value.count += r.keyCount;
-                        v.value.keySize += r.keyBytes;
-                        v.value.valueSize += r.valueBytes;
+                    if (i === dir.path.length) {
+                        setTreeItem(tree, dir.path, { count: r.keyCount, keySize: r.keyBytes, valueSize: r.valueBytes });
                     } else {
-                        setTreeItem(tree, dir.path.slice(0, i), { count: r.keyCount, keySize: r.keyBytes, valueSize: r.valueBytes });
+                        if (!getTreeItem(tree, dir.path.slice(0, i))) {
+                            setTreeItem(tree, dir.path.slice(0, i), { count: 0, keySize: 0, valueSize: 0 });
+                        }
                     }
                 }
                 if (options.recover) {
@@ -107,12 +106,53 @@ program.command('du')
             }
         }
 
+        // Convert to tree
+        type PrintedTree = { size: number, count: number, keySize: number, valueSize: number, children?: { [key: string]: PrintedTree } };
+        function printTree(src: Tree<{ keySize: number, valueSize: number, count: number }>): PrintedTree {
+            let size = src.value.keySize + src.value.valueSize;
+            let count = src.value.count;
+            let keySize = src.value.keySize;
+            let valueSize = src.value.valueSize;
+            let children: { [key: string]: PrintedTree } = {};
+            if (src.child.size === 0) {
+                return { size, count, keySize, valueSize };
+            } else {
+                if (src.value.count !== 0) {
+                    children['$self'] = {
+                        size,
+                        count,
+                        keySize,
+                        valueSize
+                    }
+                }
+
+                let unsorted: [string, PrintedTree][] = [];
+                for (let ch of src.child.keys()) {
+                    let r = src.child.get(ch)!;
+                    let p = printTree(r);
+                    size += p.size;
+                    count += p.count;
+                    keySize += p.keySize;
+                    valueSize += p.valueSize;
+                    unsorted.push([ch, p]);
+                }
+                unsorted.sort(function (a, b) {
+                    return b[1].size - a[1].size;
+                });
+                for (let k of unsorted) {
+                    children[k[0]] = k[1];
+                }
+                return { size, count, keySize, valueSize, children };
+            }
+        }
+        const printedTree = printTree(tree);
+
         if (options.output) {
-            fs.writeFileSync(options.output, JSON.stringify(materializeTree(tree)), 'utf-8');
+            fs.writeFileSync(options.output, JSON.stringify(printedTree), 'utf-8');
         }
 
         spinner.clear();
-        console.log(treeify.asTree(materializeTree(tree), true, false));
+        console.log(treeify.asTree(printedTree as any, true, false));
         spinner.render();
         spinner.succeed('Completed').stop();
     });

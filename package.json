@@ -16,7 +16,7 @@
     "coverage": "yarn jest --coverage",
     "release": "yarn clean && yarn build && yarn test && yarn lerna publish --force-publish",
     "canary": "yarn clean && yarn build && yarn test && yarn lerna publish --force-publish --canary",
-    "cli": "yarn tsc --build && node ./packages/foundationdb-cli/lib/index.js --"
+    "cli": "yarn tsc --build && node ./packages/foundationdb-cli/lib/index.js"
   },
   "devDependencies": {
     "@types/change-case": "^2.3.1",
