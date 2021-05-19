@@ -2,14 +2,16 @@ import { SingletonWorkerLayer } from './SingletonWorkerLayer';
 import { DistributedLock } from '@openland/foundationdb-locks';
 import { createNamedContext } from '@openland/context';
 import { Context } from '@openland/context';
-import { Database } from '@openland/foundationdb';
+import { Database, withTxPriority } from '@openland/foundationdb';
 import { foreverBreakable, delay, delayBreakable } from '@openland/foundationdb-utils';
 
-export function singletonWorker(config: { db: Database, name: string, version?: number, delay?: number, startDelay?: number }, worker: (ctx: Context) => Promise<void>) {
+export function singletonWorker(config: { db: Database, name: string, version?: number, delay?: number, startDelay?: number, priority?: 'default' | 'immediate' | 'batch' }, worker: (ctx: Context) => Promise<void>) {
     let working = true;
     let wasStarted = false;
     let layer = config.db.get(SingletonWorkerLayer);
+    const priority: 'default' | 'immediate' | 'batch' = config.priority || 'batch';
     let ctx = createNamedContext('singleton-' + config.name);
+    ctx = withTxPriority(ctx, priority);
     let timeout = 30000;
     let refreshInterval = 5000;
     let awaiter: (() => void) | undefined;
