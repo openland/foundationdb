@@ -4,6 +4,7 @@ import { TransactionContext } from './impl/TransactionContext';
 import { FDBError } from 'foundationdb';
 import { Context } from '@openland/context';
 import { TransactionTracer } from './tracing';
+import { PriorityContext } from './impl/PriorityContext';
 
 async function doInTx<T>(type: 'rw' | 'ro' | 'hybrid', _ctx: Context, callback: (ctx: Context) => Promise<T>): Promise<T> {
     let ex = TransactionContext.get(_ctx);
@@ -14,7 +15,8 @@ async function doInTx<T>(type: 'rw' | 'ro' | 'hybrid', _ctx: Context, callback: 
     return await TransactionTracer.tx(_ctx, async (ctx) => {
         // Implementation is copied from database.js from foundationdb library.
         let switchToWrite = false;
-        let tx = TransactionImpl.createTransaction(type === 'ro' ? true : (type === 'hybrid' ? true : false), type === 'hybrid');
+        const priority = PriorityContext.get(ctx);
+        let tx = TransactionImpl.createTransaction(type === 'ro' ? true : (type === 'hybrid' ? true : false), type === 'hybrid', priority);
         let error: FDBError | null = null;
         do {
             const ctxi = TransactionContext.set(ctx, tx);

@@ -9,8 +9,8 @@ import { Versionstamp, VersionstampRef } from '@openland/foundationdb-tuple';
 
 export class TransactionImpl implements Transaction {
 
-    static createTransaction(isReadOnly: boolean, isHybrid: boolean) {
-        return new TransactionImpl(isReadOnly, isHybrid);
+    static createTransaction(isReadOnly: boolean, isHybrid: boolean, priority: 'default' | 'immediate' | 'batch') {
+        return new TransactionImpl(isReadOnly, isHybrid, priority);
     }
 
     // ID
@@ -48,8 +48,15 @@ export class TransactionImpl implements Transaction {
     private vtPromise: Promise<Buffer> | null = null;
     private version?: Buffer;
     private versionstampIndex = 0;
+    private priority: 'default' | 'immediate' | 'batch';
 
-    private constructor(isReadOnly: boolean, isHybrid: boolean, retry?: { error: fdb.FDBError | null, db: Database, tx: fdb.Transaction }) {
+    private constructor(
+        isReadOnly: boolean,
+        isHybrid: boolean,
+        priority: 'default' | 'immediate' | 'batch',
+        retry?: { error: fdb.FDBError | null, db: Database, tx: fdb.Transaction }
+    ) {
+        this.priority = priority;
         this.isReadOnly = isReadOnly;
         this.isHybrid = isHybrid;
         this.isRetry = !!retry;
@@ -70,9 +77,9 @@ export class TransactionImpl implements Transaction {
                     this.dbTx.rawReset();
                 }
             }
-            return new TransactionImpl(isReadOnly, isHybrid, { db: this.db, tx: this.dbTx, error });
+            return new TransactionImpl(isReadOnly, isHybrid, this.priority, { db: this.db, tx: this.dbTx, error });
         } else {
-            return new TransactionImpl(isReadOnly, isHybrid);
+            return new TransactionImpl(isReadOnly, isHybrid, this.priority);
         }
     }
 
@@ -98,7 +105,11 @@ export class TransactionImpl implements Transaction {
 
         if (!this.db || !this.dbTx) {
             this.db = db;
-            this.dbTx = db.rawDB.rawCreateTransaction(this.options);
+            this.dbTx = db.rawDB.rawCreateTransaction({
+                ...(this.priority === 'batch' ? { priority_batch: true } : {}),
+                ...(this.priority === 'immediate' ? { priority_system_immediate: true } : {}),
+                ...this.options
+            });
         }
         if (!this.rawTx) {
             if (this.isReadOnly) {
