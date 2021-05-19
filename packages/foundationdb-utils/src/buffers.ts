@@ -157,3 +157,24 @@ export function bufferShiftLeft(src: Buffer, shift: number): Buffer {
     }
     return Buffer.from(data);
 }
+
+// From JAVA bindings
+// https://github.com/apple/foundationdb/blob/6571e9e78cd0f22af5e283f0d5b7c3dde661afc4/bindings/java/src/main/com/apple/foundationdb/tuple/ByteArrayUtil.java#L435
+export function formatBuffer(src: Buffer) {
+    let res = '';
+    for (let i = 0; i < src.length; i++) {
+        let code = src.readUInt8(i);
+        if (
+            code >= 32 && code < 127 && code !== 92 /* \ */
+        ) {
+            res += String.fromCharCode(code);
+        } else {
+            let c = code.toString(16);
+            if (c.length < 2) {
+                c = '0' + c;
+            }
+            res += '\\x' + c;
+        }
+    }
+    return res;
+}

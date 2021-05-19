@@ -7,16 +7,51 @@ import ora from 'ora';
 import filesize from 'filesize';
 import fs from 'fs';
 import { disableAll } from '@openland/log';
+import prompts from 'prompts';
 disableAll();
 
-import { Database, getTransaction, inTx, resolveRangeParameters } from '@openland/foundationdb';
+import { Database, getTransaction, inTx, keyNext, resolveRangeParameters, Subspace } from '@openland/foundationdb';
 import { createNamedContext } from '@openland/context';
 import { findAllDirectories } from './ops/findAllDirectories';
 import { findMisusedRanges } from './ops/findMisusedRanges';
 import { createTree, getTreeItem, materializeTree, parseTree, setTreeItem, Tree } from './ops/tree';
+import { formatBuffer } from '@openland/foundationdb-utils';
 const version = require(__dirname + '/../package.json').version as string;
 const rootCtx = createNamedContext('ofdbcli');
 const ZERO = Buffer.from([]);
+
+function formatSize(keySize: number, valueSize: number, count: number) {
+    return `${filesize(keySize)}/${filesize(valueSize)}/${count}`;
+}
+
+
+async function measureSubspace(subspace: Subspace, spinner?: ora.Ora, tag?: string) {
+    let keyBytes = 0;
+    let keyCount = 0;
+    let valueBytes = 0;
+    let cursor: Buffer | null = null;
+    let iteration = 0;
+    await inTx(rootCtx, async (ctx) => {
+        if (iteration > 0 && tag && spinner) {
+            spinner.text = 'Measuring ' + tag + ': ' + (formatSize(keyBytes, valueBytes, keyCount));
+        }
+        iteration++;
+        let tx = getTransaction(ctx)!.rawReadTransaction(subspace.db);
+        let args = resolveRangeParameters({ after: cursor ? cursor : undefined, prefix: subspace.prefix, key: ZERO });
+        for await (const [key, value] of tx.getRange(args.start, args.end)) {
+            keyBytes += key.length;
+            valueBytes += value.length;
+            keyCount++;
+            cursor = key.subarray(subspace.prefix.length);
+        }
+    });
+    if (tag && spinner) {
+        spinner.clear();
+        console.log(tag + ': ' + (formatSize(keyBytes, valueBytes, keyCount)));
+        spinner.render();
+    }
+    return { keyBytes, valueBytes, keyCount };
+}
 
 // Description
 program
@@ -41,10 +76,6 @@ program.command('du')
     .option('-r, --recover <recover>', 'Recover path')
     .option('-o, --output <path>', 'Output path')
     .action(async (options) => {
-        function formatSize(keySize: number, valueSize: number, count: number) {
-            return `${filesize(keySize)}/${filesize(valueSize)}/${count}`;
-        }
-
         // Read recovery
         let tree = createTree<{ keySize: number, valueSize: number, count: number }>({ keySize: 0, valueSize: 0, count: 0 });
         if (options.recover) {
@@ -59,38 +90,14 @@ program.command('du')
 
         const spinner = ora('Loading directories').start();
         const database = await Database.open();
-        async function measureDirectory(parent: string[]) {
-            let keyBytes = 0;
-            let keyCount = 0;
-            let valueBytes = 0;
-            let cursor: Buffer | null = null;
-            let iteration = 0;
-            await inTx(rootCtx, async (ctx) => {
-                if (iteration > 0) {
-                    spinner.text = 'Measuring ' + parent.join(' -> ') + ': ' + (formatSize(keyBytes, valueBytes, keyCount));
-                }
-                iteration++;
-                let subspace = await database.directories.open(ctx, parent);
-                let tx = getTransaction(ctx)!.rawReadTransaction(database);
-                let args = resolveRangeParameters({ after: cursor ? cursor : undefined, prefix: subspace.prefix, key: ZERO });
-                for await (const [key, value] of tx.getRange(args.start, args.end)) {
-                    keyBytes += key.length;
-                    valueBytes += value.length;
-                    keyCount++;
-                    cursor = key.subarray(subspace.prefix.length);
-                }
-            });
-            spinner.clear();
-            console.log(parent.join(' -> ') + ': ' + (formatSize(keyBytes, valueBytes, keyCount)));
-            spinner.render();
-            return { keyBytes, valueBytes, keyCount };
-        }
         const directories = await findAllDirectories(rootCtx, database);
+
+        // Measuring directories
         for (let dir of directories) {
             let ex = getTreeItem(tree, dir.path);
             if (!ex) {
                 spinner.text = 'Measuring ' + dir.path.join(' -> ');
-                let r = await measureDirectory(dir.path);
+                let r = await measureSubspace(database.allKeys.subspace(dir.key), spinner, dir.path.join(' -> '));
                 for (let i = 0; i <= dir.path.length; i++) {
                     if (i === dir.path.length) {
                         setTreeItem(tree, dir.path, { count: r.keyCount, keySize: r.keyBytes, valueSize: r.valueBytes });
@@ -106,8 +113,13 @@ program.command('du')
             }
         }
 
+        // Measure directory registry
+        spinner.text = 'Measuring directories';
+        const r = await measureSubspace(database.allKeys.subspace(Buffer.of(0xfe)), spinner, 'Measuring directories');
+        setTreeItem(tree, ['$directories'], { keySize: r.keyBytes, valueSize: r.valueBytes, count: r.keyCount });
+
         // Convert to tree
-        type PrintedTree = { size: number, count: number, keySize: number, valueSize: number, children?: { [key: string]: PrintedTree } };
+        type PrintedTree = { sizeSt: string, size: number, count: number, keySizeSt: string, keySize: number, valueSizeSt: string, valueSize: number, children?: { [key: string]: PrintedTree } };
         function printTree(src: Tree<{ keySize: number, valueSize: number, count: number }>): PrintedTree {
             let size = src.value.keySize + src.value.valueSize;
             let count = src.value.count;
@@ -115,13 +127,24 @@ program.command('du')
             let valueSize = src.value.valueSize;
             let children: { [key: string]: PrintedTree } = {};
             if (src.child.size === 0) {
-                return { size, count, keySize, valueSize };
+                return {
+                    sizeSt: filesize(size),
+                    size,
+                    count,
+                    keySizeSt: filesize(keySize),
+                    keySize,
+                    valueSizeSt: filesize(valueSize),
+                    valueSize
+                };
             } else {
                 if (src.value.count !== 0) {
                     children['$self'] = {
+                        sizeSt: filesize(size),
                         size,
                         count,
+                        keySizeSt: filesize(keySize),
                         keySize,
+                        valueSizeSt: filesize(valueSize),
                         valueSize
                     }
                 }
@@ -142,7 +165,16 @@ program.command('du')
                 for (let k of unsorted) {
                     children[k[0]] = k[1];
                 }
-                return { size, count, keySize, valueSize, children };
+                return {
+                    sizeSt: filesize(size),
+                    size,
+                    count,
+                    keySizeSt: filesize(keySize),
+                    keySize,
+                    valueSizeSt: filesize(valueSize),
+                    valueSize,
+                    children
+                };
             }
         }
         const printedTree = printTree(tree);
@@ -157,21 +189,37 @@ program.command('du')
         spinner.succeed('Completed').stop();
     });
 
+program.command('da')
+    .description('Measure all keys and values in database')
+    .action(async () => {
+        const spinner = ora('Starting').start();
+        const database = await Database.open();
+        spinner.text = 'Measuring';
+        const r = await measureSubspace(database.allKeys, spinner, 'Measuring');
+        spinner.clear();
+        console.log(formatSize(r.keyBytes, r.valueBytes, r.keyCount));
+        spinner.render();
+        spinner.succeed('Completed').stop();
+    });
+
 program.command('fm')
     .description('Find used key spaces outside of directories')
     .action(async () => {
+        const spinner = ora('Starting').start();
         const database = await Database.open();
+        spinner.text = 'Loading directories';
         const directories = await findAllDirectories(rootCtx, database);
         const sorted = directories.map((v) => v.key).sort(Buffer.compare);
         if (sorted.length === 0) {
-            console.log('No directories found');
+            spinner.fail('No directories found').stop();
             return;
         }
-
+        spinner.text = 'Measuring';
         const misused = await findMisusedRanges(rootCtx, sorted, database.allKeys);
         if (misused.length === 0) {
-            console.log('No misused keys found');
+            spinner.succeed('No misused keys found').stop();
         } else {
+            spinner.clear();
             for (let m of misused) {
                 if (m.start === null) {
                     console.log('Found invalid key range: <start> - 0x' + m.end!.toString('hex'));
@@ -180,7 +228,56 @@ program.command('fm')
                 } else {
                     console.log('Found invalid key range: 0x' + m.start!.toString('hex') + ' - 0x' + m.end!.toString('hex'));
                 }
+                console.log('FROM: ' + formatBuffer(m.from));
+                console.log('TO: ' + formatBuffer(m.to));
             }
+            spinner.succeed('Completed').stop();
+        }
+    });
+
+program.command('fc')
+    .description('Find used key spaces outside of directories and delete them')
+    .action(async () => {
+        const spinner = ora('Starting').start();
+        const database = await Database.open();
+        spinner.text = 'Loading directories';
+        const directories = await findAllDirectories(rootCtx, database);
+        const sorted = directories.map((v) => v.key).sort(Buffer.compare);
+        if (sorted.length === 0) {
+            spinner.fail('No directories found').stop();
+            return;
+        }
+        spinner.text = 'Measuring';
+        const misused = await findMisusedRanges(rootCtx, sorted, database.allKeys);
+        if (misused.length === 0) {
+            spinner.succeed('No misused keys found').stop();
+        } else {
+            spinner.clear();
+            spinner.stop();
+            for (let m of misused) {
+                if (m.start === null) {
+                    console.log('Found invalid key range: <start> - 0x' + m.end!.toString('hex'));
+                } else if (m.end === null) {
+                    console.log('Found invalid key range: 0x' + m.start!.toString('hex') + ' - <end>');
+                } else {
+                    console.log('Found invalid key range: 0x' + m.start!.toString('hex') + ' - 0x' + m.end!.toString('hex'));
+                }
+                console.log('FROM: ' + formatBuffer(m.from));
+                console.log('TO  : ' + formatBuffer(m.to));
+                if ((await prompts({
+                    name: 'confirm',
+                    type: 'confirm',
+                    message: 'Clear range?'
+                })).confirm) {
+                    spinner.start('Clearing...');
+                    await inTx(rootCtx, async (ctx) => {
+                        database.allKeys.clearRange(ctx, m.from, keyNext(m.to));
+                    });
+                    spinner.clear();
+                    spinner.stop();
+                }
+            }
+            // spinner.succeed('Completed').stop();
         }
     });
 

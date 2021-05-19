@@ -16,6 +16,7 @@
     "dependencies": {
         "@openland/context": "*",
         "@openland/foundationdb": "^11.7.1",
+        "@openland/foundationdb-utils": "^11.7.1",
         "@openland/log": "*",
         "@types/uuid": "^3.4.3",
         "chalk": "^4.1.1",
@@ -27,6 +28,7 @@
         "ora": "^5.4.0",
         "path": "^0.12.7",
         "treeify": "^1.1.0",
-        "uuid": "^3.2.1"
+        "uuid": "^3.2.1",
+        "prompts": "^2.4.1"
     }
 }

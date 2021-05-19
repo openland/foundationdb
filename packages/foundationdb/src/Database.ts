@@ -47,9 +47,18 @@ export class Database {
         if (process.env.NODE_ENV === 'production') {
             throw Error('Trying to open test database in production mode');
         }
+
+        // Allocate prefix
         let nm = args && args.name ? args.name : 'test-' + randomNumbersString(64);
+        const main = await this.open();
+        let prefix = await inTx(createNamedContext('test'), async (ctx) => {
+            return (await main.directories.createOrOpen(ctx, ['com.openland.layers', 'tests', nm])).prefix;
+        });
+        await main.close(createNamedContext('test'));
+
+        // Reopen database with prefix
         let db: fdb.Database = fdb.open(args && args.clusterFile);
-        let res = new Database(db, Buffer.from(nm, 'utf-8'), args && args.microtasks);
+        let res = new Database(db, prefix, args && args.microtasks);
         await inTx(createNamedContext('test'), async (ctx) => {
             res.allKeys.clearPrefixed(ctx, Buffer.of());
         });
