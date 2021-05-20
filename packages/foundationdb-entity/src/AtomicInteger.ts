@@ -18,6 +18,14 @@ export class AtomicInteger {
             return 0;
         }
     }
+    snapshotGet = async (ctx: Context) => {
+        let r = await this.keySpace.snapshotGet(ctx, this.key);
+        if (r) {
+            return encoders.int32LE.unpack(r);
+        } else {
+            return 0;
+        }
+    }
     set = (ctx: Context, value: number) => {
         this.keySpace.set(ctx, this.key, encoders.int32LE.pack(value));
     }

@@ -27,6 +27,10 @@ export class SimpleAtomicBooleanFactory extends AtomicBooleanFactory {
         return this._get(ctx, [key]);
     }
 
+    snapshotGet(ctx: Context, key: string) {
+        return this._snapshotGet(ctx, [key]);
+    }
+
     set(ctx: Context, key: string, value: boolean) {
         return this._set(ctx, [key], value);
     }
@@ -53,6 +57,10 @@ export class SimpleAtomicIntegerFactory extends AtomicIntegerFactory {
 
     get(ctx: Context, key: string) {
         return this._get(ctx, [key]);
+    }
+
+    snapshotGet(ctx: Context, key: string) {
+        return this._snapshotGet(ctx, [key]);
     }
 
     set(ctx: Context, key: string, value: number) {

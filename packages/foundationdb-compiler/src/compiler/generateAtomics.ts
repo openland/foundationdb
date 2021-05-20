@@ -79,6 +79,13 @@ export function generateAtomics(schema: SchemaModel, builder: StringBuilder) {
         builder.removeIndent();
         builder.append('}');
 
+        builder.append();
+        builder.append(`snapshotGet(ctx: Context, ${atomic.keys.map((v) => v.name + ': ' + resolveType(v.type)).join(', ')}) {`);
+        builder.addIndent();
+        builder.append(`return this._snapshotGet(ctx, [${atomic.keys.map((v) => v.name).join(', ')}]);`);
+        builder.removeIndent();
+        builder.append('}');
+
         if (atomic.kind === 'boolean') {
             builder.append();
             builder.append(`set(ctx: Context, ${atomic.keys.map((v) => v.name + ': ' + resolveType(v.type)).join(', ')}, value: boolean) {`);

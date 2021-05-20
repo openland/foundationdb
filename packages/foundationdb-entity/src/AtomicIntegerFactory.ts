@@ -19,8 +19,14 @@ export abstract class AtomicIntegerFactory {
     }
 
     protected async _get(ctx: Context, key: TupleItem[]) {
-        return await AtomicIntegerFactoryTracer.get(this.directory, ctx, key, async () => {
+        return await AtomicIntegerFactoryTracer.get(this.directory, ctx, key, () => {
             return this._findById(key).get(ctx);
+        });
+    }
+
+    protected async _snapshotGet(ctx: Context, key: TupleItem[]) {
+        return await AtomicIntegerFactoryTracer.get(this.directory, ctx, key, () => {
+            return this._findById(key).snapshotGet(ctx);
         });
     }
 

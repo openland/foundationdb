@@ -23,6 +23,15 @@ export class AtomicBoolean {
         }
     }
 
+    snapshotGet = async (ctx: Context) => {
+        let r = await this.keySpace.snapshotGet(ctx, this.key);
+        if (r) {
+            return !r.equals(zero) && !r.equals(zero2);
+        } else {
+            return false;
+        }
+    }
+
     set = (ctx: Context, value: boolean) => {
         if (value) {
             this.keySpace.set(ctx, this.key, one);
