@@ -85,6 +85,15 @@ const booleanTransformer: Transformer<Buffer, boolean> = {
     }
 };
 
+const stringTransformer: Transformer<Buffer, string> = {
+    unpack(src: Buffer) {
+        return src.toString('utf-8');
+    },
+    pack(src: string) {
+        return Buffer.from(src, 'utf-8');
+    }
+};
+
 /**
  * Built-in encoders.
  */
@@ -130,5 +139,10 @@ export const encoders = {
             pack: (src: T) => src,
             unpack: (src: T) => src
         };
-    }
+    },
+
+    /**
+     * UTF-8 string encoder
+     */
+    string: stringTransformer,
 };
