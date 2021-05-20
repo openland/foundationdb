@@ -1,7 +1,7 @@
 {
     "name": "@openland/foundationdb-tuple",
     "description": "Tuple encoding for FoundationDB layers",
-    "version": "11.8.0",
+    "version": "11.9.0",
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",
     "repository": "https://github.com/openland/foundationdb",

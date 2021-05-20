@@ -1,7 +1,7 @@
 {
     "name": "@openland/foundationdb-bus-redis",
     "description": "Redis provider for bus layer for FoundationDB",
-    "version": "11.8.0",
+    "version": "11.9.0",
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",
     "repository": "https://github.com/openland/foundationdb",
@@ -13,9 +13,9 @@
     },
     "dependencies": {
         "@openland/context": "*",
-        "@openland/foundationdb": "^11.8.0",
-        "@openland/foundationdb-bus": "^11.8.0",
-        "@openland/foundationdb-utils": "^11.8.0",
+        "@openland/foundationdb": "^11.9.0",
+        "@openland/foundationdb-bus": "^11.9.0",
+        "@openland/foundationdb-utils": "^11.9.0",
         "@openland/log": "*",
         "handy-redis": "^1.5.5"
     }
