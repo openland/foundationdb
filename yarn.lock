@@ -2395,10 +2395,10 @@ form-data@~2.3.2:
     combined-stream "^1.0.6"
     mime-types "^2.1.12"
 
-foundationdb@1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/foundationdb/-/foundationdb-1.0.3.tgz#7abeaf7ec9cda7d3b49b6bf664f2740c71573c8b"
-  integrity sha512-bC4vi1WP7KVzXRpdc/l97tckTq3qlvlOKpC5UTV4aaArPqSTa9+8wsMrPisGOkHqFyAo+mpm8bel86PG4CVIVQ==
+foundationdb@1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/foundationdb/-/foundationdb-1.1.1.tgz#7738684b4012879b7b10002f53e65540683a8db1"
+  integrity sha512-WL5DKUMU7k6STftiZJDepNnJelCzuv/HmSGpRszcITfSSMNTexLNDHYxZ9coMFLNhzBxtgtAutzfPdHiR6NHsw==
   dependencies:
     fdb-tuple "^1.0.0"
     node-gyp-build "^4.2.3"

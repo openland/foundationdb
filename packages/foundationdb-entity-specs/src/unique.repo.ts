@@ -47,10 +47,10 @@ export class UniqueIndex extends Entity<UniqueIndexShape> {
 
 export class UniqueIndexFactory extends EntityFactory<UniqueIndexShape, UniqueIndex> {
 
-    static async open(storage: EntityStorage) {
-        let subspace = await storage.resolveEntityDirectory('uniqueIndex');
+    static async open(ctx: Context, storage: EntityStorage) {
+        let subspace = await storage.resolveEntityDirectory(ctx, 'uniqueIndex');
         let secondaryIndexes: SecondaryIndexDescriptor[] = [];
-        secondaryIndexes.push({ name: 'test', storageKey: 'test', type: { type: 'unique', fields: [{ name: 'unique1', type: 'string' }, { name: 'unique2', type: 'string' }] }, subspace: await storage.resolveEntityIndexDirectory('uniqueIndex', 'test'), condition: undefined });
+        secondaryIndexes.push({ name: 'test', storageKey: 'test', type: { type: 'unique', fields: [{ name: 'unique1', type: 'string' }, { name: 'unique2', type: 'string' }] }, subspace: await storage.resolveEntityIndexDirectory(ctx, 'uniqueIndex', 'test'), condition: undefined });
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'id', type: 'integer' });
         let fields: FieldDescriptor[] = [];
@@ -150,10 +150,10 @@ export class UniqueConditionalIndex extends Entity<UniqueConditionalIndexShape> 
 
 export class UniqueConditionalIndexFactory extends EntityFactory<UniqueConditionalIndexShape, UniqueConditionalIndex> {
 
-    static async open(storage: EntityStorage) {
-        let subspace = await storage.resolveEntityDirectory('uniqueConditionalIndex');
+    static async open(ctx: Context, storage: EntityStorage) {
+        let subspace = await storage.resolveEntityDirectory(ctx, 'uniqueConditionalIndex');
         let secondaryIndexes: SecondaryIndexDescriptor[] = [];
-        secondaryIndexes.push({ name: 'test', storageKey: 'test', type: { type: 'unique', fields: [{ name: 'unique1', type: 'string' }, { name: 'unique2', type: 'string' }] }, subspace: await storage.resolveEntityIndexDirectory('uniqueConditionalIndex', 'test'), condition: (src) => src.unique1 === '!' });
+        secondaryIndexes.push({ name: 'test', storageKey: 'test', type: { type: 'unique', fields: [{ name: 'unique1', type: 'string' }, { name: 'unique2', type: 'string' }] }, subspace: await storage.resolveEntityIndexDirectory(ctx, 'uniqueConditionalIndex', 'test'), condition: (src) => src.unique1 === '!' });
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'id', type: 'integer' });
         let fields: FieldDescriptor[] = [];
@@ -219,10 +219,10 @@ export interface Store extends BaseStore {
     readonly UniqueConditionalIndex: UniqueConditionalIndexFactory;
 }
 
-export async function openStore(storage: EntityStorage): Promise<Store> {
+export async function openStore(ctx: Context, storage: EntityStorage): Promise<Store> {
     const eventFactory = new EventFactory();
-    let UniqueIndexPromise = UniqueIndexFactory.open(storage);
-    let UniqueConditionalIndexPromise = UniqueConditionalIndexFactory.open(storage);
+    let UniqueIndexPromise = UniqueIndexFactory.open(ctx, storage);
+    let UniqueConditionalIndexPromise = UniqueConditionalIndexFactory.open(ctx, storage);
     return {
         storage,
         eventFactory,

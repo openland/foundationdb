@@ -10,7 +10,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntityFactory.open(store);
+        let factory = await SimpleEntityFactory.open(testCtx, store);
         expect(await inReadOnlyTx(testCtx, async (ctx) => factory.findById(ctx, '1'))).toBe(null);
     });
 
@@ -18,7 +18,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntityFactory.open(store);
+        let factory = await SimpleEntityFactory.open(testCtx, store);
         expect(await inReadOnlyTx(testCtx, async (ctx) => factory.findById(ctx, '1'))).toBe(null);
         let start = Date.now();
         let created = await inTx(testCtx, async (ctx) => factory.create(ctx, '1', { value: 'value', value2: 2, value3: false }));
@@ -63,7 +63,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntityFactory.open(store);
+        let factory = await SimpleEntityFactory.open(testCtx, store);
         await inTx(testCtx, async (ctx) => {
             let pending: any[] = [];
             for (let i = 0; i < 100; i++) {
@@ -83,7 +83,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntityFactory.open(store);
+        let factory = await SimpleEntityFactory.open(testCtx, store);
         await inTx(testCtx, async (ctx) => factory.create(ctx, '1', { value: 'value', value2: 2, value3: false }));
         await inReadOnlyTx(testCtx, async (ctx) => {
             let firstRead = await factory.findById(ctx, '1');
@@ -96,7 +96,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntityFactory.open(store);
+        let factory = await SimpleEntityFactory.open(testCtx, store);
         await inTx(testCtx, async (ctx) => {
             let ex = await factory.findById(ctx, '1');
             expect(ex).toBe(null);
@@ -110,7 +110,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntityFactory.open(store);
+        let factory = await SimpleEntityFactory.open(testCtx, store);
 
         // Create New
         let start = Date.now();
@@ -147,7 +147,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntityFactory.open(store);
+        let factory = await SimpleEntityFactory.open(testCtx, store);
         await inTx(testCtx, async (ctx) => {
             await factory.create(ctx, '1', { value: 'value', value2: 2, value3: false });
         });
@@ -159,7 +159,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntityFactory.open(store);
+        let factory = await SimpleEntityFactory.open(testCtx, store);
         await inTx(testCtx, async (ctx) => {
             await factory.create(ctx, '1', { value: 'value', value2: 2, value3: false });
         });
@@ -179,7 +179,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntityFactory.open(store);
+        let factory = await SimpleEntityFactory.open(testCtx, store);
         await inTx(testCtx, async (ctx) => {
             await factory.create(ctx, '1', { value: 'hello world1', value2: 2, value3: false });
         });
@@ -194,7 +194,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntityFactory.open(store);
+        let factory = await SimpleEntityFactory.open(testCtx, store);
         await inTx(testCtx, async (ctx) => {
             let ex = factory.create(ctx, '1', { value: 'hello world1', value2: 2, value3: false });
             let ex2 = factory.create(ctx, '1', { value: 'hello world2', value2: 2, value3: false });
@@ -208,7 +208,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntityFactory.open(store);
+        let factory = await SimpleEntityFactory.open(testCtx, store);
         let res = await inTx(testCtx, async (ctx) => {
             return await factory.create(ctx, '1', { value: 'hello world1', value2: 2, value3: false });
         });
@@ -219,7 +219,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntityFactory.open(store);
+        let factory = await SimpleEntityFactory.open(testCtx, store);
         await inTx(testCtx, async (ctx) => {
             return await factory.create(ctx, '1', { value: 'hello world1', value2: 2, value3: false });
         });
@@ -239,7 +239,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntity2Factory.open(store);
+        let factory = await SimpleEntity2Factory.open(testCtx, store);
         await expect(inReadOnlyTx(testCtx, async (ctx) => factory.findById(ctx, 0.1))).rejects.toThrowError();
         await expect(inTx(testCtx, async (ctx) => {
             return await factory.create(ctx, 0.1, { value: 'hello world1' });
@@ -250,7 +250,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntity2Factory.open(store);
+        let factory = await SimpleEntity2Factory.open(testCtx, store);
 
         let func = jest.fn();
         await inTx(testCtx, async (ctx) => {
@@ -280,7 +280,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntityFactory.open(store);
+        let factory = await SimpleEntityFactory.open(testCtx, store);
 
         await inTx(testCtx, async ctx => {
             let created = await factory.create(ctx, '1', { value: 'value', value2: 2, value3: false });
@@ -317,7 +317,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntityFactory.open(store);
+        let factory = await SimpleEntityFactory.open(testCtx, store);
 
         await inTx(testCtx, async ctx => {
             let created = await factory.create(ctx, '1', { value: 'value', value2: 2, value3: false });
@@ -338,7 +338,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntity2Factory.open(store);
+        let factory = await SimpleEntity2Factory.open(testCtx, store);
 
         await inTx(testCtx, async ctx => {
             let created = await factory.create(ctx, 1, { value: 'value' });
@@ -350,7 +350,7 @@ describe('Entity', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleEntityFactory.open(store);
+        let factory = await SimpleEntityFactory.open(testCtx, store);
 
         await inTx(testCtx, async _ctx => {
             await factory.create(_ctx, '1', { value: 'value', value2: 2, value3: false });

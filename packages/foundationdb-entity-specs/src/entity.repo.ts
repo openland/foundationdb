@@ -59,8 +59,8 @@ export class SimpleEntity extends Entity<SimpleEntityShape> {
 
 export class SimpleEntityFactory extends EntityFactory<SimpleEntityShape, SimpleEntity> {
 
-    static async open(storage: EntityStorage) {
-        let subspace = await storage.resolveEntityDirectory('simpleEntity');
+    static async open(ctx: Context, storage: EntityStorage) {
+        let subspace = await storage.resolveEntityDirectory(ctx, 'simpleEntity');
         let secondaryIndexes: SecondaryIndexDescriptor[] = [];
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'id', type: 'string' });
@@ -136,8 +136,8 @@ export class SimpleEntity2 extends Entity<SimpleEntity2Shape> {
 
 export class SimpleEntity2Factory extends EntityFactory<SimpleEntity2Shape, SimpleEntity2> {
 
-    static async open(storage: EntityStorage) {
-        let subspace = await storage.resolveEntityDirectory('simpleEntity2');
+    static async open(ctx: Context, storage: EntityStorage) {
+        let subspace = await storage.resolveEntityDirectory(ctx, 'simpleEntity2');
         let secondaryIndexes: SecondaryIndexDescriptor[] = [];
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'id', type: 'integer' });
@@ -369,10 +369,10 @@ export class AllFields extends Entity<AllFieldsShape> {
 
 export class AllFieldsFactory extends EntityFactory<AllFieldsShape, AllFields> {
 
-    static async open(storage: EntityStorage) {
-        let subspace = await storage.resolveEntityDirectory('allFields');
+    static async open(ctx: Context, storage: EntityStorage) {
+        let subspace = await storage.resolveEntityDirectory(ctx, 'allFields');
         let secondaryIndexes: SecondaryIndexDescriptor[] = [];
-        secondaryIndexes.push({ name: 'uniqIndex', storageKey: 'uniqIndex', type: { type: 'unique', fields: [{ name: 'key1', type: 'boolean' }, { name: 'key2', type: 'integer' }, { name: 'key3', type: 'float' }, { name: 'key4', type: 'string' }, { name: 'value1', type: 'boolean' }, { name: 'value2', type: 'integer' }, { name: 'value3', type: 'float' }, { name: 'value4', type: 'string' }, { name: 'value10', type: 'opt_boolean' }, { name: 'value11', type: 'opt_integer' }, { name: 'value12', type: 'opt_float' }, { name: 'value13', type: 'opt_string' }, { name: 'createdAt', type: 'integer' }, { name: 'updatedAt', type: 'integer' }, { name: 'value5', type: 'string' }, { name: 'value55', type: 'opt_string' }] }, subspace: await storage.resolveEntityIndexDirectory('allFields', 'uniqIndex'), condition: (src) => src.key1 !== 'hello!' });
+        secondaryIndexes.push({ name: 'uniqIndex', storageKey: 'uniqIndex', type: { type: 'unique', fields: [{ name: 'key1', type: 'boolean' }, { name: 'key2', type: 'integer' }, { name: 'key3', type: 'float' }, { name: 'key4', type: 'string' }, { name: 'value1', type: 'boolean' }, { name: 'value2', type: 'integer' }, { name: 'value3', type: 'float' }, { name: 'value4', type: 'string' }, { name: 'value10', type: 'opt_boolean' }, { name: 'value11', type: 'opt_integer' }, { name: 'value12', type: 'opt_float' }, { name: 'value13', type: 'opt_string' }, { name: 'createdAt', type: 'integer' }, { name: 'updatedAt', type: 'integer' }, { name: 'value5', type: 'string' }, { name: 'value55', type: 'opt_string' }] }, subspace: await storage.resolveEntityIndexDirectory(ctx, 'allFields', 'uniqIndex'), condition: (src) => src.key1 !== 'hello!' });
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'key1', type: 'boolean' });
         primaryKeys.push({ name: 'key2', type: 'integer' });
@@ -475,12 +475,12 @@ export interface Store extends BaseStore {
     readonly SampleExt: number;
 }
 
-export async function openStore(storage: EntityStorage): Promise<Store> {
+export async function openStore(ctx: Context, storage: EntityStorage): Promise<Store> {
     const eventFactory = new EventFactory();
-    let SimpleEntityPromise = SimpleEntityFactory.open(storage);
-    let SimpleEntity2Promise = SimpleEntity2Factory.open(storage);
-    let AllFieldsPromise = AllFieldsFactory.open(storage);
-    let directoryDirectoryPromise = storage.resolveCustomDirectory('directory');
+    let SimpleEntityPromise = SimpleEntityFactory.open(ctx, storage);
+    let SimpleEntity2Promise = SimpleEntity2Factory.open(ctx, storage);
+    let AllFieldsPromise = AllFieldsFactory.open(ctx, storage);
+    let directoryDirectoryPromise = storage.resolveCustomDirectory(ctx, 'directory');
     let SampleExtPromise = 123;
     return {
         storage,

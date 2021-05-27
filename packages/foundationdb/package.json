@@ -15,6 +15,6 @@
         "@openland/context": "*",
         "@openland/foundationdb-tuple": "^11.10.0",
         "@openland/log": "*",
-        "foundationdb": "1.0.3"
+        "foundationdb": "1.1.1"
     }
 }

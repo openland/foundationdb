@@ -81,9 +81,9 @@ export function generateEvents(schema: SchemaModel, builder: StringBuilder) {
 
         // Open
         builder.append();
-        builder.append(`static async open(storage: EntityStorage, factory: EventFactory) {`);
+        builder.append(`static async open(ctx: Context, storage: EntityStorage, factory: EventFactory) {`);
         builder.addIndent();
-        builder.append(`let subspace = await storage.resolveEventStoreDirectory('${eventKey}');`);
+        builder.append(`let subspace = await storage.resolveEventStoreDirectory(ctx, '${eventKey}');`);
         builder.append(`const descriptor = {`);
         builder.addIndent();
         builder.append(`name: '${eventStore.name}',`);

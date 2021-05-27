@@ -51,9 +51,9 @@ export function generateAtomics(schema: SchemaModel, builder: StringBuilder) {
 
         // Constructor
         builder.append();
-        builder.append(`static async open(storage: EntityStorage) {`);
+        builder.append(`static async open(ctx: Context, storage: EntityStorage) {`);
         builder.addIndent();
-        builder.append(`let directory = await storage.resolveAtomicDirectory('${entityKey}');`);
+        builder.append(`let directory = await storage.resolveAtomicDirectory(ctx, '${entityKey}');`);
         builder.append(`return new ${entityClass}Factory(storage, directory);`);
         builder.removeIndent();
         builder.append(`}`);

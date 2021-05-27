@@ -6,8 +6,9 @@ import { createNamedContext } from '@openland/context';
 
 describe('Events', () => {
     it('should decode and encode events', async () => {
+        let root = createNamedContext('test');
         let db = await openTestDatabase();
-        let store = await openStore(new EntityStorage(db));
+        let store = await openStore(root, new EntityStorage(db));
         let encoded = store.eventFactory.encode(SampleEvent.create({
             id: 'some_id',
             name: 'name'
@@ -20,7 +21,7 @@ describe('Events', () => {
     it('should persist events', async () => {
         let root = createNamedContext('test');
         let db = await openTestDatabase();
-        let store = await openStore(new EntityStorage(db));
+        let store = await openStore(root, new EntityStorage(db));
         await inTx(root, async (ctx) => {
             store.UserEvents.post(ctx, 'user1', SampleEvent.create({ id: '1' }));
             store.UserEvents.post(ctx, 'user1', SampleEvent.create({ id: '2' }));
@@ -51,7 +52,7 @@ describe('Events', () => {
     it('should stream events', async () => {
         let root = createNamedContext('test');
         let db = await openTestDatabase();
-        let store = await openStore(new EntityStorage(db));
+        let store = await openStore(root, new EntityStorage(db));
         await inTx(root, async (ctx) => {
             store.UserEvents.post(ctx, 'user1', SampleEvent.create({ id: '1' }));
             store.UserEvents.post(ctx, 'user1', SampleEvent.create({ id: '2' }));
@@ -94,7 +95,7 @@ describe('Events', () => {
     it('should delete events', async () => {
         let root = createNamedContext('test');
         let db = await openTestDatabase();
-        let store = await openStore(new EntityStorage(db));
+        let store = await openStore(root, new EntityStorage(db));
 
         // Create initial
         await inTx(root, async (ctx) => {

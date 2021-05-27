@@ -27,23 +27,23 @@ export function generateStore(schema: SchemaModel, builder: StringBuilder) {
     builder.removeIndent();
     builder.append('}');
     builder.append();
-    builder.append(`export async function openStore(storage: EntityStorage): Promise<Store> {`);
+    builder.append(`export async function openStore(ctx: Context, storage: EntityStorage): Promise<Store> {`);
     builder.addIndent();
     builder.append(`const eventFactory = new EventFactory();`);
     for (let event of schema.events) {
         builder.append(`eventFactory.registerEventType('${Case.camelCase(event.name)}', ${Case.pascalCase(event.name)}.encode as any, ${Case.pascalCase(event.name)}.decode);`);
     }
     for (let atomic of schema.atomics) {
-        builder.append(`let ${atomic.name}Promise = ${atomic.name}Factory.open(storage);`);
+        builder.append(`let ${atomic.name}Promise = ${atomic.name}Factory.open(ctx, storage);`);
     }
     for (let entity of schema.entities) {
-        builder.append(`let ${entity.name}Promise = ${entity.name}Factory.open(storage);`);
+        builder.append(`let ${entity.name}Promise = ${entity.name}Factory.open(ctx, storage);`);
     }
     for (let directory of schema.directories) {
-        builder.append(`let ${directory.name}DirectoryPromise = storage.resolveCustomDirectory('${Case.camelCase(directory.name)}');`);
+        builder.append(`let ${directory.name}DirectoryPromise = storage.resolveCustomDirectory(ctx, '${Case.camelCase(directory.name)}');`);
     }
     for (let atomic of schema.eventStores) {
-        builder.append(`let ${atomic.name}Promise = ${atomic.name}.open(storage, eventFactory);`);
+        builder.append(`let ${atomic.name}Promise = ${atomic.name}.open(ctx, storage, eventFactory);`);
     }
     for (let ext of schema.extensions) {
         if (ext.field) {

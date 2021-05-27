@@ -196,11 +196,11 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
         //
 
         builder.append();
-        builder.append(`static async open(storage: EntityStorage) {`);
+        builder.append(`static async open(ctx: Context, storage: EntityStorage) {`);
         builder.addIndent();
 
         // Root Directory
-        builder.append(`let subspace = await storage.resolveEntityDirectory('${entityKey}');`);
+        builder.append(`let subspace = await storage.resolveEntityDirectory(ctx, '${entityKey}');`);
 
         // Indexes
         builder.append(`let secondaryIndexes: SecondaryIndexDescriptor[] = [];`);
@@ -271,7 +271,7 @@ export function generateEntities(schema: SchemaModel, builder: StringBuilder) {
             if (index.condition) {
                 condition = index.condition.toString();
             }
-            builder.append(`secondaryIndexes.push({ name: '${index.name}', storageKey: '${index.name}', type: ${type}, subspace: await storage.resolveEntityIndexDirectory('${entityKey}', '${index.name}'), condition: ${condition} });`);
+            builder.append(`secondaryIndexes.push({ name: '${index.name}', storageKey: '${index.name}', type: ${type}, subspace: await storage.resolveEntityIndexDirectory(ctx, '${entityKey}', '${index.name}'), condition: ${condition} });`);
         }
 
         // Primary Keys

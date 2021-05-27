@@ -9,7 +9,7 @@ describe('Unique index', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await UniqueIndexFactory.open(store);
+        let factory = await UniqueIndexFactory.open(testCtx, store);
 
         // Should create first item
         await inTx(testCtx, async (ctx) => {
@@ -48,7 +48,7 @@ describe('Unique index', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await UniqueIndexFactory.open(store);
+        let factory = await UniqueIndexFactory.open(testCtx, store);
 
         // Concurrent creation
         await inTx(testCtx, async (ctx) => {
@@ -78,7 +78,7 @@ describe('Unique index', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await UniqueIndexFactory.open(store);
+        let factory = await UniqueIndexFactory.open(testCtx, store);
 
         await inTx(testCtx, async (ctx) => {
             let p1 = factory.create(ctx, 1, { unique1: '1', unique2: '2' });
@@ -94,7 +94,7 @@ describe('Unique index', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await UniqueConditionalIndexFactory.open(store);
+        let factory = await UniqueConditionalIndexFactory.open(testCtx, store);
 
         let ex = await inReadOnlyTx(testCtx, async (ctx) => factory.test.find(ctx, '!', '2'));
         expect(ex).toBeNull();
@@ -136,7 +136,7 @@ describe('Unique index', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await UniqueIndexFactory.open(store);
+        let factory = await UniqueIndexFactory.open(testCtx, store);
 
         await inTx(testCtx, async ctx => {
             let created = await factory.create(ctx, 1, { unique1: '1', unique2: '2' });
@@ -150,7 +150,7 @@ describe('Unique index', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await UniqueConditionalIndexFactory.open(store);
+        let factory = await UniqueConditionalIndexFactory.open(testCtx, store);
 
         await inTx(testCtx, async ctx => {
             let created = await factory.create(ctx, 1, { unique1: '!', unique2: '2' });

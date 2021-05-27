@@ -10,14 +10,14 @@ describe('AtomicInteger', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleAtomicIntegerFactory.open(store);
+        let factory = await SimpleAtomicIntegerFactory.open(testCtx, store);
         expect(await inReadOnlyTx(testCtx, async (ctx) => factory.get(ctx, '1'))).toBe(0);
     });
     it('should set and get', async () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleAtomicIntegerFactory.open(store);
+        let factory = await SimpleAtomicIntegerFactory.open(testCtx, store);
         await inTx(testCtx, async (ctx) => {
             factory.set(ctx, 'some', 1339);
         });
@@ -33,7 +33,7 @@ describe('AtomicInteger', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleAtomicIntegerFactory.open(store);
+        let factory = await SimpleAtomicIntegerFactory.open(testCtx, store);
 
         await inTx(testCtx, async (ctx) => {
             factory.set(ctx, 'some-1', 1339);
@@ -83,7 +83,7 @@ describe('AtomicBoolean', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleAtomicBooleanFactory.open(store);
+        let factory = await SimpleAtomicBooleanFactory.open(testCtx, store);
 
         let res = await inReadOnlyTx(testCtx, async (ctx) => factory.get(ctx, 'some-1'));
         expect(res).toEqual(false);
@@ -106,7 +106,7 @@ describe('AtomicBoolean', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await SimpleAtomicBooleanFactory.open(store);
+        let factory = await SimpleAtomicBooleanFactory.open(testCtx, store);
 
         let res = await inReadOnlyTx(testCtx, async (ctx) => factory.get(ctx, 'some-1'));
         expect(res).toEqual(false);

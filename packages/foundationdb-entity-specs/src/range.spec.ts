@@ -9,7 +9,7 @@ describe('Range Index', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await RangeIndexFactory.open(store);
+        let factory = await RangeIndexFactory.open(testCtx, store);
 
         await inTx(testCtx, async (ctx) => {
             await factory.create(ctx, 1, { range1: 1, range2: 2 });
@@ -38,7 +38,7 @@ describe('Range Index', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await RangeIndexFactory.open(store);
+        let factory = await RangeIndexFactory.open(testCtx, store);
 
         await inTx(testCtx, async (ctx) => {
             await factory.create(ctx, -3, { range1: 0, range2: 2 });
@@ -163,7 +163,7 @@ describe('Range Index', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await RangeIndexFactory.open(store);
+        let factory = await RangeIndexFactory.open(testCtx, store);
 
         await inTx(testCtx, async (ctx) => {
             await factory.create(ctx, -3, { range1: 0, range2: 2 });
@@ -206,7 +206,7 @@ describe('Range Index', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await RangeIndexConditionalFactory.open(store);
+        let factory = await RangeIndexConditionalFactory.open(testCtx, store);
 
         let ex = await inReadOnlyTx(testCtx, async (ctx) => factory.ranges.findAll(ctx, 0));
         expect(ex.length).toBe(0);
@@ -248,7 +248,7 @@ describe('Range Index', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await RangeIndexFactory.open(store);
+        let factory = await RangeIndexFactory.open(testCtx, store);
 
         await inTx(testCtx, async ctx => {
             let created = await factory.create(ctx, 1, { range1: 1, range2: 2 });
@@ -262,7 +262,7 @@ describe('Range Index', () => {
         let testCtx = createNamedContext('test');
         let db = await openTestDatabase();
         let store = new EntityStorage(db);
-        let factory = await RangeIndexConditionalFactory.open(store);
+        let factory = await RangeIndexConditionalFactory.open(testCtx, store);
 
         await inTx(testCtx, async ctx => {
             let created = await factory.create(ctx, 1, { range1: 0, range2: 2 });

@@ -10,8 +10,8 @@ import { AtomicIntegerFactory, AtomicBooleanFactory } from '@openland/foundation
 
 export class SimpleAtomicBooleanFactory extends AtomicBooleanFactory {
 
-    static async open(storage: EntityStorage) {
-        let directory = await storage.resolveAtomicDirectory('simpleAtomicBoolean');
+    static async open(ctx: Context, storage: EntityStorage) {
+        let directory = await storage.resolveAtomicDirectory(ctx, 'simpleAtomicBoolean');
         return new SimpleAtomicBooleanFactory(storage, directory);
     }
 
@@ -42,8 +42,8 @@ export class SimpleAtomicBooleanFactory extends AtomicBooleanFactory {
 
 export class SimpleAtomicIntegerFactory extends AtomicIntegerFactory {
 
-    static async open(storage: EntityStorage) {
-        let directory = await storage.resolveAtomicDirectory('simpleAtomicInteger');
+    static async open(ctx: Context, storage: EntityStorage) {
+        let directory = await storage.resolveAtomicDirectory(ctx, 'simpleAtomicInteger');
         return new SimpleAtomicIntegerFactory(storage, directory);
     }
 
@@ -85,10 +85,10 @@ export interface Store extends BaseStore {
     readonly SimpleAtomicInteger: SimpleAtomicIntegerFactory;
 }
 
-export async function openStore(storage: EntityStorage): Promise<Store> {
+export async function openStore(ctx: Context, storage: EntityStorage): Promise<Store> {
     const eventFactory = new EventFactory();
-    let SimpleAtomicBooleanPromise = SimpleAtomicBooleanFactory.open(storage);
-    let SimpleAtomicIntegerPromise = SimpleAtomicIntegerFactory.open(storage);
+    let SimpleAtomicBooleanPromise = SimpleAtomicBooleanFactory.open(ctx, storage);
+    let SimpleAtomicIntegerPromise = SimpleAtomicIntegerFactory.open(ctx, storage);
     return {
         storage,
         eventFactory,

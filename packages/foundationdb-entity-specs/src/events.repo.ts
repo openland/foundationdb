@@ -44,8 +44,8 @@ export class SampleEvent extends BaseEvent {
 
 export class UserEvents extends EventStore {
 
-    static async open(storage: EntityStorage, factory: EventFactory) {
-        let subspace = await storage.resolveEventStoreDirectory('userEvents');
+    static async open(ctx: Context, storage: EntityStorage, factory: EventFactory) {
+        let subspace = await storage.resolveEventStoreDirectory(ctx, 'userEvents');
         const descriptor = {
             name: 'UserEvents',
             storageKey: 'userEvents',
@@ -101,10 +101,10 @@ export interface Store extends BaseStore {
     readonly UserEvents: UserEvents;
 }
 
-export async function openStore(storage: EntityStorage): Promise<Store> {
+export async function openStore(ctx: Context, storage: EntityStorage): Promise<Store> {
     const eventFactory = new EventFactory();
     eventFactory.registerEventType('sampleEvent', SampleEvent.encode as any, SampleEvent.decode);
-    let UserEventsPromise = UserEvents.open(storage, eventFactory);
+    let UserEventsPromise = UserEvents.open(ctx, storage, eventFactory);
     return {
         storage,
         eventFactory,

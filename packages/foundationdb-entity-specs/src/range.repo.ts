@@ -47,10 +47,10 @@ export class RangeIndex extends Entity<RangeIndexShape> {
 
 export class RangeIndexFactory extends EntityFactory<RangeIndexShape, RangeIndex> {
 
-    static async open(storage: EntityStorage) {
-        let subspace = await storage.resolveEntityDirectory('rangeIndex');
+    static async open(ctx: Context, storage: EntityStorage) {
+        let subspace = await storage.resolveEntityDirectory(ctx, 'rangeIndex');
         let secondaryIndexes: SecondaryIndexDescriptor[] = [];
-        secondaryIndexes.push({ name: 'ranges', storageKey: 'ranges', type: { type: 'range', fields: [{ name: 'range1', type: 'integer' }, { name: 'range2', type: 'integer' }] }, subspace: await storage.resolveEntityIndexDirectory('rangeIndex', 'ranges'), condition: undefined });
+        secondaryIndexes.push({ name: 'ranges', storageKey: 'ranges', type: { type: 'range', fields: [{ name: 'range1', type: 'integer' }, { name: 'range2', type: 'integer' }] }, subspace: await storage.resolveEntityIndexDirectory(ctx, 'rangeIndex', 'ranges'), condition: undefined });
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'id', type: 'integer' });
         let fields: FieldDescriptor[] = [];
@@ -153,10 +153,10 @@ export class RangeIndexConditional extends Entity<RangeIndexConditionalShape> {
 
 export class RangeIndexConditionalFactory extends EntityFactory<RangeIndexConditionalShape, RangeIndexConditional> {
 
-    static async open(storage: EntityStorage) {
-        let subspace = await storage.resolveEntityDirectory('rangeIndexConditional');
+    static async open(ctx: Context, storage: EntityStorage) {
+        let subspace = await storage.resolveEntityDirectory(ctx, 'rangeIndexConditional');
         let secondaryIndexes: SecondaryIndexDescriptor[] = [];
-        secondaryIndexes.push({ name: 'ranges', storageKey: 'ranges', type: { type: 'range', fields: [{ name: 'range1', type: 'integer' }, { name: 'range2', type: 'integer' }] }, subspace: await storage.resolveEntityIndexDirectory('rangeIndexConditional', 'ranges'), condition: (src) => src.range1 === 0 });
+        secondaryIndexes.push({ name: 'ranges', storageKey: 'ranges', type: { type: 'range', fields: [{ name: 'range1', type: 'integer' }, { name: 'range2', type: 'integer' }] }, subspace: await storage.resolveEntityIndexDirectory(ctx, 'rangeIndexConditional', 'ranges'), condition: (src) => src.range1 === 0 });
         let primaryKeys: PrimaryKeyDescriptor[] = [];
         primaryKeys.push({ name: 'id', type: 'integer' });
         let fields: FieldDescriptor[] = [];
@@ -225,10 +225,10 @@ export interface Store extends BaseStore {
     readonly RangeIndexConditional: RangeIndexConditionalFactory;
 }
 
-export async function openStore(storage: EntityStorage): Promise<Store> {
+export async function openStore(ctx: Context, storage: EntityStorage): Promise<Store> {
     const eventFactory = new EventFactory();
-    let RangeIndexPromise = RangeIndexFactory.open(storage);
-    let RangeIndexConditionalPromise = RangeIndexConditionalFactory.open(storage);
+    let RangeIndexPromise = RangeIndexFactory.open(ctx, storage);
+    let RangeIndexConditionalPromise = RangeIndexConditionalFactory.open(ctx, storage);
     return {
         storage,
         eventFactory,
