@@ -1,7 +1,7 @@
 {
     "name": "@openland/foundationdb-entity",
     "description": "Entity layer for FoundationDB",
-    "version": "11.11.1",
+    "version": "11.12.0",
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",
     "repository": "https://github.com/openland/foundationdb",
@@ -13,9 +13,9 @@
     },
     "dependencies": {
         "@openland/context": "*",
-        "@openland/foundationdb": "^11.11.1",
-        "@openland/foundationdb-bus": "^11.11.1",
-        "@openland/foundationdb-utils": "^11.11.1",
+        "@openland/foundationdb": "^11.12.0",
+        "@openland/foundationdb-bus": "^11.12.0",
+        "@openland/foundationdb-utils": "^11.12.0",
         "@openland/lifetime": "*",
         "@openland/log": "*"
     }

@@ -1,7 +1,7 @@
 {
     "name": "@openland/foundationdb-compiler",
     "description": "Compiler for FoundationDB layers",
-    "version": "11.11.1",
+    "version": "11.12.0",
     "main": "lib/index.js",
     "typings": "lib/index.d.ts",
     "repository": "https://github.com/openland/foundationdb",
@@ -13,9 +13,9 @@
     },
     "dependencies": {
         "@openland/context": "*",
-        "@openland/foundationdb": "^11.11.1",
-        "@openland/foundationdb-entity": "^11.11.1",
-        "@openland/foundationdb-utils": "^11.11.1",
+        "@openland/foundationdb": "^11.12.0",
+        "@openland/foundationdb-entity": "^11.12.0",
+        "@openland/foundationdb-utils": "^11.12.0",
         "@openland/log": "*",
         "@types/change-case": "^2.3.1",
         "@types/meow": "^5.0.0",
