@@ -20,7 +20,7 @@ const version = require(__dirname + '/../package.json').version as string;
 const rootCtx = createNamedContext('ofdbcli');
 const ZERO = Buffer.from([]);
 
-function formatSize(keySize: number, valueSize: number, count: number) {
+function formatSize(keySize: number, valueSize: number, prefixSize: number, count: number) {
     return `${filesize(keySize)}/${filesize(valueSize)}/${count}`;
 }
 
@@ -33,7 +33,7 @@ async function measureSubspace(subspace: Subspace, spinner?: ora.Ora, tag?: stri
     let iteration = 0;
     await inTx(rootCtx, async (ctx) => {
         if (iteration > 0 && tag && spinner) {
-            spinner.text = 'Measuring ' + tag + ': ' + (formatSize(keyBytes, valueBytes, keyCount));
+            spinner.text = 'Measuring ' + tag + ': ' + (formatSize(keyBytes, valueBytes, keyCount * subspace.prefix.length, keyCount));
         }
         iteration++;
         let tx = getTransaction(ctx)!.rawReadTransaction(subspace.db);
@@ -47,7 +47,7 @@ async function measureSubspace(subspace: Subspace, spinner?: ora.Ora, tag?: stri
     });
     if (tag && spinner) {
         spinner.clear();
-        console.log(tag + ': ' + (formatSize(keyBytes, valueBytes, keyCount)));
+        console.log(tag + ': ' + (formatSize(keyBytes, valueBytes, keyCount * subspace.prefix.length, keyCount)));
         spinner.render();
     }
     let prefixBytes = keyCount * subspace.prefix.length;
@@ -206,7 +206,7 @@ program.command('da')
         spinner.text = 'Measuring';
         const r = await measureSubspace(database.allKeys, spinner, 'Measuring');
         spinner.clear();
-        console.log(formatSize(r.keyBytes, r.valueBytes, r.keyCount));
+        console.log(formatSize(r.keyBytes, r.valueBytes, r.prefixBytes, r.keyCount));
         spinner.render();
         spinner.succeed('Completed').stop();
     });
