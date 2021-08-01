@@ -21,7 +21,7 @@ const rootCtx = createNamedContext('ofdbcli');
 const ZERO = Buffer.from([]);
 
 function formatSize(keySize: number, valueSize: number, prefixSize: number, count: number) {
-    return `${filesize(keySize)}/${filesize(valueSize)}/${count}`;
+    return `${filesize(keySize)}/${filesize(valueSize)}/${filesize(prefixSize)}/${count}`;
 }
 
 
