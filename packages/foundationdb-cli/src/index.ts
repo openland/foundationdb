@@ -50,7 +50,8 @@ async function measureSubspace(subspace: Subspace, spinner?: ora.Ora, tag?: stri
         console.log(tag + ': ' + (formatSize(keyBytes, valueBytes, keyCount)));
         spinner.render();
     }
-    return { keyBytes, valueBytes, keyCount };
+    let prefixBytes = keyCount * subspace.prefix.length;
+    return { keyBytes, valueBytes, keyCount, prefixBytes };
 }
 
 // Description
@@ -77,7 +78,7 @@ program.command('du')
     .option('-o, --output <path>', 'Output path')
     .action(async (options) => {
         // Read recovery
-        let tree = createTree<{ keySize: number, valueSize: number, count: number }>({ keySize: 0, valueSize: 0, count: 0 });
+        let tree = createTree<{ keySize: number, valueSize: number, count: number, prefixSize: number }>({ keySize: 0, valueSize: 0, count: 0, prefixSize: 0 });
         if (options.recover) {
             if (fs.existsSync(options.recover)) {
                 tree = parseTree(JSON.parse(fs.readFileSync(options.recover, 'utf-8')));
@@ -100,10 +101,10 @@ program.command('du')
                 let r = await measureSubspace(database.allKeys.subspace(dir.key), spinner, dir.path.join(' -> '));
                 for (let i = 0; i <= dir.path.length; i++) {
                     if (i === dir.path.length) {
-                        setTreeItem(tree, dir.path, { count: r.keyCount, keySize: r.keyBytes, valueSize: r.valueBytes });
+                        setTreeItem(tree, dir.path, { count: r.keyCount, keySize: r.keyBytes, valueSize: r.valueBytes, prefixSize: r.prefixBytes });
                     } else {
                         if (!getTreeItem(tree, dir.path.slice(0, i))) {
-                            setTreeItem(tree, dir.path.slice(0, i), { count: 0, keySize: 0, valueSize: 0 });
+                            setTreeItem(tree, dir.path.slice(0, i), { count: 0, keySize: 0, valueSize: 0, prefixSize: 0 });
                         }
                     }
                 }
@@ -116,15 +117,16 @@ program.command('du')
         // Measure directory registry
         spinner.text = 'Measuring directories';
         const r = await measureSubspace(database.allKeys.subspace(Buffer.of(0xfe)), spinner, 'Measuring directories');
-        setTreeItem(tree, ['$directories'], { keySize: r.keyBytes, valueSize: r.valueBytes, count: r.keyCount });
+        setTreeItem(tree, ['$directories'], { keySize: r.keyBytes, valueSize: r.valueBytes, count: r.keyCount, prefixSize: r.prefixBytes });
 
         // Convert to tree
-        type PrintedTree = { sizeSt: string, size: number, count: number, keySizeSt: string, keySize: number, valueSizeSt: string, valueSize: number, children?: { [key: string]: PrintedTree } };
-        function printTree(src: Tree<{ keySize: number, valueSize: number, count: number }>): PrintedTree {
-            let size = src.value.keySize + src.value.valueSize;
+        type PrintedTree = { sizeSt: string, size: number, count: number, prefixSizeSt: string, prefixSize: number, keySizeSt: string, keySize: number, valueSizeSt: string, valueSize: number, children?: { [key: string]: PrintedTree } };
+        function printTree(src: Tree<{ keySize: number, valueSize: number, count: number, prefixSize: number }>): PrintedTree {
+            let size = src.value.keySize + src.value.valueSize + src.value.prefixSize;
             let count = src.value.count;
             let keySize = src.value.keySize;
             let valueSize = src.value.valueSize;
+            let prefixSize = src.value.prefixSize;
             let children: { [key: string]: PrintedTree } = {};
             if (src.child.size === 0) {
                 return {
@@ -134,7 +136,9 @@ program.command('du')
                     keySizeSt: filesize(keySize),
                     keySize,
                     valueSizeSt: filesize(valueSize),
-                    valueSize
+                    valueSize,
+                    prefixSize: prefixSize,
+                    prefixSizeSt: filesize(prefixSize)
                 };
             } else {
                 if (src.value.count !== 0) {
@@ -145,7 +149,9 @@ program.command('du')
                         keySizeSt: filesize(keySize),
                         keySize,
                         valueSizeSt: filesize(valueSize),
-                        valueSize
+                        valueSize,
+                        prefixSize: prefixSize,
+                        prefixSizeSt: filesize(prefixSize)
                     }
                 }
 
@@ -157,6 +163,7 @@ program.command('du')
                     count += p.count;
                     keySize += p.keySize;
                     valueSize += p.valueSize;
+                    prefixSize += p.prefixSize;
                     unsorted.push([ch, p]);
                 }
                 unsorted.sort(function (a, b) {
@@ -173,6 +180,8 @@ program.command('du')
                     keySize,
                     valueSizeSt: filesize(valueSize),
                     valueSize,
+                    prefixSize: prefixSize,
+                    prefixSizeSt: filesize(prefixSize),
                     children
                 };
             }
