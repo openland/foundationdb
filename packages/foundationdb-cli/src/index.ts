@@ -16,6 +16,7 @@ import { findAllDirectories } from './ops/findAllDirectories';
 import { findMisusedRanges } from './ops/findMisusedRanges';
 import { createTree, getTreeItem, materializeTree, parseTree, setTreeItem, Tree } from './ops/tree';
 import { formatBuffer } from '@openland/foundationdb-utils';
+import { getBoundaryKeys } from './ops/getBoundaryKeys';
 const version = require(__dirname + '/../package.json').version as string;
 const rootCtx = createNamedContext('ofdbcli');
 const ZERO = Buffer.from([]);
@@ -23,7 +24,6 @@ const ZERO = Buffer.from([]);
 function formatSize(keySize: number, valueSize: number, prefixSize: number, count: number) {
     return `${filesize(keySize)}/${filesize(valueSize)}/${filesize(prefixSize)}/${count}`;
 }
-
 
 async function measureSubspace(subspace: Subspace, spinner?: ora.Ora, tag?: string) {
     let keyBytes = 0;
@@ -69,6 +69,22 @@ program.command('ls')
         for (let dir of directories) {
             console.log(dir.path.join(' -> ') + ': ' + dir.key.toString('hex'));
         }
+    });
+
+program.command('sh')
+    .description('Read all shards')
+    .action(async () => {
+        const spinner = ora('Loading shards').start();
+        const database = await Database.open();
+        let keys = await getBoundaryKeys(rootCtx, database, Buffer.from([]), Buffer.from([0xff, 0xff, 0xff]));
+        spinner.stop();
+        for (let k of keys) {
+            console.log(formatBuffer(k));
+        }
+        // const directories = await findAllDirectories(rootCtx, database);
+        // for (let dir of directories) {
+        //     console.log(dir.path.join(' -> ') + ': ' + dir.key.toString('hex'));
+        // }
     });
 
 // Size usage
